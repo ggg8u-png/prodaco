@@ -1,0 +1,602 @@
+backend:
+  name: git-gateway
+  branch: main
+
+# 업로드 이미지 저장 위치 (사이트에서 /uploads/... 로 서빙)
+media_folder: "public/uploads"
+public_folder: "/uploads"
+
+locale: "ko"
+
+publish_mode: simple
+
+collections:
+  # ─────────────────────────────────────────────────────────────
+  # 1. 사이트 설정 — 연락처·SEO·기본 문구
+  # ─────────────────────────────────────────────────────────────
+  - name: "settings"
+    label: "① 사이트 설정 (연락처·SEO)"
+    description: "연락처·소개·버튼 문구 등 사이트 전반 설정"
+    files:
+      - name: "general"
+        label: "연락처·기본 정보·문구"
+        file: "content/settings.json"
+        fields:
+          - { label: "전화번호", name: "phone", widget: "string", hint: "예: 010-8470-4965" }
+          - { label: "카카오톡 오픈채팅 링크", name: "kakaoUrl", widget: "string" }
+          - { label: "네이버 플레이스 링크(선택)", name: "naverPlaceUrl", widget: "string", required: false }
+          - { label: "경력 표기", name: "experience", widget: "string", hint: "예: 10년" }
+          - { label: "응대 안내 문구", name: "responseTimeText", widget: "string" }
+          - { label: "업체 소개 요약(About)", name: "geoSummary", widget: "text" }
+          - { label: "메인 히어로 보조 문구", name: "heroSubcopy", widget: "text" }
+          - { label: "카톡 버튼 문구", name: "ctaKakaoLabel", widget: "string" }
+          - { label: "전화 버튼 문구", name: "ctaPhoneLabel", widget: "string" }
+          - { label: "SEO 제목(메타 타이틀)", name: "seoTitle", widget: "string", hint: "구글·네이버 검색결과에 표시되는 제목. 예: 바닥재 철거·마루 철거 견적 상담 | 프로다" }
+          - { label: "SEO 설명(메타 디스크립션)", name: "seoDescription", widget: "text", hint: "검색결과 제목 아래 표시되는 설명. 100~160자 권장." }
+          - { label: "SEO 키워드(쉼표로 구분)", name: "seoKeywords", widget: "string", hint: "예: 바닥재철거,마루철거,데코타일철거" }
+          - { label: "네이버 소유확인 코드", name: "naverVerify", widget: "string", hint: "네이버 서치어드바이저에서 발급받은 인증 코드" }
+
+  # ─────────────────────────────────────────────────────────────
+  # 2. 업체 정보 — 서비스·강점·진행 과정·차별점
+  # ─────────────────────────────────────────────────────────────
+  - name: "company"
+    label: "② 업체 정보 (서비스·강점·과정)"
+    description: "상호, 서비스 목록, 강점, 진행 과정, 차별점 섹션"
+    files:
+      - name: "company"
+        label: "업체 정보"
+        file: "content/company.json"
+        fields:
+          - { label: "상호(한글)", name: "name", widget: "string" }
+          - { label: "상호(영문)", name: "nameEn", widget: "string" }
+          - { label: "작업 지역", name: "region", widget: "string" }
+          - { label: "전문 분야", name: "speciality", widget: "string" }
+          - label: "강점"
+            name: "strengths"
+            widget: "list"
+            label_singular: "강점"
+            summary: "{{fields.label}}"
+            fields:
+              - { label: "제목", name: "label", widget: "string" }
+              - { label: "설명", name: "description", widget: "text" }
+          - label: "서비스 목록"
+            name: "services"
+            widget: "list"
+            label_singular: "서비스"
+            summary: "{{fields.name}}"
+            fields:
+              - { label: "ID(고유)", name: "id", widget: "string" }
+              - { label: "서비스명", name: "name", widget: "string" }
+              - { label: "설명", name: "description", widget: "text" }
+              - { label: "아이콘", name: "icon", widget: "string", hint: "layers, grid, scroll, square, paint-roller, wind 중 하나" }
+          - label: "진행 과정"
+            name: "process"
+            widget: "list"
+            label_singular: "단계"
+            summary: "{{fields.step}}. {{fields.title}}"
+            fields:
+              - { label: "단계 번호", name: "step", widget: "number", value_type: "int" }
+              - { label: "제목", name: "title", widget: "string" }
+              - { label: "설명", name: "description", widget: "text" }
+          - label: "차별점 섹션 (샌딩이 다릅니다)"
+            name: "differentiator"
+            widget: "object"
+            fields:
+              - { label: "제목", name: "title", widget: "string" }
+              - { label: "부제", name: "subtitle", widget: "string" }
+              - { label: "본문", name: "body", widget: "text" }
+              - { label: "포인트 목록", name: "points", widget: "list", field: { label: "포인트", name: "point", widget: "string" } }
+          - label: "상담 순서 안내"
+            name: "consultSteps"
+            widget: "list"
+            field: { label: "단계", name: "step", widget: "string" }
+
+  # ─────────────────────────────────────────────────────────────
+  # 3. 메인(홈) 페이지 — 히어로·섹션 제목·문구
+  # ─────────────────────────────────────────────────────────────
+  - name: "home"
+    label: "③ 메인 페이지 (홈 문구)"
+    description: "메인 페이지 히어로, 섹션 제목, 통계, 마무리 CTA 문구"
+    files:
+      - name: "home"
+        label: "메인 페이지"
+        file: "content/home.json"
+        fields:
+          - label: "히어로(최상단)"
+            name: "hero"
+            widget: "object"
+            fields:
+              - { label: "상단 지역 뱃지", name: "badgeRegions", widget: "string" }
+              - { label: "제목 1줄째", name: "h1Part1", widget: "string" }
+              - { label: "제목 강조 단어", name: "h1Accent", widget: "string" }
+              - { label: "제목 2줄째", name: "h1Part2", widget: "string" }
+              - { label: "제목 3줄째", name: "h1Part3", widget: "string" }
+              - { label: "샌딩 뱃지 라벨", name: "badgeLabel", widget: "string" }
+              - { label: "샌딩 뱃지 설명", name: "badgeSubtext", widget: "string" }
+              - { label: "SINCE 라벨", name: "sinceLabel", widget: "string" }
+              - { label: "SINCE 값", name: "sinceValue", widget: "string" }
+          - label: "흐르는 키워드(티커)"
+            name: "tickerWords"
+            widget: "list"
+            field: { label: "키워드", name: "word", widget: "string" }
+          - label: "통계 바"
+            name: "stats"
+            widget: "list"
+            label_singular: "항목"
+            summary: "{{fields.label}}: {{fields.value}}"
+            fields:
+              - { label: "라벨", name: "label", widget: "string" }
+              - { label: "값", name: "value", widget: "string" }
+              - { label: "강조(노란색)", name: "accent", widget: "boolean", default: false }
+          - label: "About 섹션"
+            name: "about"
+            widget: "object"
+            fields:
+              - { label: "라벨", name: "label", widget: "string" }
+              - { label: "제목", name: "heading", widget: "string" }
+              - { label: "키워드 뱃지", name: "skillBadges", widget: "list", field: { label: "뱃지", name: "badge", widget: "string" } }
+          - label: "섹션 제목들"
+            name: "sections"
+            widget: "object"
+            fields:
+              - label: "서비스 섹션"
+                name: "services"
+                widget: "object"
+                fields:
+                  - { label: "라벨", name: "label", widget: "string" }
+                  - { label: "제목", name: "heading", widget: "string" }
+                  - { label: "부제", name: "subheading", widget: "string" }
+              - label: "차별점 섹션"
+                name: "differentiator"
+                widget: "object"
+                fields:
+                  - { label: "라벨", name: "label", widget: "string" }
+                  - { label: "제목 1줄째", name: "headingLine1", widget: "string" }
+                  - { label: "제목 2줄째", name: "headingLine2", widget: "string" }
+              - label: "진행과정 섹션"
+                name: "process"
+                widget: "object"
+                fields:
+                  - { label: "라벨", name: "label", widget: "string" }
+                  - { label: "제목", name: "heading", widget: "string" }
+              - label: "견적 기준 섹션"
+                name: "quote"
+                widget: "object"
+                fields:
+                  - { label: "라벨", name: "label", widget: "string" }
+                  - { label: "제목", name: "heading", widget: "string" }
+                  - { label: "안내문", name: "intro", widget: "text" }
+              - label: "시공사례 섹션"
+                name: "gallery"
+                widget: "object"
+                fields:
+                  - { label: "라벨", name: "label", widget: "string" }
+                  - { label: "제목", name: "heading", widget: "string" }
+                  - { label: "제목 접미", name: "headingSuffix", widget: "string" }
+              - label: "후기 섹션"
+                name: "reviews"
+                widget: "object"
+                fields:
+                  - { label: "라벨", name: "label", widget: "string" }
+                  - { label: "제목", name: "heading", widget: "string" }
+              - label: "상담준비 섹션"
+                name: "prepare"
+                widget: "object"
+                fields:
+                  - { label: "라벨", name: "label", widget: "string" }
+                  - { label: "제목", name: "heading", widget: "string" }
+              - label: "FAQ 섹션"
+                name: "faq"
+                widget: "object"
+                fields:
+                  - { label: "라벨", name: "label", widget: "string" }
+                  - { label: "제목", name: "heading", widget: "string" }
+              - label: "콜백(번호 남기기) 섹션"
+                name: "callback"
+                widget: "object"
+                fields:
+                  - { label: "라벨", name: "label", widget: "string" }
+                  - { label: "제목 1줄째", name: "headingLine1", widget: "string" }
+                  - { label: "제목 2줄째", name: "headingLine2", widget: "string" }
+                  - { label: "설명", name: "description", widget: "text" }
+          - label: "버튼·링크 라벨"
+            name: "labels"
+            widget: "object"
+            fields:
+              - { label: "서비스 강점 뱃지", name: "serviceFlagBadge", widget: "string" }
+              - { label: "서비스 상담 버튼", name: "serviceCta", widget: "string" }
+              - { label: "지역 바로가기 제목", name: "regionLinksTitle", widget: "string" }
+              - { label: "지역 링크 접미", name: "regionLinkSuffix", widget: "string" }
+              - { label: "전체 서비스 링크", name: "allServicesLink", widget: "string" }
+              - { label: "Before 라벨", name: "beforeLabel", widget: "string" }
+              - { label: "After 라벨", name: "afterLabel", widget: "string" }
+              - { label: "갤러리 Before 칩", name: "galleryBeforeChip", widget: "string" }
+              - { label: "갤러리 After 칩", name: "galleryAfterChip", widget: "string" }
+              - { label: "시공사례 전체보기", name: "galleryAllLink", widget: "string" }
+              - { label: "후기 전체보기", name: "reviewsAllLink", widget: "string" }
+              - { label: "FAQ 전체보기", name: "faqAllLink", widget: "string" }
+              - { label: "네이버 플레이스 링크 문구", name: "naverPlaceLink", widget: "string" }
+          - { label: "중간 갤러리 CTA 제목", name: "midrollGalleryHeading", widget: "string" }
+          - { label: "후기 안내문(앞)", name: "reviewsDisclaimerPrefix", widget: "text" }
+          - { label: "후기 안내문(강조)", name: "reviewsDisclaimerEmphasis", widget: "string" }
+          - { label: "후기 안내문(뒤)", name: "reviewsDisclaimerSuffix", widget: "text" }
+          - label: "마무리 CTA"
+            name: "finalCta"
+            widget: "object"
+            fields:
+              - { label: "뱃지", name: "badge", widget: "string" }
+              - { label: "제목 1줄째", name: "headingLine1", widget: "string" }
+              - { label: "제목 2줄째(앞)", name: "headingLine2Prefix", widget: "string" }
+              - { label: "제목 2줄째(강조)", name: "headingLine2Accent", widget: "string" }
+              - { label: "안내 문구", name: "copyPrefix", widget: "text" }
+
+  # ─────────────────────────────────────────────────────────────
+  # 4. 공통 UI — 헤더/푸터/하위 페이지 문구
+  # ─────────────────────────────────────────────────────────────
+  - name: "ui"
+    label: "④ 공통 UI (헤더·푸터·페이지)"
+    description: "상단 메뉴, 하단 푸터, 서비스·후기·갤러리·블로그 페이지 문구. {region}·{cluster}·{experience}·{year}는 자동 치환되니 그대로 두세요."
+    files:
+      - name: "ui"
+        label: "공통 UI 문구"
+        file: "content/ui.json"
+        fields:
+          - label: "헤더(상단)"
+            name: "header"
+            widget: "object"
+            fields:
+              - label: "메뉴"
+                name: "nav"
+                widget: "list"
+                label_singular: "메뉴"
+                summary: "{{fields.label}}"
+                fields:
+                  - { label: "링크", name: "href", widget: "string" }
+                  - { label: "이름", name: "label", widget: "string" }
+              - { label: "뱃지", name: "badge", widget: "string" }
+              - { label: "전화 버튼", name: "phoneCta", widget: "string" }
+              - { label: "메뉴 라벨", name: "menuLabel", widget: "string" }
+              - { label: "카톡 버튼", name: "kakaoCta", widget: "string" }
+          - label: "푸터(하단)"
+            name: "footer"
+            widget: "object"
+            fields:
+              - { label: "소개 문구", name: "bio", widget: "text", hint: "{experience}는 자동 치환됩니다" }
+              - { label: "서비스 라벨", name: "serviceLabel", widget: "string" }
+              - { label: "바로가기 라벨", name: "quickLinksLabel", widget: "string" }
+              - label: "푸터 링크"
+                name: "links"
+                widget: "list"
+                label_singular: "링크"
+                summary: "{{fields.label}}"
+                fields:
+                  - { label: "링크", name: "href", widget: "string" }
+                  - { label: "이름", name: "label", widget: "string" }
+              - { label: "전화 라벨", name: "phoneLabel", widget: "string" }
+              - { label: "카톡 라벨", name: "kakaoLabel", widget: "string" }
+              - { label: "저작권 접미 문구", name: "copyrightSuffix", widget: "string" }
+          - label: "서비스 목록 페이지"
+            name: "servicesPage"
+            widget: "object"
+            fields:
+              - { label: "제목", name: "h1", widget: "string" }
+              - { label: "안내문", name: "intro", widget: "text", hint: "{experience} 자동 치환" }
+              - { label: "지역 섹션 라벨", name: "regionSectionLabel", widget: "string" }
+              - { label: "광역 라벨", name: "broadRegionLabel", widget: "string" }
+              - { label: "품목 섹션 라벨", name: "itemSectionLabel", widget: "string" }
+          - label: "지역별 페이지"
+            name: "regionPage"
+            widget: "object"
+            fields:
+              - { label: "안내문 템플릿", name: "introTemplate", widget: "text", hint: "{region} {cluster} {experience} 자동 치환" }
+              - { label: "가능 작업 라벨", name: "capabilitiesLabel", widget: "string", hint: "{region} 자동 치환" }
+              - { label: "비용 라벨", name: "pricingLabel", widget: "string", hint: "{region} 자동 치환" }
+              - { label: "비용 안내문(앞)", name: "pricingDisclaimer", widget: "text" }
+              - { label: "비용 안내문(강조)", name: "pricingDisclaimerStrong", widget: "string" }
+              - { label: "비용 안내문(뒤)", name: "pricingDisclaimerSuffix", widget: "string" }
+              - label: "비용표 헤더"
+                name: "tableHeaders"
+                widget: "object"
+                fields:
+                  - { label: "바닥재 열", name: "material", widget: "string" }
+                  - { label: "단가 열", name: "price", widget: "string" }
+                  - { label: "비고 열", name: "note", widget: "string" }
+              - { label: "사례 라벨", name: "casesLabel", widget: "string" }
+              - { label: "Before 라벨", name: "beforeLabel", widget: "string" }
+              - { label: "After 라벨", name: "afterLabel", widget: "string" }
+              - { label: "후기 라벨", name: "reviewsLabel", widget: "string" }
+              - { label: "FAQ 라벨", name: "faqLabel", widget: "string" }
+              - { label: "인근 지역 라벨", name: "neighborhoodLabel", widget: "string", hint: "{cluster} 자동 치환" }
+              - { label: "CTA 뱃지", name: "ctaBadge", widget: "string" }
+              - { label: "CTA 제목", name: "ctaHeading", widget: "string", hint: "{region} 자동 치환" }
+              - { label: "CTA 제목 2줄째", name: "ctaHeadingLine2", widget: "string" }
+              - { label: "카톡 버튼", name: "kakaoCta", widget: "string" }
+          - label: "FAQ 페이지"
+            name: "faqPage"
+            widget: "object"
+            fields:
+              - { label: "뱃지", name: "badge", widget: "string" }
+              - { label: "제목", name: "heading", widget: "string" }
+              - { label: "부제", name: "subheading", widget: "string" }
+          - label: "후기 페이지"
+            name: "reviewsPage"
+            widget: "object"
+            fields:
+              - { label: "제목", name: "h1", widget: "string" }
+              - label: "필터 탭"
+                name: "filterTabs"
+                widget: "list"
+                label_singular: "탭"
+                summary: "{{fields.label}}"
+                fields:
+                  - { label: "값", name: "value", widget: "string", hint: "all / consumer / business" }
+                  - { label: "이름", name: "label", widget: "string" }
+              - { label: "예시 라벨", name: "sampleLabel", widget: "string" }
+              - { label: "실제 후기 라벨", name: "realLabel", widget: "string" }
+          - label: "갤러리 페이지"
+            name: "galleryPage"
+            widget: "object"
+            fields:
+              - { label: "제목", name: "h1", widget: "string" }
+              - { label: "안내문", name: "intro", widget: "text" }
+              - { label: "전후 라벨", name: "beforeAfterLabel", widget: "string" }
+              - { label: "작업현장 라벨", name: "worksiteLabel", widget: "string" }
+              - { label: "하단 CTA 문구", name: "ctaCopy", widget: "text" }
+          - label: "블로그 목록 페이지"
+            name: "blogPage"
+            widget: "object"
+            fields:
+              - { label: "뱃지", name: "badge", widget: "string" }
+              - { label: "제목", name: "h1", widget: "string" }
+              - { label: "부제", name: "subheading", widget: "string" }
+              - label: "카테고리 색상"
+                name: "categoryColors"
+                widget: "list"
+                label_singular: "카테고리"
+                summary: "{{fields.category}}"
+                fields:
+                  - { label: "카테고리명", name: "category", widget: "string" }
+                  - { label: "색상 클래스", name: "className", widget: "string", hint: "예: text-orange-600" }
+          - label: "블로그 글 하단(업체 소개)"
+            name: "blogPost"
+            widget: "object"
+            fields:
+              - { label: "소개 제목", name: "aboutHeading", widget: "string" }
+              - { label: "전문 라벨", name: "specialtyLabel", widget: "string" }
+              - { label: "경력 라벨", name: "experienceLabel", widget: "string" }
+              - { label: "지역 라벨", name: "regionLabel", widget: "string" }
+              - { label: "정산 라벨", name: "billingLabel", widget: "string" }
+              - { label: "정산 값", name: "billingValue", widget: "string" }
+              - { label: "관련글 라벨", name: "relatedLabel", widget: "string" }
+
+  # ─────────────────────────────────────────────────────────────
+  # 5. 견적·전환 문구 — 견적 기준·상담 준비·CTA 카피
+  # ─────────────────────────────────────────────────────────────
+  - name: "landing"
+    label: "⑤ 견적·CTA 문구"
+    description: "견적이 달라지는 기준, 상담 전 준비, 시공사례 텍스트, CTA 버튼 문구"
+    files:
+      - name: "landing"
+        label: "견적·전환 문구"
+        file: "content/landing.json"
+        fields:
+          - label: "견적이 달라지는 기준"
+            name: "quoteFactors"
+            widget: "list"
+            label_singular: "기준"
+            summary: "{{fields.label}}"
+            fields:
+              - { label: "ID(고유)", name: "id", widget: "string" }
+              - { label: "제목", name: "label", widget: "string" }
+              - { label: "설명", name: "detail", widget: "text" }
+          - label: "상담 전 준비 정보"
+            name: "consultPrep"
+            widget: "list"
+            label_singular: "항목"
+            summary: "{{fields.label}}"
+            fields:
+              - { label: "ID(고유)", name: "id", widget: "string" }
+              - { label: "제목", name: "label", widget: "string" }
+              - { label: "안내", name: "hint", widget: "text" }
+          - label: "바닥재 선택지"
+            name: "materialOptions"
+            widget: "list"
+            field: { label: "바닥재", name: "material", widget: "string" }
+          - label: "지역 선택지"
+            name: "regionOptions"
+            widget: "list"
+            field: { label: "지역", name: "region", widget: "string" }
+          - label: "시공사례(텍스트)"
+            name: "caseStudies"
+            widget: "list"
+            label_singular: "사례"
+            summary: "{{fields.region}} · {{fields.scope}}"
+            fields:
+              - { label: "ID(고유)", name: "id", widget: "string" }
+              - { label: "지역", name: "region", widget: "string" }
+              - { label: "바닥재", name: "material", widget: "string" }
+              - { label: "작업 범위", name: "scope", widget: "string" }
+              - { label: "결과", name: "result", widget: "string" }
+          - label: "CTA 버튼 문구"
+            name: "ctaCopy"
+            widget: "object"
+            fields:
+              - { label: "전화(짧게)", name: "phoneShort", widget: "string" }
+              - { label: "카톡(짧게)", name: "kakaoShort", widget: "string" }
+              - { label: "문자 버튼", name: "smsPrimary", widget: "string" }
+              - { label: "카톡 마이크로카피", name: "kakaoMicro", widget: "string" }
+              - { label: "견적 CTA", name: "quoteCta", widget: "string" }
+              - { label: "중간 CTA 제목", name: "midroll", widget: "string" }
+              - { label: "신뢰 문구", name: "trust", widget: "string" }
+
+  # ─────────────────────────────────────────────────────────────
+  # 6. 비용 참고표 — 품목별 평당 단가
+  # ─────────────────────────────────────────────────────────────
+  - name: "costs"
+    label: "⑥ 비용 참고표"
+    description: "품목별 평당 참고 단가(만원). 단가를 비워두면 '현장 별도 산정'으로 표시됩니다."
+    files:
+      - name: "costs"
+        label: "비용 참고표"
+        file: "content/costs.json"
+        fields:
+          - label: "비용 항목"
+            name: "floorCosts"
+            widget: "list"
+            label_singular: "항목"
+            summary: "{{fields.label}}"
+            fields:
+              - { label: "ID(고유)", name: "key", widget: "string", hint: "예: ganmaru, deco (변경 비권장)" }
+              - { label: "바닥재명", name: "label", widget: "string" }
+              - { label: "최소 단가(만원/평)", name: "minPrice", widget: "number", value_type: "int", required: false, hint: "별도 산정이면 비워두세요" }
+              - { label: "최대 단가(만원/평)", name: "maxPrice", widget: "number", value_type: "int", required: false, hint: "별도 산정이면 비워두세요" }
+              - { label: "비고", name: "note", widget: "text" }
+
+  # ─────────────────────────────────────────────────────────────
+  # 6-2. 색인·SEO 설정 — 페이지 생성 수 / 색인 정책
+  # ─────────────────────────────────────────────────────────────
+  - name: "seo"
+    label: "⑪ 색인·SEO 설정"
+    description: "검색엔진 색인 정책. ⚠ 생성 수를 올려도 검증 안 된 페이지는 자동 noindex 입니다. 색인을 늘리려면 ⑩ 시공사례에 '지역+품목'을 정확히 지정해 사례를 추가하세요(사례 1건 = 그 지역+품목의 모든 페이지 색인)."
+    files:
+      - name: "seo"
+        label: "색인·SEO 설정"
+        file: "content/seo.json"
+        fields:
+          - label: "생성할 페이지 수 (generateCount)"
+            name: "generateCount"
+            widget: "number"
+            value_type: "int"
+            min: 1546
+            default: 1546
+            hint: "빌드 시 만들 키워드 페이지 수. 라이브 1,546개 미만으로는 안 내려가고, 최대 약 26,000까지. 숫자를 올려도 '시공사례·라이브'로 검증된 페이지만 색인되니 올려도 안전합니다(나머지는 noindex). 권장: 라이브 + 여유분(예: 3,000~5,000)."
+          - label: "시공사례로 자동 색인 (autoIndexByGalleryCase)"
+            name: "autoIndexByGalleryCase"
+            widget: "boolean"
+            default: true
+            hint: "켜두면, ⑩ 시공사례에 올린 '지역+품목'과 일치하는 페이지가 자동으로 색인 대상이 됩니다. (권장: 켬)"
+          - label: "AI 검색 크롤러 허용 (allowAiCrawlers)"
+            name: "allowAiCrawlers"
+            widget: "boolean"
+            default: true
+            hint: "ChatGPT·Perplexity·Claude 등 생성형 AI 검색에 노출되도록 허용. 끄면 AI 크롤러를 차단합니다. (권장: 켬)"
+          - label: "수동 색인 강제 슬러그 (extraIndexSlugs)"
+            name: "extraIndexSlugs"
+            widget: "list"
+            required: false
+            default: []
+            field: { label: "슬러그(주소)", name: "slug", widget: "string" }
+            hint: "시공사례 없이도 특정 페이지를 색인하고 싶을 때만 주소를 추가하세요. 예: 서울-강마루철거. ⚠ 실제 내용이 충실한 페이지에만 쓰세요(빈 페이지 강제 색인은 검색 감점)."
+
+  # ─────────────────────────────────────────────────────────────
+  # 6-3. 전역 문구 치환·삭제 — 모든 페이지(생성 페이지 포함)에 일괄 적용
+  # ─────────────────────────────────────────────────────────────
+  - name: "replacements"
+    label: "⑫ 전역 문구 치환·삭제"
+    description: "여기에 규칙을 추가하면 자동 생성되는 키워드 페이지를 포함한 사이트 전체 텍스트에 일괄 적용됩니다. '바꿀 문구'를 비우면 해당 문구가 삭제됩니다. (저장·게시 후 재빌드 시 반영, 주소/URL은 바뀌지 않습니다.)"
+    files:
+      - name: "replacements"
+        label: "전역 문구 치환·삭제"
+        file: "content/replacements.json"
+        fields:
+          - label: "치환 규칙"
+            name: "rules"
+            widget: "list"
+            label_singular: "규칙"
+            summary: "{{fields.from}} → {{fields.to}}"
+            required: false
+            fields:
+              - { label: "찾을 문구", name: "from", widget: "string", hint: "예: 마루샌딩" }
+              - { label: "바꿀 문구(비우면 삭제)", name: "to", widget: "string", required: false, default: "", hint: "예: 바닥샌딩 / 비워두면 '찾을 문구'를 삭제" }
+
+  # ─────────────────────────────────────────────────────────────
+  # 7. FAQ
+  # ─────────────────────────────────────────────────────────────
+  - name: "faq"
+    label: "⑦ 자주 묻는 질문(FAQ)"
+    description: "FAQ 페이지에 표시되는 질문과 답변"
+    files:
+      - name: "list"
+        label: "FAQ 목록"
+        file: "content/faq.json"
+        fields:
+          - label: "FAQ"
+            name: "faqs"
+            widget: "list"
+            label_singular: "질문"
+            summary: "[{{fields.category}}] {{fields.question}}"
+            fields:
+              - { label: "ID(고유)", name: "id", widget: "string", hint: "예: f1, f2 (고유해야 함)" }
+              - { label: "질문", name: "question", widget: "string" }
+              - { label: "답변", name: "answer", widget: "text" }
+              - { label: "카테고리", name: "category", widget: "select", options: ["비용", "상담", "원상복구", "일정", "폐기물", "작업방법", "소요시간", "정산", "샌딩", "소음", "준비사항", "지역", "견적", "B2B"] }
+
+  # ─────────────────────────────────────────────────────────────
+  # 8. 블로그
+  # ─────────────────────────────────────────────────────────────
+  - name: "blog"
+    label: "⑧ 블로그 글"
+    label_singular: "블로그 글"
+    description: "정보/가이드 글 (URL: /blog/식별자)"
+    folder: "content/blog"
+    create: true
+    slug: "{{fields.id}}"
+    identifier_field: "title"
+    extension: "json"
+    format: "json"
+    fields:
+      - { label: "URL 식별자(영문·숫자·하이픈, 고유)", name: "id", widget: "string", hint: "주소가 됩니다. 예: deco-tile-cost" }
+      - { label: "제목", name: "title", widget: "string" }
+      - { label: "요약", name: "excerpt", widget: "text" }
+      - { label: "날짜", name: "date", widget: "date", format: "YYYY-MM-DD" }
+      - { label: "카테고리", name: "category", widget: "select", options: ["비용정보", "가이드", "정보", "전문정보"] }
+      - { label: "태그", name: "tags", widget: "list", default: [] }
+      - { label: "본문", name: "content", widget: "text", hint: "## 소제목, ### 작은제목, - 목록, 1. 번호목록, > 인용 사용 가능" }
+
+  # ─────────────────────────────────────────────────────────────
+  # 9. 고객 후기
+  # ─────────────────────────────────────────────────────────────
+  - name: "reviews"
+    label: "⑨ 고객 후기"
+    files:
+      - name: "list"
+        label: "후기 목록"
+        file: "content/reviews.json"
+        fields:
+          - label: "후기"
+            name: "items"
+            widget: "list"
+            label_singular: "후기"
+            summary: "{{fields.name}} · {{fields.item}}"
+            fields:
+              - { label: "ID(고유)", name: "id", widget: "string" }
+              - { label: "이름", name: "name", widget: "string", hint: "성+○+이름 끝글자 마스킹 권장 (예: 김○름)" }
+              - { label: "지역", name: "region", widget: "string" }
+              - { label: "작업 종류", name: "item", widget: "string" }
+              - { label: "내용", name: "content", widget: "text" }
+              - { label: "별점", name: "rating", widget: "number", default: 5, value_type: "int", min: 1, max: 5 }
+              - { label: "유형", name: "type", widget: "select", options: ["consumer", "business"], default: "consumer" }
+              - { label: "예시(준비용) 후기?", name: "sample", widget: "boolean", default: false, hint: "실제 후기가 아니면 켜기 → 카드에 '예시' 라벨 표시" }
+              - { label: "날짜(선택)", name: "date", widget: "string", required: false, default: "" }
+
+  # ─────────────────────────────────────────────────────────────
+  # 10. 시공 사례(사진)
+  # ─────────────────────────────────────────────────────────────
+  - name: "gallery"
+    label: "⑩ 시공 사례(사진)"
+    label_singular: "시공 사례"
+    description: "철거 전/후 비교 사진. 추가하면 시공사례 맨 앞에 노출됩니다."
+    folder: "content/gallery"
+    create: true
+    slug: "{{fields.id}}"
+    identifier_field: "title"
+    extension: "json"
+    format: "json"
+    fields:
+      - { label: "ID(고유)", name: "id", widget: "string", hint: "예: case-2026-07" }
+      - { label: "제목", name: "title", widget: "string" }
+      - { label: "지역", name: "region", widget: "string", required: false, default: "수도권" }
+      - { label: "작업 종류", name: "item", widget: "string", required: false, default: "바닥재 철거 · 샌딩" }
+      - { label: "철거 전 사진", name: "beforeImage", widget: "image" }
+      - { label: "샌딩 후 사진", name: "afterImage", widget: "image" }
+      - { label: "설명", name: "description", widget: "string", required: false }

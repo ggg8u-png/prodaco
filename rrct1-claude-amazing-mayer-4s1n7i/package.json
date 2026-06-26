@@ -1,0 +1,32 @@
+{
+  "name": "proda",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "prebuild": "node scripts/fetch-gallery.mjs",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "fetch:photos": "node scripts/fetch-gallery.mjs",
+    "promote": "node scripts/promote-keywords.mjs"
+  },
+  "dependencies": {
+    "lucide-react": "^0.460.0",
+    "next": "15.3.9",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "autoprefixer": "^10.0.1",
+    "eslint": "^8",
+    "eslint-config-next": "15.3.9",
+    "postcss": "^8",
+    "sharp": "^0.35.2",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5"
+  }
+}

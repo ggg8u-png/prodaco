@@ -1,0 +1,12 @@
+{
+  "floorCosts": [
+    { "key": "ganmaru", "label": "강마루 (접착)", "minPrice": 3, "maxPrice": 5, "note": "접착 강도에 따라 변동" },
+    { "key": "ganghwa", "label": "강화·합판마루", "minPrice": 2, "maxPrice": 4, "note": "못 박음 구조는 상대적으로 저렴" },
+    { "key": "wonmok", "label": "원목마루", "minPrice": 3, "maxPrice": 5, "note": "두께·접착 방식에 따라 차이" },
+    { "key": "deco", "label": "데코·디럭스타일", "minPrice": 2, "maxPrice": 4, "note": "접착제 잔재 제거 여부로 변동" },
+    { "key": "jangpan", "label": "장판 (PVC·륨)", "minPrice": 1, "maxPrice": 3, "note": "면적 대비 가장 저렴" },
+    { "key": "tile", "label": "타일 (도기·폴리싱)", "minPrice": 4, "maxPrice": 8, "note": "두께·결합 강도에 따라 차이 큼" },
+    { "key": "coating", "label": "에폭시·우레탄 코팅", "minPrice": null, "maxPrice": null, "note": "면적·코팅 두께에 따라 별도 산정" },
+    { "key": "sanding", "label": "바닥 샌딩 (면갈이)", "minPrice": null, "maxPrice": null, "note": "바닥 상태·코팅 목적에 따라 별도 산정" }
+  ]
+}

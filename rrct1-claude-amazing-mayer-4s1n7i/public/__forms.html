@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="ko">
+  <head><meta charset="utf-8" /><title>Netlify Forms</title></head>
+  <body>
+    <!--
+      Netlify Forms 감지용 정적 폼.
+      Netlify는 배포 시 이 HTML의 form 정의를 읽어 폼을 등록한다.
+      실제 사용자 입력은 React 컴포넌트(CallbackForm)가 이 폼 이름으로 제출한다.
+    -->
+    <form name="callback" data-netlify="true" netlify-honeypot="bot-field" hidden>
+      <input type="hidden" name="form-name" value="callback" />
+      <input type="text" name="name" />
+      <input type="tel" name="phone" />
+      <input type="text" name="item" />
+      <textarea name="message"></textarea>
+      <input type="file" name="photo" />
+      <input name="bot-field" />
+    </form>
+  </body>
+</html>

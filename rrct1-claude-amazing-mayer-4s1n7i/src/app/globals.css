@@ -1,0 +1,75 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-charcoal: #16181D;
+  --color-offwhite: #F7F6F3;
+  --color-yellow: #FFD400;
+  --color-yellow-ink: #9A8A2E; /* yellow label color usable on light backgrounds */
+  --color-gray: #6B7280;
+}
+
+@layer base {
+  html {
+    font-family: 'Pretendard', system-ui, sans-serif;
+    scroll-behavior: smooth;
+  }
+  body {
+    background-color: #F7F6F3;
+    color: #16181D;
+    font-size: 16px;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    /* 한글은 어절(단어) 단위로만 줄바꿈 — 버튼·제목에서 음절 중간 줄바꿈 방지.
+       너무 긴 단어/URL은 필요 시에만 줄바꿈. */
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
+}
+
+@layer utilities {
+  .font-mono-pd {
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+}
+
+/* keyword ticker marquee (속도 완화: 30s → 44s) */
+@keyframes prodaMarquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.pd-marquee {
+  animation: prodaMarquee 44s linear infinite;
+  will-change: transform;
+}
+
+/* 후기 가로 마퀴 — 옆으로 흐름, 마우스 오버 시 정지 */
+@keyframes prodaMarqueeX {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.pd-marquee-x {
+  animation: prodaMarqueeX 60s linear infinite;
+  will-change: transform;
+}
+.group:hover .pd-marquee-x {
+  animation-play-state: paused;
+}
+
+/* 모션 최소화 선호 시 자동 흐름 정지 (접근성) */
+@media (prefers-reduced-motion: reduce) {
+  .pd-marquee,
+  .pd-marquee-x {
+    animation: none;
+  }
+  .pd-marquee-x {
+    overflow-x: auto;
+  }
+}
+
+/* FAQ details */
+details > summary { list-style: none; }
+details > summary::-webkit-details-marker { display: none; }
+details[open] .pd-faq-plus { transform: rotate(45deg); }

@@ -1,0 +1,101 @@
+{
+  "hero": {
+    "badgeRegions": "Seoul · Gyeonggi · Incheon",
+    "h1Part1": "바닥재 철거,",
+    "h1Accent": "뜯고",
+    "h1Part2": " 끝내지",
+    "h1Part3": "않습니다",
+    "badgeLabel": "SANDING",
+    "badgeSubtext": "본드·잔여물까지 정밀 제거 → 다음 공정 바로 진행",
+    "sinceLabel": "SINCE",
+    "sinceValue": "10년"
+  },
+  "tickerWords": [
+    "마루철거", "강마루·강화마루", "데코타일철거", "장판철거", "도기타일철거",
+    "우레탄·에폭시", "본드제거", "바닥샌딩(면갈이)", "원상복구", "실측정산"
+  ],
+  "stats": [
+    { "label": "전문 분야", "value": "바닥재 철거", "accent": false },
+    { "label": "작업 경험", "value": "10년", "accent": true },
+    { "label": "정산 방식", "value": "실측 면적", "accent": false },
+    { "label": "작업 지역", "value": "수도권 전역", "accent": false }
+  ],
+  "about": {
+    "label": "About",
+    "heading": "저희는 어떤 업체인가요?",
+    "skillBadges": [
+      "바닥재 철거", "마루 철거", "데코타일 철거", "장판 철거",
+      "상가 원상복구", "사무실 원상복구", "수도권 바닥 철거"
+    ]
+  },
+  "sections": {
+    "services": {
+      "label": "01 / Services",
+      "heading": "전문 철거 서비스",
+      "subheading": "수도권 전 지역 방문 · 당일 작업 가능"
+    },
+    "differentiator": {
+      "label": "02 / 핵심 차별점 — 샌딩이 다릅니다",
+      "headingLine1": "뜯는 것으로",
+      "headingLine2": "끝나지 않습니다"
+    },
+    "process": {
+      "label": "03 / Process",
+      "heading": "사진 한 장이면, 4단계로 끝"
+    },
+    "quote": {
+      "label": "04 / Quote",
+      "heading": "견적이 달라지는 기준",
+      "intro": "정확한 금액은 현장 상황에 따라 달라집니다. 아래 기준을 참고해 사진·면적과 함께 문의해 주시면 정확도 높은 가견적을 안내해 드립니다."
+    },
+    "gallery": {
+      "label": "05 / Gallery",
+      "heading": "시공 사례",
+      "headingSuffix": "철거 전 · 샌딩 후"
+    },
+    "reviews": {
+      "label": "06 / Reviews",
+      "heading": "현장에서 받은 후기"
+    },
+    "prepare": {
+      "label": "07 / Prepare",
+      "heading": "상담 전 준비하면 좋은 정보"
+    },
+    "faq": {
+      "label": "08 / FAQ",
+      "heading": "자주 묻는 질문"
+    },
+    "callback": {
+      "label": "09 / Call Back",
+      "headingLine1": "전화·카톡이 부담되면",
+      "headingLine2": "번호만 남겨주세요",
+      "description": "지금 통화가 어려우시거나 메시지를 길게 쓰기 번거로우시면, 이름·연락처만 남겨주세요. 영업시간 내에 직접 연락드려 상담을 도와드립니다. 현장 사진을 함께 올려주시면 상담이 더 빨라집니다."
+    }
+  },
+  "labels": {
+    "serviceFlagBadge": "대표 강점",
+    "serviceCta": "이 작업 상담하기",
+    "regionLinksTitle": "지역별 바로가기",
+    "regionLinkSuffix": " 바닥재 철거",
+    "allServicesLink": "지역·품목 전체 안내 →",
+    "beforeLabel": "Before — 철거 전",
+    "afterLabel": "After — 샌딩 후",
+    "galleryBeforeChip": "철거 전",
+    "galleryAfterChip": "샌딩 후",
+    "galleryAllLink": "시공사례 전체 보기",
+    "reviewsAllLink": "후기 전체 보기",
+    "faqAllLink": "질문 전체 보기",
+    "naverPlaceLink": "네이버 플레이스에서 확인하기 →"
+  },
+  "midrollGalleryHeading": "비슷한 현장, 어떻게 작업하는지 보여드릴게요",
+  "reviewsDisclaimerPrefix": "실제 고객 후기와 함께, 상담 사례를 바탕으로 작성한 ",
+  "reviewsDisclaimerEmphasis": "‘예시’ 후기",
+  "reviewsDisclaimerSuffix": "가 포함되어 있습니다. 각 카드의 라벨로 구분됩니다.",
+  "finalCta": {
+    "badge": "사진 한 장이면 견적 상담 시작",
+    "headingLine1": "현장 사진 한 장이면",
+    "headingLine2Prefix": "1차 견적 ",
+    "headingLine2Accent": "바로 안내",
+    "copyPrefix": "서울·경기·인천 수도권 전 지역 · 현장 사진·면적만 있으면 상담 가능 · "
+  }
+}
