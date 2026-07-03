@@ -448,8 +448,8 @@ collections:
             fields:
               - { label: "ID(고유)", name: "key", widget: "string", hint: "예: ganmaru, deco (변경 비권장)" }
               - { label: "바닥재명", name: "label", widget: "string" }
-              - { label: "최소 단가(만원/평)", name: "minPrice", widget: "number", value_type: "int", required: false, hint: "별도 산정이면 비워두세요" }
-              - { label: "최대 단가(만원/평)", name: "maxPrice", widget: "number", value_type: "int", required: false, hint: "별도 산정이면 비워두세요" }
+              - { label: "최소 단가(만원/평)", name: "minPrice", widget: "number", value_type: "float", step: 0.1, min: 0, required: false, hint: "소수점 한 자리까지 입력 가능. 예: 2.5 = 2만 5천원. 별도 산정이면 비워두세요" }
+              - { label: "최대 단가(만원/평)", name: "maxPrice", widget: "number", value_type: "float", step: 0.1, min: 0, required: false, hint: "소수점 한 자리까지 입력 가능. 예: 2.5 = 2만 5천원. 별도 산정이면 비워두세요" }
               - { label: "비고", name: "note", widget: "text" }
 
   # ─────────────────────────────────────────────────────────────
