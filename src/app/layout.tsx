@@ -38,6 +38,9 @@ export const metadata: Metadata = {
   },
   alternates: {
     canonical: siteUrl,
+    types: {
+      "application/rss+xml": `${siteUrl}/rss.xml`,
+    },
   },
   robots: isProduction
     ? { index: true, follow: true, googleBot: { index: true, follow: true } }
