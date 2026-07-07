@@ -52,21 +52,44 @@ export const metadata: Metadata = {
   },
 };
 
+// 엔티티 그래프 연결(sameAs) — 네이버 플레이스·구글 비즈니스 프로필·카카오 채널 URL을
+// CMS(settings.json)/환경변수에 넣으면 자동으로 구조화 데이터에 반영된다(값이 있을 때만).
+// 로컬 업체의 E-E-A-T·엔티티 인식에 영향이 크므로, URL 확보 즉시 채우면 된다.
+// (company.ts 에서 네이버·구글·카카오 + business.sameAs 를 모아 값 있는 URL만 노출)
+const businessSameAs: string[] = company.sameAs;
+
+// 사업자(NAP) 신뢰신호 — businessConfig(company.business)에 값이 있을 때만 JSON-LD에 주입.
+// 미확인 정보(상호·주소·사업자등록번호·대표자)는 넣지 않는다(허위 표기 방지). 값 확보 즉시 자동 반영.
+const b = company.business;
+const napJsonLd: Record<string, unknown> = {
+  ...(b.legalName ? { legalName: b.legalName } : {}),
+  ...(b.address ? { address: { "@type": "PostalAddress", streetAddress: b.address, addressCountry: "KR" } } : {}),
+  ...(b.registrationNumber ? { taxID: b.registrationNumber } : {}),
+  ...(b.representativeName ? { founder: { "@type": "Person", name: b.representativeName } } : {}),
+};
+
+// 서비스 지역(areaServed) — businessConfig.serviceArea 배열에서 파생(광역시/도는 AdministrativeArea).
+const ADMIN_AREAS = new Set(["경기", "수도권", "강원", "충북", "충남", "전북", "전남", "경북", "경남", "제주"]);
+const areaServedJsonLd = b.serviceArea.map((a) => ({
+  "@type": ADMIN_AREAS.has(a) ? "AdministrativeArea" : "City",
+  name: a === "경기" ? "경기도" : a,
+}));
+
 const localBusinessJsonLd = {
   "@context": "https://schema.org",
   "@type": "HomeAndConstructionBusiness",
   "@id": `${siteUrl}/#business`,
-  name: company.name,
+  name: company.brandName,
   alternateName: company.nameEn,
   url: siteUrl,
+  image: `${siteUrl}/opengraph-image`,
   telephone: company.phone,
+  // 사업자 NAP(상호·주소·사업자등록번호·대표자) — 값이 있을 때만 포함.
+  ...napJsonLd,
+  ...(businessSameAs.length ? { sameAs: businessSameAs } : {}),
   description: "10년 바닥재 철거·바닥 샌딩 전문. 마루·데코타일·장판·타일·우레탄·에폭시 철거, 상가·사무실 원상복구 바닥 철거, 실측 면적 정산. 서울·경기·인천 수도권 전 지역.",
   priceRange: "$$",
-  areaServed: [
-    { "@type": "City", name: "서울" },
-    { "@type": "AdministrativeArea", name: "경기도" },
-    { "@type": "City", name: "인천" },
-  ],
+  areaServed: areaServedJsonLd,
   serviceType: ["바닥재 철거", "바닥 샌딩", "원상복구 철거", "인테리어 철거"],
   knowsAbout: [
     "마루 철거", "데코타일 철거", "장판 철거", "타일 철거",
@@ -101,9 +124,13 @@ const organizationJsonLd = {
   "@context": "https://schema.org",
   "@type": "Organization",
   "@id": `${siteUrl}/#organization`,
-  name: company.name,
+  name: company.brandName,
   alternateName: company.nameEn,
+  ...(b.legalName ? { legalName: b.legalName } : {}),
+  ...(b.representativeName ? { founder: { "@type": "Person", name: b.representativeName } } : {}),
   url: siteUrl,
+  logo: `${siteUrl}/opengraph-image`,
+  ...(businessSameAs.length ? { sameAs: businessSameAs } : {}),
   description: "수도권 바닥재 철거·바닥 샌딩·상가 원상복구 전문",
   contactPoint: {
     "@type": "ContactPoint",

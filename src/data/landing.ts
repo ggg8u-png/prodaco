@@ -1,5 +1,5 @@
-// 전환(CRO) 관련 콘텐츠 — 견적 기준, 상담 전 준비, CTA 카피, 시공사례 placeholder.
-// 실제 수치/가격은 넣지 않는다. 현장마다 다르므로 "기준"만 안내한다.
+// 전환(CRO) 콘텐츠 — 견적 기준·상담 준비·CTA 카피.
+// 허위 단가를 넣지 않고, 금액이 달라지는 "기준"만 안내한다.
 import settings from "../../content/settings.json";
 import landingContent from "../../content/landing.json";
 
@@ -30,18 +30,6 @@ export const ctaConfig = {
   kakaoMicro: landingContent.ctaCopy.kakaoMicro,
   quoteCta: landingContent.ctaCopy.quoteCta,
   midroll: landingContent.ctaCopy.midroll,
-  // 신뢰 보강 카피 — 보장 표현 아님(무료 상담/견적, 실측 기준 정산은 실제 운영 방식)
+  // 신뢰 카피 — 보장 표현이 아니라 실제 운영 방식(무료 상담·견적, 실측 정산)
   trust: landingContent.ctaCopy.trust,
 };
-
-// 최근 작업 사례 — 실제 사진/데이터는 gallery.ts 사용. 이 배열은 텍스트 사례 placeholder.
-// TODO(운영): 실제 작업 지역/내용으로 교체하거나 gallery 데이터와 연동.
-export interface CaseStudy {
-  id: string;
-  region: string;
-  material: string;
-  scope: string;
-  result: string;
-}
-
-export const caseStudies: CaseStudy[] = landingContent.caseStudies;

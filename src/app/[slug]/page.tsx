@@ -7,10 +7,15 @@ import { company } from "@/data/company";
 import { galleryItems, worksitePhotos } from "@/data/gallery";
 import { reviews } from "@/data/reviews";
 import { FLOOR_COSTS, costKeyOf, perPyeongText } from "@/data/costs";
+import { itemFactsFor, FLOOR_COMPARE, compareKeyOf } from "@/data/itemFacts";
 import { neighborsOf, clusterLabelOf } from "@/data/regions";
 import { pickFaqs, uniqueDescription, uniqueTitle } from "@/lib/seo";
+import { relatedGuidesFor } from "@/lib/relatedGuides";
+import { keyAnswerFor, normalizeKeyAnswer } from "@/data/keyAnswer";
+import { comboProfileFor } from "@/data/comboProfiles";
 import { applyReplacements } from "@/lib/replacements";
 import GalleryImage from "@/components/GalleryImage";
+import KeyAnswer from "@/components/KeyAnswer";
 import { notFound } from "next/navigation";
 
 // 슬러그 시드 — 같은 슬러그는 항상 같은 결과(빌드 안정), 인접 슬러그는 다르게.
@@ -49,7 +54,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   // GENERATE_COUNT 로 자동 추가된 staging 페이지는 noindex,follow + 상위 지역+품목으로
   // canonical → 도어웨이/중복 색인 방지.
   const decision = indexDecisionFor(keyword);
-  const canonicalUrl = `${siteUrl}/${decision.canonicalSlug}`;
+  // 사이트맵은 slug 를 encodeURIComponent 로 인코딩해 제출한다(sitemap.ts).
+  // canonical/og:url 도 동일하게 퍼센트 인코딩해, 한글 슬러그의 raw(가) vs
+  // 인코딩(%EA%B0%95) 표기가 달라 구글이 서로 다른 URL로 오인하는 여지를 없앤다.
+  const canonicalUrl = `${siteUrl}/${encodeURIComponent(decision.canonicalSlug)}`;
   return {
     title,
     description: desc,
@@ -76,13 +84,35 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
   if (!keyword) notFound();
 
   const allKeywords = getKeywords();
+  // 페이지 자기 URL — canonical/사이트맵과 동일한 퍼센트 인코딩 형태로 통일해
+  // JSON-LD(브레드크럼·Service)와 canonical 이 서로 다른 URL 표기를 내보내지 않게 한다.
+  const pageUrl = `${siteUrl}/${encodeURIComponent(slug)}`;
   const content = getContentForKeyword(keyword);
+  // 품목(바닥재)별 실제 기술 정보 — 품목마다 내용이 달라 페이지 고유성을 높인다.
+  const itemFacts = itemFactsFor(keyword.item);
+  const itemFactRows: [string, string][] = [
+    ["포함 범위", itemFacts.scope],
+    ["시공·부착 방식", itemFacts.attach],
+    ["철거 특징", itemFacts.removal],
+    ["발생 폐기물", itemFacts.debris],
+    ["하지·현장 주의", itemFacts.caution],
+    ["마무리 포인트", itemFacts.aftercare],
+  ];
   // 전역 문구 치환/삭제(어드민 ⑫) — 화면에 보이는 키워드 텍스트에도 적용(슬러그/URL은 불변).
   const kw = applyReplacements(keyword.keyword);
   const kwTail = keyword.tail ? applyReplacements(keyword.tail) : keyword.tail;
   const related = getRelatedKeywords(keyword, allKeywords, 10);
+  // 품목·꼬리말에 맞는 심층 가이드(블로그) 링크 — 프로그래매틱↔필러 사일로 연결.
+  const guides = relatedGuidesFor(keyword, 3);
+  // GEO/AEO 핵심 답변(질문형) — H1 아래 노출 + FAQ 스키마 맨 앞에 대표 질문으로 병합.
+  const keyAnswer = normalizeKeyAnswer(keyAnswerFor(keyword));
+  // 지역×품목 결합 프로파일 — near-duplicate 완화(지역 현장특성 + 품목 난이도/샌딩·본드/
+  // 사진견적/다음공정을 슬러그 시드로 조합해 형제 페이지끼리도 문단이 달라진다).
+  const combo = comboProfileFor(keyword);
   // 페이지별 관련성 높은 FAQ — 모디파이어 적합 + 시드 변형(전 페이지 동일 FAQ 제거).
-  const faqSubset = pickFaqs(keyword, 4);
+  const faqSubset = pickFaqs(keyword, 8);
+  // 바닥재별 철거 특성 비교(현재 품목 강조) — 페이지 정보가치·고유성 강화.
+  const compareKey = compareKeyOf(keyword.item);
 
   // 인근 지역(같은 품목) 실링크 — 로컬 사일로. 실제 존재하는 페이지만 링크.
   const neighborLinks = keyword.region && keyword.item
@@ -98,10 +128,11 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
   //    없으면 전체 풀에서 슬러그 시드로 2건 선택(페이지마다 다른 조합).
   const regionCases = keyword.region ? galleryItems.filter((c) => c.region === keyword.region) : [];
   const casePool = regionCases.length >= 2 ? regionCases : galleryItems;
-  const cases = rotatePick(casePool, seed, 2);
+  // 시공사례는 수도권 전역 공통(대표) 실적 — 모든 페이지에 공통 노출(3세트).
+  const cases = rotatePick(casePool, seed, 3);
   // 1-b) 작업 현장(시공중) 실사진 — 슬러그 시드로 3장 회전(페이지마다 다른 조합).
   //      (XOR 결과는 부호가 생길 수 있어 >>> 0 로 부호 없는 정수로 만든다 — 음수 인덱스 방지)
-  const sitePhotos = rotatePick(worksitePhotos, (seed ^ 0x2f) >>> 0, 3);
+  const sitePhotos = rotatePick(worksitePhotos, (seed ^ 0x2f) >>> 0, 6);
   // 2) 품목별 실제 비용 참고표 — 현재 품목 행을 강조.
   const costKey = costKeyOf(keyword.item);
   // 3) 실제 고객 후기 — 같은 품목 후기를 우선, 부족하면 시드로 채움.
@@ -128,7 +159,7 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
       { "@type": "ListItem", position: 1, name: "홈", item: siteUrl },
       { "@type": "ListItem", position: 2, name: "서비스 안내", item: `${siteUrl}/services` },
       ...(regionHub ? [{ "@type": "ListItem", position: 3, name: regionHub.name, item: regionHub.url }] : []),
-      { "@type": "ListItem", position: regionHub ? 4 : 3, name: kw, item: `${siteUrl}/${slug}` },
+      { "@type": "ListItem", position: regionHub ? 4 : 3, name: kw, item: pageUrl },
     ],
   };
 
@@ -142,7 +173,7 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
       ? { "@type": "City", name: keyword.region }
       : { "@type": "AdministrativeArea", name: "서울·경기·인천 수도권" },
     provider: { "@type": "LocalBusiness", "@id": `${siteUrl}/#business` },
-    url: `${siteUrl}/${slug}`,
+    url: pageUrl,
   };
 
   // Service.provider 가 참조하는 실제 LocalBusiness 노드(실 NAP·권역) — 로컬 신호 강화.
@@ -150,7 +181,7 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
     "@id": `${siteUrl}/#business`,
-    name: `${company.name} (PRODA)`,
+    name: company.brandName,
     description: company.geoSummary,
     telephone: company.phone,
     url: siteUrl,
@@ -167,14 +198,22 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
     address: { "@type": "PostalAddress", addressRegion: "수도권", addressCountry: "KR" },
   };
 
+  // 핵심 답변(가시 텍스트와 동일)을 FAQ 스키마 맨 앞 대표 질문으로 병합.
+  // 중복 방지: 같은 질문이 faqSubset 에 없을 때만 추가한다.
+  const faqEntities = [
+    { "@type": "Question", name: keyAnswer.question, acceptedAnswer: { "@type": "Answer", text: keyAnswer.answer } },
+    ...faqSubset
+      .filter((f) => f.question !== keyAnswer.question)
+      .map((f) => ({
+        "@type": "Question",
+        name: f.question,
+        acceptedAnswer: { "@type": "Answer", text: f.answer },
+      })),
+  ];
   const faqJsonLd = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: faqSubset.map((f) => ({
-      "@type": "Question",
-      name: f.question,
-      acceptedAnswer: { "@type": "Answer", text: f.answer },
-    })),
+    mainEntity: faqEntities,
   };
 
   return (
@@ -214,6 +253,54 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
               <MessageCircle size={16} /> 카카오톡 상담
             </a>
           </div>
+        </div>
+      </section>
+
+      {/* GEO/AEO 빠른 답변 — H1 바로 아래, 질문형 + 40~80자 핵심 답변 + 보충 + CTA(인용 최적화) */}
+      <KeyAnswer {...keyAnswer} />
+
+      {/* 지역×품목 맞춤 안내 — 지역 현장특성 + 품목 난이도·샌딩/본드·사진견적·다음공정.
+          지역/품목 조합마다 다른 문단으로 near-duplicate 위험을 낮춘다(자연어, 키워드 반복 최소화). */}
+      <section className="py-10 px-5 bg-[#F7F6F3] border-b border-gray-100">
+        <div className="max-w-3xl mx-auto">
+          <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">
+            {kw} 이렇게 봅니다
+          </p>
+          <p className="text-xs text-gray-500 mb-5 leading-relaxed">
+            {keyword.region && keyword.region !== "수도권" ? `${keyword.region} ` : ""}현장 특성과 이 품목의 작업 포인트를 정리했습니다. 아래 내용을 참고해 사진과 함께 문의하시면 상담이 빨라집니다.
+          </p>
+          <dl className="space-y-px border border-gray-200 bg-gray-200">
+            {([
+              ["지역 현장 특성", combo.regionLine],
+              ["품목 작업 난이도", combo.difficulty],
+              ["샌딩·본드 제거 필요성", combo.sandingBond],
+              ["사진 견적 시 알려주실 정보", combo.photoInfo],
+              ["다음 공정 전 확인할 점", combo.nextProcess],
+            ] as [string, string][]).map(([label, value]) => (
+              <div key={label} className="bg-white px-4 py-3.5">
+                <dt className="font-mono-pd text-[10px] font-bold uppercase tracking-[0.1em] text-[#9A8A2E]">{label}</dt>
+                <dd className="mt-1 text-[13px] leading-relaxed text-[#3A4048]">{value}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </section>
+
+      {/* 품목 철거 포인트 — 바닥재별 실제 기술 정보(품목마다 다름) */}
+      <section className="py-10 px-5 border-b border-gray-100">
+        <div className="max-w-3xl mx-auto">
+          <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">{kw} 포인트 한눈에</p>
+          <p className="text-xs text-gray-500 mb-5 leading-relaxed">
+            {applyReplacements(`${keyword.item || "바닥재"}는 부착 방식에 따라 철거 방법이 달라집니다. 아래는 이 바닥재의 실제 시공·철거 특성입니다.`)}
+          </p>
+          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-px border border-gray-200 bg-gray-200">
+            {itemFactRows.map(([label, value]) => (
+              <div key={label} className="bg-white px-4 py-3.5">
+                <dt className="font-mono-pd text-[10px] font-bold uppercase tracking-[0.1em] text-[#9A8A2E]">{label}</dt>
+                <dd className="mt-1 text-[13px] leading-relaxed text-[#3A4048]">{applyReplacements(value)}</dd>
+              </div>
+            ))}
+          </dl>
         </div>
       </section>
 
@@ -277,7 +364,7 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
               ))}
             </div>
             <p className="text-xs text-gray-400 mt-4">
-              수도권 전역 바닥재 철거·샌딩 실제 현장 사진입니다. 더 많은 사례는{" "}
+              {keyword.region ? `${keyword.region} 포함 ` : ""}수도권 전역에서 동일 팀·동일 품질로 진행한 실제 바닥재 철거·샌딩 시공 사례입니다. 더 많은 사례는{" "}
               <Link href="/gallery" className="text-[#9A8A2E] underline underline-offset-2">시공 갤러리</Link>에서 보실 수 있습니다.
             </p>
           </div>
@@ -306,6 +393,46 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
           </div>
         </section>
       )}
+
+      <section className="py-10 px-5 bg-[#F7F6F3]">
+        <div className="max-w-3xl mx-auto">
+          <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">바닥재별 철거 특성 비교</p>
+          <p className="text-xs text-gray-500 mb-5 leading-relaxed">
+            바닥재는 종류에 따라 철거 난이도·소음·분진·폐기물이 다릅니다. 아래에서 {compareKey && <strong>현재 품목({keyword.item})</strong>}{!compareKey && "각 바닥재"}을(를) 다른 바닥재와 비교해 보세요. (실제 시공 특성 기준 상대 비교)
+          </p>
+          <div className="overflow-x-auto border border-gray-200 bg-white">
+            <table className="w-full text-sm min-w-[560px]">
+              <thead>
+                <tr className="bg-[#16181D] text-white text-left">
+                  <th className="px-3 py-2.5 font-semibold">바닥재</th>
+                  <th className="px-3 py-2.5 font-semibold whitespace-nowrap">철거 난이도</th>
+                  <th className="px-3 py-2.5 font-semibold">소음</th>
+                  <th className="px-3 py-2.5 font-semibold">분진</th>
+                  <th className="px-3 py-2.5 font-semibold whitespace-nowrap">작업 시간</th>
+                  <th className="px-3 py-2.5 font-semibold">폐기물</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {FLOOR_COMPARE.map((row) => {
+                  const active = !!compareKey && row.key === compareKey;
+                  return (
+                    <tr key={row.key} className={active ? "bg-[#FFF8D6]" : ""}>
+                      <td className="px-3 py-2.5 font-medium text-[#16181D] whitespace-nowrap">
+                        {row.label}{active && <span className="ml-1.5 text-[10px] font-bold text-[#9A8A2E]">← 현재</span>}
+                      </td>
+                      <td className="px-3 py-2.5 text-gray-700 whitespace-nowrap">{row.difficulty}</td>
+                      <td className="px-3 py-2.5 text-gray-700">{row.noise}</td>
+                      <td className="px-3 py-2.5 text-gray-700">{row.dust}</td>
+                      <td className="px-3 py-2.5 text-gray-700 whitespace-nowrap">{row.time}</td>
+                      <td className="px-3 py-2.5 text-gray-700 whitespace-nowrap">{row.waste}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
 
       <section className="py-10 px-5">
         <div className="max-w-3xl mx-auto">
@@ -427,6 +554,25 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
                   className="text-xs font-medium text-[#16181D] px-3 py-1.5 border border-gray-300 bg-white hover:border-[#9A8A2E] hover:text-[#9A8A2E] transition-colors"
                 >
                   {applyReplacements(k.keyword)}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {guides.length > 0 && (
+        <section className="py-10 px-5">
+          <div className="max-w-3xl mx-auto">
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">관련 전문 가이드</p>
+            <p className="text-xs text-gray-500 mb-4 leading-relaxed">
+              {applyReplacements(`${keyword.item || "바닥재 철거"}`)} 관련해 더 깊은 내용은 아래 가이드에서 확인하세요.
+            </p>
+            <div className="divide-y divide-gray-100 border-t border-gray-200">
+              {guides.map((g) => (
+                <Link key={g.id} href={`/blog/${g.id}`} className="group flex items-center justify-between gap-3 py-3.5">
+                  <span className="text-sm font-semibold text-[#16181D] group-hover:text-[#9A8A2E] transition-colors">{g.title}</span>
+                  <span aria-hidden className="text-gray-300 group-hover:text-[#9A8A2E] shrink-0 transition-colors">→</span>
                 </Link>
               ))}
             </div>

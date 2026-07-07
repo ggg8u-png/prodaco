@@ -4,6 +4,8 @@ import { getKeywords } from "@/data/keywords";
 import { CLUSTERS } from "@/data/regions";
 import { company } from "@/data/company";
 import { applyReplacements } from "@/lib/replacements";
+import { keyAnswerForServices } from "@/data/keyAnswer";
+import KeyAnswer from "@/components/KeyAnswer";
 import ui from "../../../content/ui.json";
 
 export const metadata: Metadata = {
@@ -93,6 +95,9 @@ export default function ServicesDirectory() {
           </p>
         </div>
       </section>
+
+      {/* GEO/AEO 빠른 답변 — 디렉터리 단위 대표 질문+답변 */}
+      <KeyAnswer {...keyAnswerForServices()} />
 
       <section className="py-12 px-5">
         <div className="max-w-4xl mx-auto">

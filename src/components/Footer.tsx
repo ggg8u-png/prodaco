@@ -52,8 +52,37 @@ export default function Footer() {
           </ul>
         </div>
       </div>
+      {/* 사업자(NAP) 신뢰신호 — content/settings.json 의 business 값이 있을 때만 노출.
+          미확인 정보(상호·대표·사업자등록번호·주소)는 렌더하지 않아 허위 표기를 원천 차단한다. */}
+      {(() => {
+        const b = company.business;
+        const rows: Array<{ label: string; value: string }> = [
+          { label: ui.footer.businessNameLabel, value: b.legalName },
+          { label: ui.footer.representativeLabel, value: b.representativeName },
+          { label: ui.footer.registrationLabel, value: b.registrationNumber },
+          { label: ui.footer.addressLabel, value: b.address },
+          { label: ui.footer.serviceAreaLabel, value: b.serviceAreaText },
+        ].filter((r) => r.value);
+        if (rows.length === 0) return null;
+        return (
+          <div className="mx-auto mt-7 max-w-[1200px] border-t border-white/[0.07] pt-6">
+            <p className="mb-2.5 font-mono-pd text-[11px] font-bold uppercase tracking-[0.14em] text-[#6B7280]">
+              {ui.footer.businessLabel}
+            </p>
+            <dl className="flex flex-wrap gap-x-6 gap-y-1.5 text-xs text-[#7B818C]">
+              {rows.map((r) => (
+                <div key={r.label} className="flex gap-1.5">
+                  <dt className="text-[#5A606B]">{r.label}</dt>
+                  <dd className="text-[#8B919B]">{r.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        );
+      })()}
+
       <p className="mx-auto mt-6 max-w-[1200px] text-xs text-[#5A606B]">
-        © {new Date().getFullYear()} {company.name} (PRODA). {ui.footer.copyrightSuffix}
+        © {new Date().getFullYear()} {company.brandName} (PRODA). {ui.footer.copyrightSuffix}
       </p>
     </footer>
   );

@@ -5,6 +5,7 @@ import { posts } from "@/data/posts";
 import { company } from "@/data/company";
 import { faqs } from "@/data/faq";
 import CtaBand from "@/components/CtaBand";
+import { relatedServicesForPost } from "@/lib/relatedGuides";
 import { PhoneIcon, KakaoIcon } from "@/components/icons";
 import ui from "../../../../content/ui.json";
 
@@ -52,6 +53,8 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
   ].slice(0, 4);
 
   const faqSubset = faqs.slice(0, 4);
+  // 필러(블로그) → 서비스 사일로 역방향 링크 — 주제에 맞는 실제 지역+품목 페이지.
+  const serviceLinks = relatedServicesForPost(post.id, 3);
 
   const articleJsonLd = {
     "@context": "https://schema.org",
@@ -67,13 +70,13 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
     image: [`${siteUrl}/opengraph-image`],
     author: {
       "@type": "Organization",
-      name: company.name,
+      name: company.brandName,
       url: siteUrl,
       telephone: company.phone,
     },
     publisher: {
       "@type": "Organization",
-      name: company.name,
+      name: company.brandName,
       url: siteUrl,
     },
     keywords: post.tags.join(", "),
@@ -230,6 +233,30 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
               </div>
             </div>
           </section>
+
+          {/* 관련 서비스 — 필러(블로그) → 서비스 사일로 역방향 내부 링크 */}
+          {serviceLinks.length > 0 && (
+            <section className="mt-12">
+              <p className="mb-4 font-mono-pd text-xs font-bold uppercase tracking-[0.16em] text-[#9A8A2E]">관련 서비스</p>
+              <div className="flex flex-wrap gap-2">
+                {serviceLinks.map((s) => (
+                  <Link
+                    key={s.slug}
+                    href={`/${s.slug}`}
+                    className="text-sm font-semibold text-[#16181D] px-3.5 py-2 border border-gray-300 bg-white hover:border-[#9A8A2E] hover:text-[#9A8A2E] transition-colors"
+                  >
+                    {s.label}
+                  </Link>
+                ))}
+                <Link
+                  href="/services"
+                  className="text-sm font-semibold text-white px-3.5 py-2 border border-[#16181D] bg-[#16181D] hover:bg-[#9A8A2E] hover:border-[#9A8A2E] transition-colors"
+                >
+                  지역·품목 전체 →
+                </Link>
+              </div>
+            </section>
+          )}
 
           {/* 관련 글 — 내부 링크 */}
           {relatedPosts.length > 0 && (

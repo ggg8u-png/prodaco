@@ -7,11 +7,13 @@ import { galleryItems } from "@/data/gallery";
 import { quoteFactors, consultPrep, ctaConfig } from "@/data/landing";
 import { getKeywords } from "@/data/keywords";
 import GalleryImage from "@/components/GalleryImage";
+import KeyAnswer from "@/components/KeyAnswer";
 import QuoteChecklist from "@/components/QuoteChecklist";
 import CtaBand from "@/components/CtaBand";
 import CallbackForm from "@/components/CallbackForm";
 import ReviewsMarquee from "@/components/ReviewsMarquee";
 import { PhoneIcon, KakaoIcon, MessageIcon } from "@/components/icons";
+import { keyAnswerForHome } from "@/data/keyAnswer";
 import home from "../../content/home.json";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://prodaco.kr";
@@ -144,6 +146,9 @@ export default function Home() {
           <span>{tickerLine}</span>
         </div>
       </div>
+
+      {/* GEO/AEO 빠른 답변 — 사이트 대표 질문+답변(생성형 검색 인용용, 상단 노출) */}
+      <KeyAnswer {...keyAnswerForHome()} />
 
       {/* GEO SUMMARY — 생성형 검색 인용용 요약 */}
       <section className="bg-white px-4 py-12 sm:px-6 lg:px-10 lg:py-16">

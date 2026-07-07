@@ -25,7 +25,13 @@
     ],
     "phoneLabel": "전화 상담",
     "kakaoLabel": "카카오톡 오픈채팅",
-    "copyrightSuffix": "수도권 바닥재 철거·바닥 샌딩 전문."
+    "copyrightSuffix": "수도권 바닥재 철거·바닥 샌딩 전문.",
+    "businessLabel": "사업자 정보",
+    "businessNameLabel": "상호",
+    "representativeLabel": "대표",
+    "registrationLabel": "사업자등록번호",
+    "addressLabel": "주소",
+    "serviceAreaLabel": "서비스 지역"
   },
   "servicesPage": {
     "h1": "지역·품목별 서비스 안내",
@@ -64,13 +70,18 @@
   },
   "reviewsPage": {
     "h1": "저희와 함께하신 분들",
+    "intro": "아래에는 검증된 실제 고객 후기와, 자주 접수되는 상담 사례를 바탕으로 정리한 ‘상황 예시’가 함께 있습니다. 둘은 카드 라벨로 명확히 구분되며, 상황 예시는 실제 후기가 아니므로 별점을 표시하지 않습니다.",
     "filterTabs": [
       { "value": "all", "label": "전체" },
       { "value": "consumer", "label": "일반 고객" },
       { "value": "business", "label": "업체·시공팀" }
     ],
-    "sampleLabel": "예시",
-    "realLabel": "실제 후기"
+    "sampleLabel": "상황 예시",
+    "realLabel": "실제 후기",
+    "actualSectionLabel": "실제 고객 후기",
+    "exampleSectionLabel": "자주 접수되는 상담 사례 (상황 예시)",
+    "exampleSectionNote": "아래 카드는 실제 후기가 아니라, 자주 문의되는 상황을 바탕으로 작업 방식을 설명한 예시입니다.",
+    "exampleCardHint": "· 실제 후기 아님"
   },
   "galleryPage": {
     "h1": "철거 전·후 / 작업 현장",

@@ -5,11 +5,13 @@ import { getKeywords } from "@/data/keywords";
 import { neighborsOf, clusterLabelOf } from "@/data/regions";
 import { FLOOR_COSTS, perPyeongText } from "@/data/costs";
 import { pickFaqs } from "@/lib/seo";
+import { keyAnswerForRegion } from "@/data/keyAnswer";
 import { applyReplacements } from "@/lib/replacements";
 import { company } from "@/data/company";
 import { galleryItems } from "@/data/gallery";
 import { reviews } from "@/data/reviews";
 import GalleryImage from "@/components/GalleryImage";
+import KeyAnswer from "@/components/KeyAnswer";
 import { notFound } from "next/navigation";
 import ui from "../../../../content/ui.json";
 
@@ -76,9 +78,11 @@ export default async function RegionHub({ params }: { params: Promise<{ region: 
   const items = itemsForRegion(region);
   const cluster = clusterLabelOf(region);
   const neighbors = neighborsOf(region, 6);
-  const cases = rotatePick(galleryItems, seed, 2);
+  const cases = rotatePick(galleryItems, seed, 3);
   const pageReviews = rotatePick(reviews, seed, 2);
   const faqSubset = pickFaqs({ slug: `region-${region}`, keyword: `${region} 바닥재 철거`, type: "region-item", region, item: "바닥재 철거" }, 4);
+  // GEO/AEO 핵심 답변(지역 단위) — H1 아래 노출 + FAQ 스키마 맨 앞 대표 질문으로 병합.
+  const keyAnswer = keyAnswerForRegion(region);
 
   const breadcrumbJsonLd = {
     "@context": "https://schema.org",
@@ -93,7 +97,7 @@ export default async function RegionHub({ params }: { params: Promise<{ region: 
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
     "@id": `${siteUrl}/#business`,
-    name: `${company.name} (PRODA)`,
+    name: company.brandName,
     description: company.geoSummary,
     telephone: company.phone,
     url: `${siteUrl}/services/${encodeURIComponent(region)}`,
@@ -106,11 +110,16 @@ export default async function RegionHub({ params }: { params: Promise<{ region: 
   const faqJsonLd = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: faqSubset.map((f) => ({
-      "@type": "Question",
-      name: f.question,
-      acceptedAnswer: { "@type": "Answer", text: f.answer },
-    })),
+    mainEntity: [
+      { "@type": "Question", name: keyAnswer.question, acceptedAnswer: { "@type": "Answer", text: keyAnswer.answer } },
+      ...faqSubset
+        .filter((f) => f.question !== keyAnswer.question)
+        .map((f) => ({
+          "@type": "Question",
+          name: f.question,
+          acceptedAnswer: { "@type": "Answer", text: f.answer },
+        })),
+    ],
   };
 
   return (
@@ -145,6 +154,9 @@ export default async function RegionHub({ params }: { params: Promise<{ region: 
           </div>
         </div>
       </section>
+
+      {/* GEO/AEO 빠른 답변 — H1 바로 아래(지역 단위), 질문형 + 핵심 답변 + 보충 + CTA */}
+      <KeyAnswer {...keyAnswer} />
 
       {items.length > 0 && (
         <section className="py-12 px-5">

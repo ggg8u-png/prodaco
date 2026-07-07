@@ -88,9 +88,9 @@
     "naverPlaceLink": "네이버 플레이스에서 확인하기 →"
   },
   "midrollGalleryHeading": "비슷한 현장, 어떻게 작업하는지 보여드릴게요",
-  "reviewsDisclaimerPrefix": "실제 고객 후기와 함께, 상담 사례를 바탕으로 작성한 ",
-  "reviewsDisclaimerEmphasis": "‘예시’ 후기",
-  "reviewsDisclaimerSuffix": "가 포함되어 있습니다. 각 카드의 라벨로 구분됩니다.",
+  "reviewsDisclaimerPrefix": "검증된 실제 고객 후기와 함께, 자주 접수되는 ",
+  "reviewsDisclaimerEmphasis": "상담 사례(상황 예시)",
+  "reviewsDisclaimerSuffix": "가 포함되어 있습니다. 상황 예시는 실제 후기가 아니므로 별점 없이 라벨로 구분해 표기합니다.",
   "finalCta": {
     "badge": "사진 한 장이면 견적 상담 시작",
     "headingLine1": "현장 사진 한 장이면",

@@ -13,9 +13,17 @@ const seo = seoSettings as {
   autoIndexByGalleryCase?: boolean;
   allowAiCrawlers?: boolean;
   extraIndexSlugs?: string[];
+  noindexTypes?: string[];
 };
 const AUTO_INDEX_BY_CASE = seo.autoIndexByGalleryCase !== false; // 기본 true
 const EXTRA_INDEX_SLUGS = new Set(seo.extraIndexSlugs || []);
+// 약한 롱테일 유형은 noindex,follow 로 강등한다(색인 경쟁에서 제외).
+//   · 지역+품목(region-item)·지역 허브는 색인 유지(핵심 로컬 페이지).
+//   · b2b·synonym·consumer·target·item-tail 등 얇은 템플릿 유형은 색인 제외 →
+//     크롤 예산과 품질 신호를 대표(region-item) 페이지에 집중, 도어웨이 신호 완화.
+//   · 단, 실제 시공사례(hasRealCase)나 수동 승인(extraIndexSlugs)은 유형과 무관히 색인(오버라이드).
+// CMS(content/seo.json)의 noindexTypes 로 조정한다. 빈 배열이면 현행(전체 색인)로 복귀.
+const NOINDEX_TYPES = new Set(seo.noindexTypes || []);
 // robots.ts 등 다른 모듈이 참조할 수 있도록 AI 크롤러 허용 여부를 노출.
 export const allowAiCrawlers: boolean = seo.allowAiCrawlers !== false; // 기본 true
 
@@ -124,9 +132,13 @@ function hasRealCase(k: KeywordEntry): boolean {
 export function isIndexable(k: KeywordEntry | string): boolean {
   const entry = typeof k === "string" ? bySlug.get(k) : k;
   const slug = typeof k === "string" ? k : k.slug;
-  if (liveSlugSet.has(slug)) return true; // 큐레이션 라이브(검수·고가치)
+  // ① 오버라이드(유형과 무관히 항상 색인): 수동 승인 슬러그 · 실제 시공사례 보유
   if (EXTRA_INDEX_SLUGS.has(slug)) return true; // CMS 에서 수동 승인한 슬러그
   if (AUTO_INDEX_BY_CASE && entry && hasRealCase(entry)) return true; // 실제 사례 보유 → 자동 승급
+  // ② 약한 롱테일 유형(b2b·synonym·tail 등)은 라이브라도 색인 제외 → noindex,follow
+  if (entry && NOINDEX_TYPES.has(String(entry.type))) return false;
+  // ③ 그 외 큐레이션 라이브(region-item 등 핵심 페이지)는 색인
+  if (liveSlugSet.has(slug)) return true; // 큐레이션 라이브(검수·고가치)
   return false;
 }
 

@@ -1,17 +1,24 @@
 "use client";
 import { useEffect, useRef } from "react";
 import type { Review } from "@/types";
+import { isExampleReview } from "@/data/reviews";
 
 // 후기를 옆으로 흘려보내는 가로 마퀴. 마우스 오버 시 정지(.pd-marquee-x:hover).
-// sample(예시) 후기는 카드에 '예시' 라벨을 반드시 노출한다.
+//  · 실제 후기(검증)  → 별점 + '실제 후기' 라벨
+//  · 상황 예시(상담 사례) → 별점 없이 '상담 사례' 라벨 (허위 별점 방지)
 function Card({ review }: { review: Review }) {
+  const example = isExampleReview(review);
   return (
     <div className="flex w-[300px] shrink-0 flex-col rounded-sm border border-white/[0.1] bg-[#22262E] p-6 sm:w-[340px]">
       <div className="mb-3 flex items-center justify-between gap-2">
-        <span className="text-sm tracking-[0.12em] text-[#FFD400]">{"★".repeat(review.rating)}</span>
-        {review.sample ? (
+        {example ? (
+          <span className="font-mono-pd text-[11px] font-bold uppercase tracking-[0.1em] text-[#7B818C]">상담 사례</span>
+        ) : (
+          <span className="text-sm tracking-[0.12em] text-[#FFD400]">{"★".repeat(Math.max(0, Math.min(5, review.rating)))}</span>
+        )}
+        {example ? (
           <span className="rounded-sm border border-white/15 px-1.5 py-0.5 font-mono-pd text-[10px] font-bold uppercase tracking-[0.1em] text-[#7B818C]">
-            예시
+            상황 예시
           </span>
         ) : (
           <span className="rounded-sm bg-[#FFD400]/15 px-1.5 py-0.5 font-mono-pd text-[10px] font-bold uppercase tracking-[0.1em] text-[#FFD400]">
@@ -21,7 +28,7 @@ function Card({ review }: { review: Review }) {
       </div>
       <p className="mb-5 line-clamp-5 flex-1 text-[14.5px] leading-[1.7] text-[#D6D9DE]">{review.content}</p>
       <p className="text-[13px] font-bold text-[#8B919B]">
-        {review.name} · {review.region} · {review.item}
+        {example ? `${review.region} · ${review.item}` : `${review.name} · ${review.region} · ${review.item}`}
       </p>
     </div>
   );

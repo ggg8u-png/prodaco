@@ -7,6 +7,17 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://prodaco.kr";
 // 콘텐츠 버전 날짜 — 정적 페이지 lastmod 기준(매 빌드 갱신 신호 방지).
 const SITE_LASTMOD = new Date("2026-06-23");
 
+// 안전한 lastmod 파서 — 값이 없거나(빈 문자열/undefined) 파싱 불가한 날짜면
+// SITE_LASTMOD 로 폴백해 sitemap 에 'Invalid Date' 가 새어 나가지 않게 한다.
+function safeLastmod(...candidates: (string | undefined)[]): Date {
+  for (const c of candidates) {
+    if (!c) continue;
+    const d = new Date(c);
+    if (!Number.isNaN(d.getTime())) return d;
+  }
+  return SITE_LASTMOD;
+}
+
 function keywordPriority(type: string): number {
   switch (type) {
     case "region-item": return 0.75;
@@ -51,12 +62,21 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.8,
   }));
 
-  const blogPages: MetadataRoute.Sitemap = posts.map((p) => ({
-    url: `${siteUrl}/blog/${p.id}`,
-    lastModified: new Date(p.date),
-    changeFrequency: "monthly" as const,
-    priority: 0.8,
-  }));
+  // 블로그 개별 글 — content/blog/*.json 전체가 posts 로 로드되어 사이트맵에 포함된다.
+  //  · URL 세그먼트는 글의 id 를 쓴다. id 는 곧 URL 슬러그로, 라우트(/blog/[id],
+  //    generateStaticParams → { id: p.id })와 정확히 일치해야 404 가 나지 않는다.
+  //    (별도 slug 필드를 URL 에 쓰려면 라우트도 함께 바꿔야 하므로 여기선 id 로 통일 —
+  //     남은 TODO 참고. 지금은 slug 필드가 없어 항상 id 로 동작한다.)
+  //  · lastmod 는 updatedAt(최종 수정일) → date(발행일) → SITE_LASTMOD 순으로 안전 폴백.
+  //  · id 가 없는(손상된) 글은 방어적으로 제외 — 404 URL 제출을 막는다.
+  const blogPages: MetadataRoute.Sitemap = posts
+    .filter((p) => typeof p.id === "string" && p.id.length > 0)
+    .map((p) => ({
+      url: `${siteUrl}/blog/${p.id}`,
+      lastModified: safeLastmod(p.updatedAt, p.date),
+      changeFrequency: "monthly" as const,
+      priority: 0.8,
+    }));
 
   return [...staticPages, ...regionHubPages, ...keywordPages, ...blogPages];
 }
