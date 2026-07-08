@@ -4,9 +4,12 @@
 # (Netlify UI 의 Build command·Publish directory 가 비어 있고 런타임 자동 감지가
 #  안 잡히면 SSR/라우팅이 구성되지 않아 사이트 전체가 404 가 난다. 그래서 여기서
 #  플러그인·빌드 명령·Node 버전을 직접 지정해 안정적으로 배포되게 한다.)
-# publish 디렉터리는 @netlify/plugin-nextjs 가 자동 설정하므로 여기서 지정하지 않는다.
+# publish 는 .next 로 고정한다. (UI 의 Publish directory 가 비어 있으면 Netlify 가
+#  repo 루트를 publish 로 잡는데, @netlify/plugin-nextjs 는 "publish == base" 를 거부해
+#  빌드가 실패한다. Next.js 빌드 산출물 디렉터리인 .next 를 명시해야 한다.)
 [build]
   command = "npm run build"
+  publish = ".next"
 
 [build.environment]
   NODE_VERSION = "20"
