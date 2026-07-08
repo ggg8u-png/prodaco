@@ -1,9 +1,20 @@
 # netlify.toml — 프로다 (Next.js)
 # =============================================================================
-# 빌드 명령/배포 디렉터리는 Netlify 의 Next.js 런타임(@netlify/plugin-nextjs)
-# 자동 감지를 그대로 사용합니다. (여기서 command/publish 를 덮어쓰지 않습니다 —
-# 덮어쓰면 SSG·이미지·라우팅이 깨질 수 있어 의도적으로 비워 둡니다.)
-#
+# Next.js 런타임을 명시적으로 선언한다.
+# (Netlify UI 의 Build command·Publish directory 가 비어 있고 런타임 자동 감지가
+#  안 잡히면 SSR/라우팅이 구성되지 않아 사이트 전체가 404 가 난다. 그래서 여기서
+#  플러그인·빌드 명령·Node 버전을 직접 지정해 안정적으로 배포되게 한다.)
+# publish 디렉터리는 @netlify/plugin-nextjs 가 자동 설정하므로 여기서 지정하지 않는다.
+[build]
+  command = "npm run build"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# -----------------------------------------------------------------------------
 # 페이지 생성 수(GENERATE_COUNT)는 이제 어드민(/admin)에서 바꿉니다 (코드 수정 불필요):
 #   /admin → "⑪ 색인·SEO 설정" → "생성할 페이지 수(generateCount)" 수정 → 게시
 #   → content/seo.json 에 커밋되고 Netlify 가 재빌드하며 그 개수만큼 생성합니다.
