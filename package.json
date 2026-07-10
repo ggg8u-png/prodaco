@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "next lint",
     "fetch:photos": "node scripts/fetch-gallery.mjs",
-    "promote": "node scripts/promote-keywords.mjs"
+    "promote": "node scripts/promote-keywords.mjs",
+    "seo:indexnow": "node scripts/indexnow.mjs"
   },
   "dependencies": {
     "lucide-react": "^0.460.0",

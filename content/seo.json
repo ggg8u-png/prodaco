@@ -1,9 +1,8 @@
 {
   "generateCount": 1546,
   "autoIndexByGalleryCase": true,
-  "allowAiCrawlers": true,
   "extraIndexSlugs": [],
-  "noindexTypes": ["b2b", "synonym", "consumer", "target", "item-tail"],
+  "noindexTypes": [],
   "reviewSchema": {
     "enabled": false,
     "minVerified": 8

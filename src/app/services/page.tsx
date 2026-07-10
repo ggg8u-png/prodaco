@@ -44,6 +44,26 @@ export default function ServicesDirectory() {
     byItem.get(k.item)!.push(k);
   }
 
+  // 나머지 유형(b2b·consumer·synonym·target)도 디렉터리에서 계층적으로 링크해
+  // 내부링크 고립(orphan)을 없앤다 — 이 페이지는 홈에서 1클릭이므로 모든 항목이 2클릭 이내.
+  // B2B(협력·하도급)는 지역이 있는 항목을 지역별로 묶어 계층화한다.
+  // 지역 허브가 실제로 존재하는 지역(region-item 보유) — /services/{region} 링크는 이 집합에 한함.
+  const hubRegionSet = new Set(byRegion.keys());
+  const b2bByRegion = new Map<string, typeof keywords>();
+  const b2bGeneral: typeof keywords = [];
+  for (const k of keywords) {
+    if (k.type !== "b2b") continue;
+    if (k.region) {
+      if (!b2bByRegion.has(k.region)) b2bByRegion.set(k.region, []);
+      b2bByRegion.get(k.region)!.push(k);
+    } else {
+      b2bGeneral.push(k);
+    }
+  }
+  // 바닥재 용어·직접 시공(consumer·synonym) / 공간·상황별(target).
+  const termKeywords = keywords.filter((k) => k.type === "consumer" || k.type === "synonym");
+  const targetKeywords = keywords.filter((k) => k.type === "target");
+
   const breadcrumbJsonLd = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -137,6 +157,83 @@ export default function ServicesDirectory() {
                     ))}
                   </div>
                 </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {(b2bByRegion.size > 0 || b2bGeneral.length > 0) && (
+        <section className="py-12 px-5">
+          <div className="max-w-4xl mx-auto">
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">인테리어·시공팀 협력 · 하도급(B2B)</p>
+            <p className="text-xs text-gray-500 mb-6 leading-relaxed max-w-2xl">
+              인테리어 업체·시공팀의 바닥 철거 외주와 하도급을 진행합니다. 세금계산서 발행, 다수 현장, 촉박한 공정 일정에 맞춰 협력합니다. 지역별 협력 페이지와 일반 협력 안내를 확인하세요.
+            </p>
+            {b2bGeneral.length > 0 && (
+              <div className="mb-6">
+                <h3 className="mb-2 text-sm font-black text-[#16181D]">협력 유형·안내</h3>
+                <div className="flex flex-wrap gap-1.5">
+                  {b2bGeneral.map((k) => (
+                    <Link key={k.slug} href={`/${k.slug}`} className="text-xs text-gray-600 px-2.5 py-1 border border-gray-200 bg-white hover:border-[#9A8A2E] hover:text-[#9A8A2E] transition-colors">
+                      {applyReplacements(k.keyword)}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+            {[...b2bByRegion.keys()].map((region) => (
+              <div key={region} className="mb-4">
+                <h3 className="mb-2 text-sm font-black text-[#16181D]">
+                  {hubRegionSet.has(region) ? (
+                    <Link href={`/services/${encodeURIComponent(region)}`} className="hover:text-[#9A8A2E] hover:underline underline-offset-2">{region} 협력·하도급 →</Link>
+                  ) : (
+                    <span>{region} 협력·하도급</span>
+                  )}
+                </h3>
+                <div className="flex flex-wrap gap-1.5">
+                  {b2bByRegion.get(region)!.map((k) => (
+                    <Link key={k.slug} href={`/${k.slug}`} className="text-xs text-gray-600 px-2.5 py-1 border border-gray-200 bg-white hover:border-[#9A8A2E] hover:text-[#9A8A2E] transition-colors">
+                      {applyReplacements(k.keyword)}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {targetKeywords.length > 0 && (
+        <section className="py-12 px-5 bg-[#F7F6F3]">
+          <div className="max-w-4xl mx-auto">
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">공간·상황별 안내</p>
+            <p className="text-xs text-gray-500 mb-5 leading-relaxed max-w-2xl">
+              아파트·상가·사무실·빌라 등 공간 유형과 이사·리모델링·원상복구 같은 상황에 맞춰 바닥 철거를 안내합니다. 상황에 해당하는 페이지에서 준비 사항과 진행 방식을 확인하세요.
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {targetKeywords.map((k) => (
+                <Link key={k.slug} href={`/${k.slug}`} className="text-xs text-gray-600 px-2.5 py-1 border border-gray-200 bg-white hover:border-[#9A8A2E] hover:text-[#9A8A2E] transition-colors">
+                  {applyReplacements(k.keyword)}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {termKeywords.length > 0 && (
+        <section className="py-12 px-5">
+          <div className="max-w-4xl mx-auto">
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">바닥재 용어·직접 시공 안내</p>
+            <p className="text-xs text-gray-500 mb-5 leading-relaxed max-w-2xl">
+              마루 뜯기, 장판 제거, 본드 제거처럼 바닥재를 직접 걷어내려는 분을 위한 용어·방법 안내입니다. 직접 하기 어려운 부분은 전문 시공으로도 도와드립니다.
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {termKeywords.map((k) => (
+                <Link key={k.slug} href={`/${k.slug}`} className="text-xs text-gray-600 px-2.5 py-1 border border-gray-200 bg-white hover:border-[#9A8A2E] hover:text-[#9A8A2E] transition-colors">
+                  {applyReplacements(k.keyword)}
+                </Link>
               ))}
             </div>
           </div>

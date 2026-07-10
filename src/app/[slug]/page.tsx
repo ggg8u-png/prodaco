@@ -7,7 +7,7 @@ import { company } from "@/data/company";
 import { galleryItems, worksitePhotos } from "@/data/gallery";
 import { reviews } from "@/data/reviews";
 import { FLOOR_COSTS, costKeyOf, perPyeongText } from "@/data/costs";
-import { itemFactsFor, FLOOR_COMPARE, compareKeyOf } from "@/data/itemFacts";
+import { itemFactsFor, FLOOR_COMPARE, compareKeyOf, itemMistakesFor } from "@/data/itemFacts";
 import { neighborsOf, clusterLabelOf } from "@/data/regions";
 import { pickFaqs, uniqueDescription, uniqueTitle } from "@/lib/seo";
 import { relatedGuidesFor } from "@/lib/relatedGuides";
@@ -33,6 +33,13 @@ function rotatePick<T>(arr: T[], seed: number, n: number): T[] {
   const start = seed % arr.length;
   return Array.from({ length: n }, (_, i) => arr[(start + i) % arr.length]);
 }
+
+// ISR 캐시 — 정적 프리렌더 + CDN 캐시(stale-while-revalidate)로 Googlebot 응답을 빠르게 한다.
+// (revalidate 미설정 시 Next 기본 헤더가 Cache-Control: max-age=0, must-revalidate 라
+//  엣지 노드마다 첫 요청이 원본 재검증 → 서버리스 콜드스타트 ~5초 응답 → 구글이 크롤 속도를
+//  제한 → "발견됨-색인 안 됨" 정체. 하루 TTL + SWR 로 CDN 이 즉시 응답하게 해 크롤을 살린다.
+//  CMS 게시 시엔 넷리파이 전체 재빌드가 캐시를 갱신하므로 TTL 이 길어도 최신성은 유지된다.)
+export const revalidate = 86400;
 
 export async function generateStaticParams() {
   const keywords = getKeywords();
@@ -90,6 +97,8 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
   const content = getContentForKeyword(keyword);
   // 품목(바닥재)별 실제 기술 정보 — 품목마다 내용이 달라 페이지 고유성을 높인다.
   const itemFacts = itemFactsFor(keyword.item);
+  // 품목별 '피해야 할 잘못된 시공·철거 방식' — 품목마다 실패 지점이 달라 고유성을 더한다.
+  const itemMistakes = itemMistakesFor(keyword.item);
   const itemFactRows: [string, string][] = [
     ["포함 범위", itemFacts.scope],
     ["시공·부착 방식", itemFacts.attach],
@@ -124,6 +133,19 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
 
   // ── 실데이터 섹션(페이지별 고유 콘텐츠) ──────────────────────────────────────
   const seed = slugSeed(slug);
+
+  // 지역 없는 정보·수요형 페이지(item-tail·consumer·target 등)를 로컬 사일로에 연결한다.
+  // 핵심 페이지(region-item)의 '인근 지역' 섹션에 대응 — 같은 품목의 지역별(region-item)
+  // 페이지로 링크해 ① 고립을 풀고(크롤·색인 경로 확보) ② 페이지별 고유 '지역 목록'을 더한다.
+  // region 페이지엔 이미 neighborLinks 섹션이 있으므로 중복을 피해 렌더하지 않는다.
+  // 슬러그 시드로 지역을 회전 선택해 형제 페이지(비용/방법/기간…)끼리도 목록이 달라지게 한다.
+  const sameItemRegionLinks = keyword.item && neighborLinks.length === 0
+    ? rotatePick(
+        allKeywords.filter((k) => k.type === "region-item" && k.item === keyword.item && k.region),
+        seed,
+        24
+      )
+    : [];
   // 1) 실제 비포/애프터 시공 사례 — 같은 지역 사례가 있으면 우선 노출(로컬 실증),
   //    없으면 전체 풀에서 슬러그 시드로 2건 선택(페이지마다 다른 조합).
   const regionCases = keyword.region ? galleryItems.filter((c) => c.region === keyword.region) : [];
@@ -301,6 +323,12 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
               </div>
             ))}
           </dl>
+          {itemMistakes && (
+            <div className="mt-4 border-l-2 border-[#B23A34] bg-[#FCF3F2] px-4 py-3">
+              <p className="font-mono-pd text-[10px] font-bold uppercase tracking-[0.1em] text-[#B23A34]">피해야 할 시공·철거 방식</p>
+              <p className="mt-1 text-[13px] leading-relaxed text-[#3A4048]">{applyReplacements(itemMistakes)}</p>
+            </div>
+          )}
         </div>
       </section>
 
@@ -548,6 +576,28 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
             </p>
             <div className="flex flex-wrap gap-2">
               {neighborLinks.map((k) => (
+                <Link
+                  key={k.slug}
+                  href={`/${k.slug}`}
+                  className="text-xs font-medium text-[#16181D] px-3 py-1.5 border border-gray-300 bg-white hover:border-[#9A8A2E] hover:text-[#9A8A2E] transition-colors"
+                >
+                  {applyReplacements(k.keyword)}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {sameItemRegionLinks.length > 0 && (
+        <section className="py-10 px-5">
+          <div className="max-w-3xl mx-auto">
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">{applyReplacements(`지역별 ${keyword.item}`)}</p>
+            <p className="text-xs text-gray-500 mb-4 leading-relaxed">
+              {applyReplacements(`${keyword.item}는 서울·경기·인천 수도권 전 지역에서 같은 팀·같은 품질로 진행합니다. 아래에서 작업 지역을 선택하면 해당 지역 ${keyword.item} 안내(현장 특성·비용·사례)를 보실 수 있습니다.`)}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {sameItemRegionLinks.map((k) => (
                 <Link
                   key={k.slug}
                   href={`/${k.slug}`}

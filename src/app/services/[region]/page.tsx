@@ -26,6 +26,10 @@ function regionsWithPages(): string[] {
   return [...set];
 }
 
+// ISR 캐시 — 지역 허브도 CDN 캐시(stale-while-revalidate)로 빠르게 제공(크롤 속도 개선).
+// ([slug] 페이지와 동일한 이유. Cache-Control: max-age=0 → 콜드스타트 5초 응답 방지.)
+export const revalidate = 86400;
+
 export function generateStaticParams() {
   return regionsWithPages().map((region) => ({ region }));
 }
@@ -77,7 +81,10 @@ export default async function RegionHub({ params }: { params: Promise<{ region: 
   const seed = seedOf(region);
   const items = itemsForRegion(region);
   const cluster = clusterLabelOf(region);
-  const neighbors = neighborsOf(region, 6);
+  // 인접 지역 링크는 '허브가 실제로 존재하는 지역'만(neighborsOf 는 인접 클러스터 데이터라
+  // region-item 이 없는 지역(예: 평택)도 포함될 수 있어 그대로 링크하면 /services/평택 404 발생).
+  const hubSet = new Set(regionsWithPages());
+  const neighbors = neighborsOf(region, 10).filter((nb) => hubSet.has(nb)).slice(0, 6);
   const cases = rotatePick(galleryItems, seed, 3);
   const pageReviews = rotatePick(reviews, seed, 2);
   const faqSubset = pickFaqs({ slug: `region-${region}`, keyword: `${region} 바닥재 철거`, type: "region-item", region, item: "바닥재 철거" }, 4);

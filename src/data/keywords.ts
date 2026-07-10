@@ -1,5 +1,6 @@
 import liveData from "./keywords.json";
-import stagingData from "./keywords-staging.json";
+// keywords-staging.json(5.5MB/2.4만개)은 정적 import 하지 않는다 — generateCount 가
+// 라이브 수를 초과할 때만 buildKeywords() 안에서 지연 로드한다(콜드스타트 절감).
 import { galleryItems } from "./gallery";
 import type { KeywordEntry } from "./taxonomy";
 import seoSettings from "../../content/seo.json";
@@ -11,7 +12,6 @@ import seoSettings from "../../content/seo.json";
 const seo = seoSettings as {
   generateCount?: number;
   autoIndexByGalleryCase?: boolean;
-  allowAiCrawlers?: boolean;
   extraIndexSlugs?: string[];
   noindexTypes?: string[];
 };
@@ -24,17 +24,11 @@ const EXTRA_INDEX_SLUGS = new Set(seo.extraIndexSlugs || []);
 //   · 단, 실제 시공사례(hasRealCase)나 수동 승인(extraIndexSlugs)은 유형과 무관히 색인(오버라이드).
 // CMS(content/seo.json)의 noindexTypes 로 조정한다. 빈 배열이면 현행(전체 색인)로 복귀.
 const NOINDEX_TYPES = new Set(seo.noindexTypes || []);
-// robots.ts 등 다른 모듈이 참조할 수 있도록 AI 크롤러 허용 여부를 노출.
-export const allowAiCrawlers: boolean = seo.allowAiCrawlers !== false; // 기본 true
 
 // 큐레이션 라이브 키워드(검수·고가치) — 항상 생성 + 색인 대상.
 const live = liveData as KeywordEntry[];
-
-// 단계 추가용 대기 풀(우선순위 정렬). {meta, items} 또는 배열 형태 모두 허용.
-const stagingRaw = stagingData as unknown;
-const staging: KeywordEntry[] = Array.isArray(stagingRaw)
-  ? (stagingRaw as KeywordEntry[])
-  : ((stagingRaw as { items?: KeywordEntry[] }).items || []);
+// isIndexable 등에서 참조 — 라이브(1.5천개) 기준이라 상시 상주해도 가볍다.
+const liveSlugSet = new Set(live.map((k) => k.slug));
 
 // =============================================================================
 // GENERATE_COUNT — "넷리파이에서 숫자만 바꾸면 그 개수만큼 페이지 생성"
@@ -50,24 +44,37 @@ const staging: KeywordEntry[] = Array.isArray(stagingRaw)
 //                    생성/크롤되지만 색인 경쟁은 대표 페이지로 모아 도어웨이 패널티를 피한다.
 //                    ("2만 생성하되 큐레이션·사례 페이지만 색인"하는 안전 모델)
 // =============================================================================
-const liveSlugSet = new Set(live.map((k) => k.slug));
-// staging 에서 라이브와 중복되는 슬러그는 제거(라이브 우선).
-const stagingUnique = staging.filter((k) => !liveSlugSet.has(k.slug));
-// 생성 우선순위 풀: 큐레이션 라이브 → staging(우선순위 정렬).
-const orderedPool: KeywordEntry[] = [...live, ...stagingUnique];
-
 function resolveGenerateCount(): number {
   // 우선순위: Netlify 환경변수 GENERATE_COUNT(운영 긴급 오버라이드) >
   //           CMS content/seo.json 의 generateCount > 라이브 수(기본).
   const envRaw = parseInt(process.env.GENERATE_COUNT || "", 10);
   const raw = Number.isFinite(envRaw) && envRaw > 0 ? envRaw : seo.generateCount;
   if (!raw || !Number.isFinite(raw) || raw <= 0) return live.length; // 기본 = 라이브만
-  // 라이브 미만 방지(검수 페이지 보호), 풀 초과 방지로 클램프.
-  return Math.min(Math.max(raw, live.length), orderedPool.length);
+  // 라이브 미만 방지(검수 페이지 보호). 풀 크기 상한은 staging 로드 후 buildKeywords 에서 클램프.
+  return Math.max(raw, live.length);
 }
 
 const GENERATE_COUNT = resolveGenerateCount();
-const keywords: KeywordEntry[] = orderedPool.slice(0, GENERATE_COUNT);
+
+// 생성 키워드 집합. 라이브만으로 충분하면(기본) staging(5.5MB) 로드를 건너뛰어
+// 서버리스 콜드스타트를 줄인다 — 5.5MB JSON 파싱 + 2.4만개 필터를 매 부팅마다 하지 않는다.
+// generateCount 를 라이브 수보다 크게 올린 경우에만 staging 풀을 지연 로드한다.
+function buildKeywords(): KeywordEntry[] {
+  if (GENERATE_COUNT <= live.length) return live;
+  // 단계 추가용 대기 풀(우선순위 정렬). {meta, items} 또는 배열 형태 모두 허용.
+  // (정적 import 대신 지연 require — 라이브만 생성하는 기본 경로에선 5.5MB 파싱을 건너뛴다.)
+  const stagingRaw = require("./keywords-staging.json") as unknown;
+  const staging: KeywordEntry[] = Array.isArray(stagingRaw)
+    ? (stagingRaw as KeywordEntry[])
+    : ((stagingRaw as { items?: KeywordEntry[] }).items || []);
+  // staging 에서 라이브와 중복되는 슬러그는 제거(라이브 우선).
+  const stagingUnique = staging.filter((k) => !liveSlugSet.has(k.slug));
+  // 생성 우선순위 풀: 큐레이션 라이브 → staging(우선순위 정렬).
+  const orderedPool: KeywordEntry[] = [...live, ...stagingUnique];
+  return orderedPool.slice(0, Math.min(GENERATE_COUNT, orderedPool.length));
+}
+
+const keywords: KeywordEntry[] = buildKeywords();
 
 export function getKeywords(): KeywordEntry[] {
   return keywords;

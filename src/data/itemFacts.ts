@@ -162,6 +162,23 @@ const BY_ITEM: Record<string, Partial<ItemFact>> = {
   },
 };
 
+// 품목군별 '피해야 할 잘못된 시공·철거 방식' — 실제 현장에서 문제로 이어지는 오류만 정직하게
+// 정리(허위 수치·과장 없음). 품목마다 실패 지점이 달라 페이지의 품목축 고유성을 더한다.
+const FAMILY_MISTAKES: Record<keyof typeof FAMILY, string> = {
+  ganmaru: "본드를 덜 긁어낸 채 새 바닥재를 올리면 들뜸·단차가 생깁니다. 헤라로 무리하게 떠내다 난방 배관·콘크리트 하지를 긁는 것도 피해야 합니다.",
+  ganghwa: "걸레받이·문틀을 강제로 뜯어 벽면·몰딩을 손상시키거나, 재사용이 목적인데 클릭 판재를 부러뜨리는 것을 피합니다.",
+  wonmok: "재사용·부분 보수 대상 원목을 한 번에 뜯어 파손시키는 것, 두께를 오판해 하지를 과하게 긁는 것을 피합니다.",
+  deco: "비닐 조각만 걷고 남은 본드를 방치하면 새 바닥재가 울고 자국이 비칩니다. 겹시공을 한 겹만 걷어내는 오판도 피해야 합니다.",
+  jangpan: "롤만 걷어내고 밑면 종이·양면테이프를 남기면 다음 시공에서 들뜸·단차가 생깁니다.",
+  tile: "방수층·배관 확인 없이 깨내면 누수로 이어질 수 있습니다. 압착 몰탈을 남긴 채 마감하거나 층간소음 사전 고지 없이 강행하는 것을 피합니다.",
+  coating: "집진 없이 연마해 분진 피해를 주는 것, 다음 마감을 고려하지 않고 과도하게(혹은 부족하게) 갈아내는 것을 피합니다.",
+  sanding: "숙련 없이 과연마해 무늬목을 상하게 하거나, 덜 갈아 코팅이 들뜨게 하는 것, 습도·건조 관리를 생략하는 것을 피합니다.",
+  generic: "재질·접착 상태 확인 없이 힘으로 뜯어 하지를 상하게 하는 것, 본드·잔여물을 남긴 채 마감하는 것을 피합니다.",
+};
+export function itemMistakesFor(item: string | undefined): string {
+  return FAMILY_MISTAKES[familyKeyOf(item || "바닥재철거")];
+}
+
 function familyKeyOf(item: string): keyof typeof FAMILY {
   const s = item || "";
   if (/(샌딩|면갈이|마루재생|마루코팅)/.test(s)) return "sanding";

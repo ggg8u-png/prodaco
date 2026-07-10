@@ -475,11 +475,6 @@ collections:
             widget: "boolean"
             default: true
             hint: "켜두면, ⑩ 시공사례에 올린 '지역+품목'과 일치하는 페이지가 자동으로 색인 대상이 됩니다. (권장: 켬)"
-          - label: "AI 검색 크롤러 허용 (allowAiCrawlers)"
-            name: "allowAiCrawlers"
-            widget: "boolean"
-            default: true
-            hint: "ChatGPT·Perplexity·Claude 등 생성형 AI 검색에 노출되도록 허용. 끄면 AI 크롤러를 차단합니다. (권장: 켬)"
           - label: "수동 색인 강제 슬러그 (extraIndexSlugs)"
             name: "extraIndexSlugs"
             widget: "list"
