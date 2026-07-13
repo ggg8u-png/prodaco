@@ -2,7 +2,7 @@
   "generateCount": 1546,
   "autoIndexByGalleryCase": true,
   "extraIndexSlugs": [],
-  "noindexTypes": [],
+  "noindexTypes": ["b2b", "consumer", "target", "synonym"],
   "reviewSchema": {
     "enabled": false,
     "minVerified": 8
