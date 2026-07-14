@@ -590,8 +590,21 @@ collections:
     fields:
       - { label: "ID(고유)", name: "id", widget: "string", hint: "예: case-2026-07" }
       - { label: "제목", name: "title", widget: "string" }
-      - { label: "지역", name: "region", widget: "string", required: false, default: "수도권" }
-      - { label: "작업 종류", name: "item", widget: "string", required: false, default: "바닥재 철거 · 샌딩" }
+      # ⚠ 자동 색인 조건: 아래 (지역 + 작업 종류)가 키워드 페이지의 값과 '정확히' 일치해야
+      #   그 지역+품목 페이지가 자동 색인됩니다. 자유 입력(오타·공백으로 조용히 실패) 대신
+      #   '정확한 값만 고르는' 드롭다운으로 고정. 목록은 keywords.json 의 region/item 과 동일.
+      - label: "지역"
+        name: "region"
+        widget: "select"
+        required: true
+        hint: "이 사례가 실제 진행된 지역을 고르세요. 여기서 고른 지역의 페이지가 자동 색인됩니다."
+        options: ["서울","경기","인천","수도권","강남","서초","송파","강동","강서","양천","영등포","구로","금천","동작","관악","마포","서대문","은평","용산","성동","광진","동대문","중랑","성북","강북","노원","도봉","중구","수원","성남","용인","화성","동탄","부천","안산","안양","시흥","김포","광명","군포","오산","의왕","하남","의정부","남양주","구리","고양","파주","부평","계양","남동구","서구","연수구","미추홀구","송도","일산","운정","위례","판교","평촌","산본","광교","양주","동두천","과천"]
+      - label: "작업 종류"
+        name: "item"
+        widget: "select"
+        required: true
+        hint: "실제 철거한 바닥재 종류를 고르세요. 지역과 함께 이 값이 일치하는 페이지가 자동 색인됩니다."
+        options: ["마루철거","강마루철거","강화마루철거","온돌마루철거","데코타일철거","데코륨철거","디럭스타일철거","타일철거","바닥타일철거","폴리싱타일철거","장판철거","륨장판철거","바닥재철거","바닥철거","바닥샌딩","면갈이","에폭시철거","우레탄철거"]
       - { label: "철거 전 사진", name: "beforeImage", widget: "image" }
       - { label: "샌딩 후 사진", name: "afterImage", widget: "image" }
       - { label: "설명", name: "description", widget: "string", required: false }

@@ -63,71 +63,9 @@ function loadCmsGallery(): GalleryItem[] {
 }
 
 // 비포·애프터 7세트 (각 폴더의 이른 시각 = Before, 늦은 시각 = After 로 추정)
-const legacyGalleryItems: GalleryItem[] = [
-  {
-    id: "ba1",
-    title: "바닥재 철거·샌딩 현장 ①",
-    region: "수도권",
-    item: "바닥재 철거 · 샌딩",
-    beforeImage: driveThumb("1YLdwnXX05Oj7htnNSMtfxNdsqDwjKAB7"),
-    afterImage: driveThumb("1b2uPpyYWnOOqJzPND6mMOXbE5pQj71bi"),
-    description: "철거 전 바닥과 샌딩 마무리 후 비교 (2026.06)",
-  },
-  {
-    id: "ba2",
-    title: "바닥재 철거·샌딩 현장 ②",
-    region: "수도권",
-    item: "바닥재 철거 · 샌딩",
-    beforeImage: driveThumb("1tJKOX0qvcNJOQDq4jl25a6ZZhDbN03gv"),
-    afterImage: driveThumb("1ekZZwhDpz75n_p16yHn52Bb3uN_9YWt1"),
-    description: "철거 전 바닥과 샌딩 마무리 후 비교 (2026.06)",
-  },
-  {
-    id: "ba3",
-    title: "바닥재 철거·샌딩 현장 ③",
-    region: "수도권",
-    item: "바닥재 철거 · 샌딩",
-    beforeImage: driveThumb("1iaZRpDZ7l--1j3sbb7f4b3c06l4gBL10"),
-    afterImage: driveThumb("1mnMpkemoJ3bjeHirkyCxXm62zbgBaiEK"),
-    description: "철거 전 바닥과 샌딩 마무리 후 비교 (2026.01)",
-  },
-  {
-    id: "ba4",
-    title: "바닥재 철거·샌딩 현장 ④",
-    region: "수도권",
-    item: "바닥재 철거 · 샌딩",
-    beforeImage: driveThumb("1jIGVYfr_-Gv0nHqQiith6hIJDuzEq8mP"),
-    afterImage: driveThumb("1JuAwrdBoiWPurYfRS_Ct9ViHB2bv1wYJ"),
-    description: "철거 전 바닥과 샌딩 마무리 후 비교 (2025.12)",
-  },
-  {
-    id: "ba5",
-    title: "바닥재 철거·샌딩 현장 ⑤",
-    region: "수도권",
-    item: "바닥재 철거 · 샌딩",
-    beforeImage: driveThumb("18npwF9EXWg9kwFFEJd3v41EgASLpoFVo"),
-    afterImage: driveThumb("1dYR2cuHiS0YSguqfyRklTdcp_CRJED5N"),
-    description: "철거 전 바닥과 샌딩 마무리 후 비교 (2025.06)",
-  },
-  {
-    id: "ba6",
-    title: "바닥재 철거·샌딩 현장 ⑥",
-    region: "수도권",
-    item: "바닥재 철거 · 샌딩",
-    beforeImage: driveThumb("1Rru0j_g7vJnHad2uwnvyTZVSt-lF37yb"),
-    afterImage: driveThumb("1t2gUxIUuMdfTbgxIaFr4-yIo_uiNMBNO"),
-    description: "철거 전 바닥과 샌딩 마무리 후 비교 (2025.07)",
-  },
-  {
-    id: "ba7",
-    title: "바닥재 철거·샌딩 현장 ⑦",
-    region: "수도권",
-    item: "바닥재 철거 · 샌딩",
-    beforeImage: driveThumb("1CuWDxS5ZrknC1sK5QdGIyhR9Q0YTzL6v"),
-    afterImage: driveThumb("1l6f6l4KNOU1lntGQJwXQMo1mKrfEUQEJ"),
-    description: "철거 전 바닥과 샌딩 마무리 후 비교 (2025.05)",
-  },
-];
+// 레거시 before/after 7세트는 content/gallery/*.json(CMS)로 이관됨(지역+품목 정확 태그 → 자동 색인).
+// 같은 사진 중복 노출 방지를 위해 비운다.
+const legacyGalleryItems: GalleryItem[] = [];
 
 // CMS 추가 사례 + 기존 사례 (CMS 항목이 앞에 노출)
 export const galleryItems: GalleryItem[] = [...loadCmsGallery(), ...legacyGalleryItems];
