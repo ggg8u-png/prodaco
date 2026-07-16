@@ -22,9 +22,20 @@ export const metadata: Metadata = {
   },
 };
 
+// 이 페이지 계층(홈 > 시공사례) — 전역 브레드크럼 제거 후 페이지별로만 출력.
+const breadcrumbJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "홈", item: siteUrl },
+    { "@type": "ListItem", position: 2, name: "시공사례", item: `${siteUrl}/gallery` },
+  ],
+};
+
 export default function GalleryPage() {
   return (
     <div className="pb-20 md:pb-0">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
 
       <section className="bg-[#16181D] text-white pt-14 pb-12 px-5">
         <div className="max-w-5xl mx-auto">

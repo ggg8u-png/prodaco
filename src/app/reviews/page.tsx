@@ -19,6 +19,16 @@ export const metadata: Metadata = {
   },
 };
 
+// 이 페이지 계층(홈 > 고객 후기) — 전역 브레드크럼 제거 후 페이지별로만 출력.
+const breadcrumbJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "홈", item: siteUrl },
+    { "@type": "ListItem", position: 2, name: "고객 후기", item: `${siteUrl}/reviews` },
+  ],
+};
+
 export default function ReviewsPage() {
   // 후기 구조화데이터 — 검증된 실제 후기만, config(seo.json reviewSchema)로 게이트.
   // 기본 비활성(self-serving 리치결과 정책 리스크)이라 보통 null → 아무 스키마도 렌더하지 않는다.
@@ -26,6 +36,7 @@ export default function ReviewsPage() {
   const reviewJsonLd = buildReviewJsonLd(siteUrl);
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
       {reviewJsonLd && (
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(reviewJsonLd) }} />
       )}

@@ -4,10 +4,11 @@ import ui from "../../../content/ui.json";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://prodaco.kr";
 
-const desc = "바닥재 철거 관련 자주 묻는 질문. 비용 산정, 소요시간, 폐기물 처리, 원상복구, 면적 계산, 바닥 샌딩 차이 등 궁금한 점을 확인하세요.";
+const desc = "마루·장판·데코타일·타일 철거 비용과 사진 견적, 작업시간, 폐기물 처리, 바닥 샌딩 및 실측 정산 기준을 안내합니다.";
 
 export const metadata: Metadata = {
-  title: "자주 묻는 질문",
+  // title template("%s | 프로다")과 합쳐져 "바닥철거 자주 묻는 질문 | 비용·견적·작업시간 | 프로다"로 노출.
+  title: "바닥철거 자주 묻는 질문 | 비용·견적·작업시간",
   description: desc,
   alternates: { canonical: `${siteUrl}/faq` },
   openGraph: {
@@ -29,12 +30,23 @@ const faqJsonLd = {
   })),
 };
 
+// 이 페이지 계층(홈 > 자주 묻는 질문) — 전역 브레드크럼 제거 후 페이지별로만 출력.
+const breadcrumbJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "홈", item: siteUrl },
+    { "@type": "ListItem", position: 2, name: "자주 묻는 질문", item: `${siteUrl}/faq` },
+  ],
+};
+
 const categories = Array.from(new Set(faqs.map((f) => f.category)));
 
 export default function FaqPage() {
   return (
     <div className="pb-20 md:pb-0">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
 
       <section className="bg-[#16181D] text-white pt-14 pb-12 px-5">
         <div className="max-w-3xl mx-auto">

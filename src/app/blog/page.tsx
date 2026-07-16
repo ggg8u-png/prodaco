@@ -26,9 +26,20 @@ const categoryColor: Record<string, string> = Object.fromEntries(
   )
 );
 
+// 이 페이지 계층(홈 > 바닥철거 정보) — 전역 브레드크럼 제거 후 페이지별로만 출력.
+const breadcrumbJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "홈", item: siteUrl },
+    { "@type": "ListItem", position: 2, name: "바닥철거 정보", item: `${siteUrl}/blog` },
+  ],
+};
+
 export default function BlogPage() {
   return (
     <div className="pb-20 md:pb-0">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
       <section className="bg-[#16181D] text-white pt-14 pb-12 px-5">
         <div className="max-w-4xl mx-auto">
           <p className="font-mono-pd text-[#FFD400] text-xs font-bold uppercase tracking-[0.2em] mb-4">{ui.blogPage.badge}</p>

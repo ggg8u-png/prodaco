@@ -89,7 +89,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
     "@type": "BreadcrumbList",
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "홈", item: siteUrl },
-      { "@type": "ListItem", position: 2, name: "정보", item: `${siteUrl}/blog` },
+      { "@type": "ListItem", position: 2, name: "바닥철거 정보", item: `${siteUrl}/blog` },
       { "@type": "ListItem", position: 3, name: post.title, item: postUrl },
     ],
   };

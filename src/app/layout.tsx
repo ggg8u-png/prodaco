@@ -82,6 +82,9 @@ const localBusinessJsonLd = {
   name: company.brandName,
   alternateName: company.nameEn,
   url: siteUrl,
+  // 로고는 '정사각'(/logo.png) — 네이버/구글이 로고를 정사각으로 크롭해도 '프로다'가 안 잘린다.
+  // 대표 이미지는 가로형 OG(중앙정렬)로 별도 제공.
+  logo: `${siteUrl}/logo.png`,
   image: `${siteUrl}/opengraph-image`,
   telephone: company.phone,
   // 사업자 NAP(상호·주소·사업자등록번호·대표자) — 값이 있을 때만 포함.
@@ -129,7 +132,8 @@ const organizationJsonLd = {
   ...(b.legalName ? { legalName: b.legalName } : {}),
   ...(b.representativeName ? { founder: { "@type": "Person", name: b.representativeName } } : {}),
   url: siteUrl,
-  logo: `${siteUrl}/opengraph-image`,
+  // Organization.logo 는 정사각(/logo.png) — 가로 OG를 로고로 쓰면 검색 썸네일에서 좌우가 잘린다.
+  logo: `${siteUrl}/logo.png`,
   ...(businessSameAs.length ? { sameAs: businessSameAs } : {}),
   description: "수도권 바닥재 철거·바닥 샌딩·상가 원상복구 전문",
   contactPoint: {
@@ -141,17 +145,11 @@ const organizationJsonLd = {
   },
 };
 
-const breadcrumbJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "BreadcrumbList",
-  itemListElement: [
-    { "@type": "ListItem", position: 1, name: "홈", item: siteUrl },
-    { "@type": "ListItem", position: 2, name: "시공사례", item: `${siteUrl}/gallery` },
-    { "@type": "ListItem", position: 3, name: "후기", item: `${siteUrl}/reviews` },
-    { "@type": "ListItem", position: 4, name: "자주 묻는 질문", item: `${siteUrl}/faq` },
-    { "@type": "ListItem", position: 5, name: "정보", item: `${siteUrl}/blog` },
-  ],
-};
+// ⚠ 전역 BreadcrumbList 제거: 이전엔 상단 네비(홈>시공사례>후기>FAQ>정보)를 BreadcrumbList 로
+//   모든 페이지에 주입했는데, 이는 '현재 페이지까지의 계층 경로'가 아니라 사이트 메뉴라서
+//   검색결과에 "후기 > 자주 묻는 질문 > 정보" 같은 잘못된 경로를 노출시켰다. 또 개별 페이지의
+//   올바른 브레드크럼과 이중 출력됐다. → 브레드크럼은 각 페이지가 자기 계층으로만 출력한다.
+//   (faq·reviews·gallery·blog 목록엔 페이지별 BreadcrumbList 를 추가함)
 
 const webSiteJsonLd = {
   "@context": "https://schema.org",
@@ -159,6 +157,8 @@ const webSiteJsonLd = {
   "@id": `${siteUrl}/#website`,
   url: siteUrl,
   name: "프로다",
+  // 검색결과 사이트명 신호: 정식명은 '프로다', 보조명으로 영문·업종설명을 제공(억지 키워드 반복 아님).
+  alternateName: ["PRODA", "프로다 바닥철거·샌딩"],
   description: "수도권 바닥재 철거 전문",
   inLanguage: "ko",
   publisher: { "@id": `${siteUrl}/#business` },
@@ -186,7 +186,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessJsonLd) }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteJsonLd) }} />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
       </head>
       <body className="bg-[#F7F6F3] text-[#16181D]">
         {gaId && (
