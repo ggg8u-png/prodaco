@@ -18,13 +18,18 @@
     "representativeName": "김진",
     "businessRegistrationNumber": "582-16-02568",
     "address": "경기도 파주시 물향기1로 194, 1901호",
-    "serviceArea": ["서울", "경기", "인천", "수도권"],
+    "serviceArea": [
+      "서울",
+      "경기",
+      "인천",
+      "수도권"
+    ],
     "sameAs": {
       "facebook": "",
       "twitter": "",
-      "naverPlace": "",
+      "naverPlace": "https://map.naver.com/p/entry/place/2072772831",
       "kakaoMap": "",
-      "googleBusinessProfile": ""
+      "googleBusinessProfile": "https://share.google/3eui8SbU77QKgrTTS"
     }
   }
 }
