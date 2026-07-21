@@ -1,4 +1,5 @@
 import type { KeywordEntry } from "@/data/taxonomy";
+import { josa, josaEnd } from "@/lib/josa";
 import { clusterLabelOf } from "@/data/regions";
 import { applyReplacements } from "@/lib/replacements";
 
@@ -151,7 +152,7 @@ export function keyAnswerForRegion(region: string): KeyAnswer {
   const where = cluster && cluster !== "수도권" ? `${cluster} ` : "수도권 ";
   return normalizeKeyAnswer({
     question: `${region} 바닥재 철거는 어떻게 진행되나요?`,
-    answer: `${region}을(를) 포함한 ${where}전역을 방문해 마루·데코타일·장판·타일 철거와 바닥 샌딩을 하지 손상 없이 진행합니다.`,
+    answer: `${josa(region, "을를")} 포함한 ${where}전역을 방문해 마루·데코타일·장판·타일 철거와 바닥 샌딩을 하지 손상 없이 진행합니다.`,
     supplement: `${region} 현장은 건물 유형과 주차·엘리베이터 여건을 먼저 확인해 반출 동선을 잡습니다. 참고가는 바닥재·면적별로 달라 사진 상담 후 실측 면적으로 정산합니다. 본드·잔여물까지 정리해 다음 공정이 바로 가능하게 마무리합니다.`,
   });
 }

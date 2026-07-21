@@ -6,7 +6,7 @@
 //   · 동의어 꼬리말 등 비-canonical, noindex, 관리자/유틸 URL 은 제외
 //   · 한글 슬러그는 encodeURIComponent 로 인코딩해 페이지 canonical(인코딩형)과 정확히 일치
 //   · lastmod 는 고정 상수(SITE_LASTMOD) — 매 빌드 변경 신호를 내지 않으면서 크롤 기준 날짜 제공
-import { getKeywords, canonicalSlugFor, isIndexable } from "@/data/keywords";
+import { getKeywords, canonicalSlugFor, isIndexable, hubCanonicalRegionFor } from "@/data/keywords";
 import { posts } from "@/data/posts";
 import type { KeywordEntry } from "@/data/taxonomy";
 
@@ -47,7 +47,10 @@ function keywordPriority(type: string): number {
 
 // 사이트맵에 실을 자격이 있는 키워드(색인 가능 + self-canonical)만.
 function indexableKeywords(): KeywordEntry[] {
-  return getKeywords().filter((k) => isIndexable(k) && canonicalSlugFor(k) === k.slug);
+  // self-canonical 만 포함 — 동의어 통합 + 지역허브 canonical("{지역}-바닥재철거" 류) 제외.
+  return getKeywords().filter(
+    (k) => isIndexable(k) && canonicalSlugFor(k) === k.slug && !hubCanonicalRegionFor(k)
+  );
 }
 
 function keywordEntry(k: KeywordEntry): SitemapEntry {

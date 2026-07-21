@@ -57,10 +57,12 @@ export default function ReviewsMarquee({ reviews }: { reviews: Review[] }) {
         {reviews.map((r) => (
           <Card key={r.id} review={r} />
         ))}
-        {/* 끊김 없는 루프용 복제 */}
-        {reviews.map((r) => (
-          <Card key={`dup-${r.id}`} review={r} />
-        ))}
+        {/* 끊김 없는 루프용 복제 — 시각 효과 전용이라 접근성 트리·봇 텍스트에서 제외 */}
+        <div aria-hidden="true" className="contents">
+          {reviews.map((r) => (
+            <Card key={`dup-${r.id}`} review={r} />
+          ))}
+        </div>
       </div>
     </div>
   );

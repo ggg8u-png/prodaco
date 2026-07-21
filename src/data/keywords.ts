@@ -149,6 +149,19 @@ export function isIndexable(k: KeywordEntry | string): boolean {
   return false;
 }
 
+// ─── 지역 허브 canonical(카니발라이제이션 해소) ─────────────────────────────────
+// "{지역}-바닥재철거"·"{지역}-바닥철거"는 지역 허브(/services/{지역})와 검색 의도가
+// 완전히 겹친다(둘 다 "지역 바닥(재) 철거 업체·안내"). 같은 의도를 두 URL이 경쟁하면
+// 색인·랭킹이 분산되므로, 이 조합은 허브를 canonical 로 지정하고 사이트맵에서 제외한다.
+//  · 선택지 검토: 301(URL 삭제·링크 파손 위험) vs 의도 분리(불가 — 실제로 같은 의도)
+//    vs 허브 canonical(URL·본문 유지, 신호만 허브로 집약) → 세 번째가 가장 보수적.
+//  · 페이지 자체는 그대로 서빙(200)되고 robots 도 index 유지 — canonical 이 집약을 담당.
+const GENERIC_HUB_ITEMS = new Set(["바닥재철거", "바닥철거"]);
+export function hubCanonicalRegionFor(k: KeywordEntry): string | null {
+  if (k.type !== "region-item" || !k.region || !k.item) return null;
+  return GENERIC_HUB_ITEMS.has(k.item) ? k.region : null;
+}
+
 export interface IndexDecision {
   index: boolean;
   canonicalSlug: string;

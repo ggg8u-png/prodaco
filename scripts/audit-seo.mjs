@@ -35,6 +35,7 @@ function auditFile(file) {
   if (canonical && !canonical.startsWith("https://")) issues.push("canonical-not-abs");
   if (text.length < 800 && !robots.includes("noindex") && name !== "_not-found") issues.push("thin");
   if (breadcrumbs > 1) issues.push("breadcrumb-dup");
+  if (/[을은이과]\((를|는|가|와)\)/.test(text)) issues.push("josa-paren");
   return { url, title, canonical, robots, h1s, breadcrumbs, textLength: text.length, internalLinkCount: links.length, links, issues };
 }
 

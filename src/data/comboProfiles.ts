@@ -1,4 +1,5 @@
 import type { KeywordEntry } from "@/data/taxonomy";
+import { josa, josaEnd } from "@/lib/josa";
 import { clusterLabelOf, neighborsOf } from "@/data/regions";
 import { applyReplacements } from "@/lib/replacements";
 
@@ -95,8 +96,8 @@ const REGION_SITE: Record<string, string[]> = {
 const nb2 = (nb: string[]) => nb.slice(0, 2).join("·");
 const REGION_FALLBACK: Array<(r: string, cluster: string, nb: string[]) => string> = [
   (r, cluster, nb) => `${r} 현장은 건물 유형과 주차·엘리베이터 여건을 먼저 확인해 반출 동선을 잡습니다. ${cluster}(${nb2(nb)} 등) 인근도 같은 팀이 이어서 작업합니다.`,
-  (r) => `${r}은(는) 아파트·상가·사무실이 섞여 있어 현장마다 소음·반출 대응을 달리합니다. 사진과 면적을 주시면 그 현장에 맞춰 안내해 드립니다.`,
-  (r, cluster, nb) => `${r} 작업은 폐자재 반출 위치부터 확정한 뒤 시작해 작업일에 한 번에 끝냅니다. 인근 ${nb2(nb)}과(와) 묶으면 출장 효율이 좋습니다.`,
+  (r) => `${josa(r, "은는")} 아파트·상가·사무실이 섞여 있어 현장마다 소음·반출 대응을 달리합니다. 사진과 면적을 주시면 그 현장에 맞춰 안내해 드립니다.`,
+  (r, cluster, nb) => `${r} 작업은 폐자재 반출 위치부터 확정한 뒤 시작해 작업일에 한 번에 끝냅니다. 인근 ${josa(nb2(nb), "과와")} 묶으면 출장 효율이 좋습니다.`,
   (r) => `${r} 현장은 건물 규정(작업 시간대·화물 엘리베이터·보안)을 먼저 확인해 지연과 민원을 줄입니다.`,
 ];
 

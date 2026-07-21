@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Phone, MessageCircle } from "lucide-react";
-import { getKeywords, getKeywordBySlug, indexDecisionFor } from "@/data/keywords";
+import { getKeywords, getKeywordBySlug, indexDecisionFor, hubCanonicalRegionFor } from "@/data/keywords";
 import { getContentForKeyword, getRelatedKeywords } from "@/lib/content";
 import { company } from "@/data/company";
 import { galleryItems, worksitePhotos } from "@/data/gallery";
@@ -17,6 +17,7 @@ import { applyReplacements } from "@/lib/replacements";
 import GalleryImage from "@/components/GalleryImage";
 import KeyAnswer from "@/components/KeyAnswer";
 import { notFound } from "next/navigation";
+import { josaEnd } from "@/lib/josa";
 
 // 슬러그 시드 — 같은 슬러그는 항상 같은 결과(빌드 안정), 인접 슬러그는 다르게.
 function slugSeed(s: string): number {
@@ -64,7 +65,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   // 사이트맵은 slug 를 encodeURIComponent 로 인코딩해 제출한다(sitemap.ts).
   // canonical/og:url 도 동일하게 퍼센트 인코딩해, 한글 슬러그의 raw(가) vs
   // 인코딩(%EA%B0%95) 표기가 달라 구글이 서로 다른 URL로 오인하는 여지를 없앤다.
-  const canonicalUrl = `${siteUrl}/${encodeURIComponent(decision.canonicalSlug)}`;
+  // 지역 허브와 의도가 겹치는 "{지역}-바닥재철거/바닥철거"는 허브가 대표 URL(카니발라이제이션 해소).
+  const hubRegion = hubCanonicalRegionFor(keyword);
+  const canonicalUrl = hubRegion
+    ? `${siteUrl}/services/${encodeURIComponent(hubRegion)}`
+    : `${siteUrl}/${encodeURIComponent(decision.canonicalSlug)}`;
   return {
     title,
     description: desc,
@@ -426,7 +431,7 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
         <div className="max-w-3xl mx-auto">
           <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">바닥재별 철거 특성 비교</p>
           <p className="text-xs text-gray-500 mb-5 leading-relaxed">
-            바닥재는 종류에 따라 철거 난이도·소음·분진·폐기물이 다릅니다. 아래에서 {compareKey && <strong>현재 품목({keyword.item})</strong>}{!compareKey && "각 바닥재"}을(를) 다른 바닥재와 비교해 보세요. (실제 시공 특성 기준 상대 비교)
+            바닥재는 종류에 따라 철거 난이도·소음·분진·폐기물이 다릅니다. 아래에서 {compareKey && keyword.item ? (<><strong>현재 품목({keyword.item})</strong>{josaEnd(keyword.item, "을를")}</>) : "각 바닥재를"} 다른 바닥재와 비교해 보세요. (실제 시공 특성 기준 상대 비교)
           </p>
           <div className="overflow-x-auto border border-gray-200 bg-white">
             <table className="w-full text-sm min-w-[560px]">
@@ -466,7 +471,7 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
         <div className="max-w-3xl mx-auto">
           <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">바닥재별 철거 비용 참고</p>
           <p className="text-xs text-gray-500 mb-5 leading-relaxed">
-            아래는 2024년 일반 시장 평균 참고가입니다(보장가 아님). 폐자재 처리·출장비는 별도일 수 있으며,
+            아래는 일반 시장 참고 범위입니다(2024년 조사 기준 · 보장가 아님). 폐자재 처리·출장비는 별도일 수 있으며,
             저희는 유선 가견적 후 <strong>실측 면적 기준으로 최종 정산</strong>합니다.
           </p>
           <div className="overflow-hidden border border-gray-200 bg-white">
