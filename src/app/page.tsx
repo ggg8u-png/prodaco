@@ -21,8 +21,9 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://prodaco.kr";
 export const metadata: Metadata = {
   // 레이아웃 template("%s | 프로다")가 접미사를 붙이므로 여기선 접미사를 빼서 이중 표기 방지
   title: { absolute: "바닥재 철거·마루 철거 견적 상담 | 프로다" },
+  // 네이버 서치어드바이저 권고(80자 이내) — settings.json seoDescription(72자)과 통일.
   description:
-    "마루·데코타일·장판 철거, 상가·사무실 원상복구 바닥 철거 상담. 현장 사진과 면적을 보내면 작업 범위와 견적 기준을 안내합니다. 수도권 전 지역. ☎ 010-8470-4965",
+    "마루·데코타일·장판·타일 철거와 바닥 샌딩 전문. 사진 가견적 후 실측 정산. 서울·경기·인천 수도권 ☎ 010-8470-4965",
   alternates: { canonical: siteUrl },
 };
 

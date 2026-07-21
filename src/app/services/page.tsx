@@ -10,8 +10,9 @@ import ui from "../../../content/ui.json";
 
 export const metadata: Metadata = {
   title: "지역·품목별 바닥재 철거 서비스 안내",
+  // 네이버 서치어드바이저 권고(80자 이내).
   description:
-    "서울·경기·인천 수도권 지역별, 바닥재 품목별 철거·샌딩 서비스 전체 안내. 강마루·데코타일·장판·타일 철거와 비용·견적 페이지를 한눈에. 10년 전문 업체.",
+    "서울·경기·인천 지역별·품목별 바닥 철거·샌딩 안내. 강마루·데코타일·장판·타일 철거와 비용·견적 페이지를 한눈에.",
   alternates: { canonical: `${process.env.NEXT_PUBLIC_SITE_URL || "https://prodaco.kr"}/services` },
 };
 
