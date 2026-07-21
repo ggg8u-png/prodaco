@@ -73,30 +73,49 @@ export default function ServicesDirectory() {
     ],
   };
 
-  const RegionList = ({ regions }: { regions: string[] }) => (
-    <div className="space-y-6">
-      {regions.map((region) => (
-        <div key={region} id={`region-${region}`}>
-          <h3 className="mb-2 text-sm font-black">
-            <Link href={`/services/${encodeURIComponent(region)}`} className="text-[#16181D] hover:text-[#9A8A2E] hover:underline underline-offset-2">
-              {region} 바닥재 철거 →
-            </Link>
-          </h3>
-          <div className="flex flex-wrap gap-1.5">
-            {byRegion.get(region)!.map((k) => (
-              <Link
-                key={k.slug}
-                href={`/${k.slug}`}
-                className="text-xs text-gray-600 px-2.5 py-1 border border-gray-200 bg-white hover:border-[#9A8A2E] hover:text-[#9A8A2E] transition-colors"
-              >
-                {k.item}
+  // 링크 집중 완화(크롤 우선순위 신호):
+  //  · 광역(서울·경기·인천·수도권)은 최상위 수요라 품목 칩까지 그대로 노출(Tier 1 직링크).
+  //  · 세부 지역 61곳은 '지역 허브 링크만' 노출 — 품목별 상세는 각 지역 허브(/services/{지역})가
+  //    전부 링크하므로 고아 페이지가 생기지 않고, 홈→서비스→지역허브→상세 3클릭을 유지한다.
+  //  (이전엔 이 페이지 한 곳에 콤보 1,170개 링크가 몰려 링크 목록 페이지처럼 보였다: 총 1,652 링크)
+  const RegionList = ({ regions, withItems = false }: { regions: string[]; withItems?: boolean }) =>
+    withItems ? (
+      <div className="space-y-6">
+        {regions.map((region) => (
+          <div key={region} id={`region-${region}`}>
+            <h3 className="mb-2 text-sm font-black">
+              <Link href={`/services/${encodeURIComponent(region)}`} className="text-[#16181D] hover:text-[#9A8A2E] hover:underline underline-offset-2">
+                {region} 바닥재 철거 →
               </Link>
-            ))}
+            </h3>
+            <div className="flex flex-wrap gap-1.5">
+              {byRegion.get(region)!.map((k) => (
+                <Link
+                  key={k.slug}
+                  href={`/${k.slug}`}
+                  className="text-xs text-gray-600 px-2.5 py-1 border border-gray-200 bg-white hover:border-[#9A8A2E] hover:text-[#9A8A2E] transition-colors"
+                >
+                  {k.item}
+                </Link>
+              ))}
+            </div>
           </div>
-        </div>
-      ))}
-    </div>
-  );
+        ))}
+      </div>
+    ) : (
+      <div className="flex flex-wrap gap-1.5">
+        {regions.map((region) => (
+          <Link
+            key={region}
+            id={`region-${region}`}
+            href={`/services/${encodeURIComponent(region)}`}
+            className="text-xs font-bold text-gray-700 px-3 py-1.5 border border-gray-200 bg-white hover:border-[#9A8A2E] hover:text-[#9A8A2E] transition-colors"
+          >
+            {region} 바닥재 철거
+          </Link>
+        ))}
+      </div>
+    );
 
   return (
     <div className="pb-20 md:pb-0">
@@ -131,7 +150,7 @@ export default function ServicesDirectory() {
           {broadRegions.length > 0 && (
             <div className="mb-10">
               <p className="mb-4 text-base font-black text-[#9A8A2E] border-b border-gray-100 pb-2">{ui.servicesPage.broadRegionLabel}</p>
-              <RegionList regions={broadRegions} />
+              <RegionList regions={broadRegions} withItems />
             </div>
           )}
         </div>
