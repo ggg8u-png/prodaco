@@ -53,6 +53,11 @@ function loadCmsGallery(): GalleryItem[] {
           beforeImage: g.beforeImage,
           afterImage: g.afterImage,
           description: g.description || "",
+          // 검증·부가 필드(있을 때만) — verified:false 사례는 자동 색인 승급에서 제외된다.
+          ...(typeof g.verified === "boolean" ? { verified: g.verified } : {}),
+          ...(g.workDate ? { workDate: g.workDate } : {}),
+          ...(g.buildingType ? { buildingType: g.buildingType } : {}),
+          ...(g.area ? { area: g.area } : {}),
         });
       }
     } catch {

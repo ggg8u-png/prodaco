@@ -52,11 +52,20 @@ export interface BlogPost {
 export interface GalleryItem {
   id: string;
   title: string;
+  /** 실제 작업 지역(actualRegion) — 이 값이 페이지 지역과 일치할 때만 '해당 지역 실제 사례'로 표시 가능. */
   region: string;
   item: string;
   beforeImage: string;
   afterImage: string;
   description: string;
+  /** 운영자 검증 여부 — false 면 자동 색인 승급(hasRealCase) 대상에서 제외. 미지정은 검증으로 간주(하위호환). */
+  verified?: boolean;
+  /** 작업일(YYYY-MM-DD) — 선택. */
+  workDate?: string;
+  /** 건물 유형(아파트·상가·사무실 등) — 선택. */
+  buildingType?: string;
+  /** 작업 면적(평/㎡ 표기 자유) — 선택. */
+  area?: string;
 }
 
 export interface GalleryPhoto {

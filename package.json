@@ -4,14 +4,19 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "prebuild": "node scripts/fetch-gallery.mjs",
+    "prebuild": "node scripts/fetch-gallery.mjs && npm run seo:gate",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "fetch:photos": "node scripts/fetch-gallery.mjs",
     "promote": "node scripts/promote-keywords.mjs",
     "seo:indexnow": "node scripts/indexnow.mjs",
-    "seo:audit": "node scripts/audit-seo.mjs"
+    "seo:audit": "node scripts/audit-seo.mjs",
+    "seo:gate": "npm run test:seo && npm run seo:quality",
+    "test:seo": "node scripts/ts-run.mjs scripts/seo-tests.ts",
+    "seo:quality": "node scripts/ts-run.mjs scripts/seo-quality-audit.ts",
+    "seo:quality:full": "node scripts/ts-run.mjs scripts/seo-quality-audit.ts --full",
+    "seo:urls": "node scripts/ts-run.mjs scripts/seo-url-audit.ts"
   },
   "dependencies": {
     "lucide-react": "^0.460.0",

@@ -55,6 +55,33 @@
     X-Robots-Tag = "noindex"
 
 # -----------------------------------------------------------------------------
+# 도메인·프로토콜 통합 — 모든 변형을 https://prodaco.kr 로 '한 번의 301'로 보낸다
+# -----------------------------------------------------------------------------
+# GSC 검색성과에 http://prodaco.kr/ 이 별도 URL 로 잡혔고, 중복 수집(네이버 포함)의
+# 원인이 된다. 아래 규칙은 중간 리디렉션 없이 최종 URL 로 직행시킨다(체인·302 금지).
+#   http://prodaco.kr/*      → https://prodaco.kr/*   (301)
+#   http://www.prodaco.kr/*  → https://prodaco.kr/*   (301, www+http 도 단일 홉)
+#   https://www.prodaco.kr/* → https://prodaco.kr/*   (301)
+# ※ Netlify 도메인 설정의 primary domain 이 prodaco.kr(HTTPS 강제)인지도 함께 확인.
+[[redirects]]
+  from = "http://prodaco.kr/*"
+  to = "https://prodaco.kr/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "http://www.prodaco.kr/*"
+  to = "https://prodaco.kr/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "https://www.prodaco.kr/*"
+  to = "https://prodaco.kr/:splat"
+  status = 301
+  force = true
+
+# -----------------------------------------------------------------------------
 # 301 리다이렉트 — GSC "찾을 수 없음(404)" 로 잡힌 옛 URL 을 관련 페이지로 넘긴다
 # -----------------------------------------------------------------------------
 # GSC → 색인 → "찾을 수 없음(404)" 리포트에서 정확한 2개 URL 을 확인한 뒤,

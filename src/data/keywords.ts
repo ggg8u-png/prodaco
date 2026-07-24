@@ -125,7 +125,9 @@ export function canonicalSlugFor(k: KeywordEntry): string {
 //  지역+품목 페이지가 자동 index 된다.)
 const caseKeys = new Set(
   galleryItems
-    .filter((c) => c.region && c.item)
+    // verified:false(미검증) 사례는 자동 색인 승급 근거로 쓰지 않는다 — 지역이 정확히
+    // 태그된 '검증된 실제 사례'만 해당 지역+품목 페이지를 승급시킨다.
+    .filter((c) => c.region && c.item && c.verified !== false)
     .map((c) => `${c.region}|${c.item}`)
 );
 function hasRealCase(k: KeywordEntry): boolean {

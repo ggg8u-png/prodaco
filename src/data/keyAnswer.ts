@@ -15,11 +15,14 @@ export interface KeyAnswer {
   supplement: string;
 }
 
-function familyLabel(item: string): string {
+// (export: 감사 스크립트가 제목·본문 품목 일치를 검증할 때 사용)
+export function familyLabel(item: string): string {
   if (/(샌딩|면갈이|마루재생|마루코팅)/.test(item)) return "샌딩(면갈이)";
   if (/(에폭시|우레탄)/.test(item)) return "코팅 철거";
-  if (/타일/.test(item)) return "타일 철거";
+  // 데코타일·디럭스타일·륨은 비닐계 — '타일'보다 먼저 판별해야
+  // 데코타일철거 페이지 답변이 '타일 철거'로 잘못 안내되지 않는다(제목·본문 품목 일치).
   if (/(데코|디럭스|륨|장판)/.test(item)) return "비닐계 철거";
+  if (/타일/.test(item)) return "타일 철거";
   if (/마루/.test(item)) return "마루 철거";
   return "바닥재 철거";
 }
@@ -35,7 +38,7 @@ export function keyAnswerFor(k: KeywordEntry): KeyAnswer {
   // ── 꼬리말(modifier) 우선 ──────────────────────────────────────────────────
   if (/(비용|가격|평당)/.test(m)) {
     return {
-      question: `${kw}은 얼마인가요?`,
+      question: `${josa(kw, "은는")} 얼마인가요?`,
       answer:
         "마루 종류·접착제·폐기물·샌딩 범위에 따라 달라지며, 작업 후 실측 면적으로 최종 정산합니다.",
       supplement:
@@ -44,7 +47,7 @@ export function keyAnswerFor(k: KeywordEntry): KeyAnswer {
   }
   if (m === "견적") {
     return {
-      question: `${kw}은 어떻게 받나요?`,
+      question: `${josa(kw, "은는")} 어떻게 받나요?`,
       answer:
         "바닥이 보이는 사진 2~3장과 대략 면적만 주시면 1차 가견적을 바로 안내합니다.",
       supplement:
@@ -53,7 +56,7 @@ export function keyAnswerFor(k: KeywordEntry): KeyAnswer {
   }
   if (/(방법|순서)/.test(m)) {
     return {
-      question: `${kw}는 어떻게 진행하나요?`,
+      question: `${josa(kw, "은는")} 어떻게 진행하나요?`,
       answer:
         "하지 손상 없이 바닥재를 떼어낸 뒤 본드·잔여물을 정리하고, 폐자재 반출·실측 정산까지 한 흐름으로 진행합니다.",
       supplement:
@@ -62,7 +65,7 @@ export function keyAnswerFor(k: KeywordEntry): KeyAnswer {
   }
   if (m === "원상복구") {
     return {
-      question: `${kw}는 어디까지 해주나요?`,
+      question: `${josa(kw, "은는")} 어디까지 해주나요?`,
       answer:
         "바닥재 철거에 더해 잔여 본드·이물질 제거와 건물주 요구 수준의 평탄도까지 맞춰 인계 가능한 상태로 마무리합니다.",
       supplement:
@@ -71,7 +74,7 @@ export function keyAnswerFor(k: KeywordEntry): KeyAnswer {
   }
   if (/폐기물/.test(m)) {
     return {
-      question: `${kw}는 어떻게 하나요?`,
+      question: `${josa(kw, "은는")} 어떻게 하나요?`,
       answer:
         "철거 후 폐자재는 건설 폐기물로 분리해 마대에 담아 지정 위치에 배출합니다.",
       supplement:
@@ -80,7 +83,7 @@ export function keyAnswerFor(k: KeywordEntry): KeyAnswer {
   }
   if (/(당일|긴급|빠른)/.test(m)) {
     return {
-      question: `${kw}이 가능한가요?`,
+      question: `${josa(kw, "이가")} 가능한가요?`,
       answer:
         "일정에 따라 당일·긴급 작업이 가능한 경우가 있습니다. 먼저 연락해 현장 상황을 알려주세요.",
       supplement:
@@ -89,7 +92,7 @@ export function keyAnswerFor(k: KeywordEntry): KeyAnswer {
   }
   if (m === "주의사항") {
     return {
-      question: `${item} 철거 시 주의할 점은 무엇인가요?`,
+      question: `${item} 시 주의할 점은 무엇인가요?`,
       answer:
         "무리하게 뜯으면 하지(콘크리트·방수층·배관)가 상하고, 본드를 덜 제거하면 새 바닥재 시공이 어렵습니다.",
       supplement:
@@ -127,7 +130,7 @@ export function keyAnswerFor(k: KeywordEntry): KeyAnswer {
   }
   if (isSanding) {
     return {
-      question: `${kw}는 무엇을 하는 작업인가요?`,
+      question: `${josa(kw, "은는")} 무엇을 하는 작업인가요?`,
       answer:
         "샌딩(면갈이)은 바닥을 뜯는 게 아니라 표면을 갈아 되살려 다음 공정이 바로 가능하게 하는 작업입니다.",
       supplement:
@@ -140,7 +143,7 @@ export function keyAnswerFor(k: KeywordEntry): KeyAnswer {
   return {
     question: `${kw}, 어떻게 진행되나요?`,
     answer:
-      `${where}${familyLabel(item)}는 하지 손상 없이 철거한 뒤 본드·잔여물까지 정리해 다음 공정이 바로 가능한 상태로 마무리합니다.`,
+      `${where}${josa(familyLabel(item), "은는")} 하지 손상 없이 철거한 뒤 본드·잔여물까지 정리해 다음 공정이 바로 가능한 상태로 마무리합니다.`,
     supplement:
       "사진으로 가견적을 안내한 뒤 현장 상태를 확인합니다. 본드 잔여물과 샌딩 범위에 따라 다음 공정 준비 수준이 달라질 수 있습니다. 참고가는 현장별로 상이하며 작업 후 실측 면적으로 정산합니다.",
   };

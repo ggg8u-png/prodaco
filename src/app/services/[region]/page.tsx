@@ -7,6 +7,7 @@ import { FLOOR_COSTS, perPyeongText } from "@/data/costs";
 import { pickFaqs } from "@/lib/seo";
 import { keyAnswerForRegion } from "@/data/keyAnswer";
 import { applyReplacements } from "@/lib/replacements";
+import { fillTemplate } from "@/lib/template";
 import { company } from "@/data/company";
 import { galleryItems } from "@/data/gallery";
 import { reviews } from "@/data/reviews";
@@ -85,8 +86,12 @@ export default async function RegionHub({ params }: { params: Promise<{ region: 
   // region-item 이 없는 지역(예: 평택)도 포함될 수 있어 그대로 링크하면 /services/평택 404 발생).
   const hubSet = new Set(regionsWithPages());
   const neighbors = neighborsOf(region, 10).filter((nb) => hubSet.has(nb)).slice(0, 6);
-  const cases = rotatePick(galleryItems, seed, 3);
+  // 이 지역 실제 사례가 충분하면 우선 노출, 아니면 수도권 유사 사례로 명시(지역 실적 오인 방지).
+  const regionCases = galleryItems.filter((c) => c.region === region);
+  const casesAreLocal = regionCases.length >= 2;
+  const cases = rotatePick(casesAreLocal ? regionCases : galleryItems, seed, 3);
   const pageReviews = rotatePick(reviews, seed, 2);
+  const reviewsAreLocal = pageReviews.every((r) => r.region === region);
   const faqSubset = pickFaqs({ slug: `region-${region}`, keyword: `${region} 바닥재 철거`, type: "region-item", region, item: "바닥재 철거" }, 4);
   // GEO/AEO 핵심 답변(지역 단위) — H1 아래 노출 + FAQ 스키마 맨 앞 대표 질문으로 병합.
   const keyAnswer = keyAnswerForRegion(region);
@@ -146,10 +151,13 @@ export default async function RegionHub({ params }: { params: Promise<{ region: 
           </nav>
           <h1 className="text-3xl md:text-4xl font-black mb-3">{region} 바닥재 철거</h1>
           <p className="text-gray-400 text-sm mb-8 max-w-lg leading-relaxed">
-            {ui.regionPage.introTemplate
-              .replace("{region}", region)
-              .replace("{cluster}", cluster)
-              .replace("{experience}", company.experience)}
+            {/* fillTemplate: "{region}을(를)" 같은 조사 병기 표기를 받침에 맞는 조사로 교정한다
+                ("판교을(를)" 노출 버그 수정 — 판교를 / 성남을). */}
+            {fillTemplate(ui.regionPage.introTemplate, {
+              region,
+              cluster,
+              experience: company.experience,
+            })}
           </p>
           <div className="flex flex-wrap gap-3">
             <a href={company.phoneLink} className="inline-flex items-center gap-2 rounded-sm bg-[#FFD400] text-[#16181D] font-bold px-6 py-3 text-sm hover:bg-[#FFE34D] transition-colors">
@@ -216,7 +224,14 @@ export default async function RegionHub({ params }: { params: Promise<{ region: 
       {cases.length > 0 && (
         <section className="py-10 px-5">
           <div className="max-w-3xl mx-auto">
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-5">{ui.regionPage.casesLabel}</p>
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-5">
+              {casesAreLocal ? `${region} ${ui.regionPage.casesLabel}` : `수도권 유사 시공 사례 · Before / After`}
+            </p>
+            {!casesAreLocal && (
+              <p className="text-xs text-gray-400 -mt-3 mb-5 leading-relaxed">
+                아래는 {region} 현장이 아닌 수도권에서 진행한 유사 바닥재 시공 사례입니다(카드에 실제 작업 지역 표기). 같은 팀·같은 방식으로 작업하며, {region} 방문 상담이 가능합니다.
+              </p>
+            )}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               {cases.map((c) => (
                 <div key={c.id} className="border border-gray-200">
@@ -238,7 +253,14 @@ export default async function RegionHub({ params }: { params: Promise<{ region: 
       {pageReviews.length > 0 && (
         <section className="py-10 px-5 bg-[#F7F6F3]">
           <div className="max-w-3xl mx-auto">
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-5">{ui.regionPage.reviewsLabel}</p>
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-5">
+              {reviewsAreLocal ? ui.regionPage.reviewsLabel : `${ui.regionPage.reviewsLabel} · 수도권 유사 작업`}
+            </p>
+            {!reviewsAreLocal && (
+              <p className="text-xs text-gray-400 -mt-3 mb-5 leading-relaxed">
+                같은 품목의 수도권 실제 작업 후기입니다(표기 지역 = 실제 작업 지역).
+              </p>
+            )}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {pageReviews.map((r) => (
                 <figure key={r.id} className="bg-white border border-gray-200 p-4">

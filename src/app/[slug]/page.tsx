@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Phone, MessageCircle } from "lucide-react";
-import { getKeywords, getKeywordBySlug, indexDecisionFor, hubCanonicalRegionFor } from "@/data/keywords";
+import { getKeywords, getKeywordBySlug } from "@/data/keywords";
+import { indexabilityFor } from "@/lib/seo/indexability";
 import { getContentForKeyword, getRelatedKeywords } from "@/lib/content";
 import { company } from "@/data/company";
 import { galleryItems, worksitePhotos } from "@/data/gallery";
@@ -17,7 +18,7 @@ import { applyReplacements } from "@/lib/replacements";
 import GalleryImage from "@/components/GalleryImage";
 import KeyAnswer from "@/components/KeyAnswer";
 import { notFound } from "next/navigation";
-import { josaEnd } from "@/lib/josa";
+import { josa, josaEnd } from "@/lib/josa";
 
 // 슬러그 시드 — 같은 슬러그는 항상 같은 결과(빌드 안정), 인접 슬러그는 다르게.
 function slugSeed(s: string): number {
@@ -58,23 +59,17 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   // 페이지마다 다른 고유 description(품목·지역·실제 비용·권역 반영) — 중복 description 방지.
   const desc = uniqueDescription(keyword, company.phone);
   const title = uniqueTitle(keyword);
-  // 색인 게이트: 큐레이션 라이브는 index(동의어 꼬리말은 대표 변형으로 canonical 통합),
-  // GENERATE_COUNT 로 자동 추가된 staging 페이지는 noindex,follow + 상위 지역+품목으로
-  // canonical → 도어웨이/중복 색인 방지.
-  const decision = indexDecisionFor(keyword);
-  // 사이트맵은 slug 를 encodeURIComponent 로 인코딩해 제출한다(sitemap.ts).
-  // canonical/og:url 도 동일하게 퍼센트 인코딩해, 한글 슬러그의 raw(가) vs
-  // 인코딩(%EA%B0%95) 표기가 달라 구글이 서로 다른 URL로 오인하는 여지를 없앤다.
-  // 지역 허브와 의도가 겹치는 "{지역}-바닥재철거/바닥철거"는 허브가 대표 URL(카니발라이제이션 해소).
-  const hubRegion = hubCanonicalRegionFor(keyword);
-  const canonicalUrl = hubRegion
-    ? `${siteUrl}/services/${encodeURIComponent(hubRegion)}`
-    : `${siteUrl}/${encodeURIComponent(decision.canonicalSlug)}`;
+  // 색인 게이트(단일 출처: src/lib/seo/indexability.ts) —
+  //   Tier A: index,follow + self-canonical(사이트맵 포함)
+  //   Tier B: noindex,follow 또는 canonical 을 대표 URL(동의어 대표·지역 허브)로 통합
+  // canonical/og:url 은 사이트맵 loc 과 동일한 퍼센트 인코딩 절대주소를 쓴다(표기 불일치 방지).
+  const ix = indexabilityFor(keyword);
+  const canonicalUrl = ix.canonicalUrl;
   return {
     title,
     description: desc,
     alternates: { canonical: canonicalUrl },
-    robots: decision.index ? undefined : { index: false, follow: true },
+    robots: ix.indexable ? undefined : { index: false, follow: true },
     openGraph: {
       title: applyReplacements(`${keyword.keyword} | 프로다`),
       description: desc,
@@ -124,7 +119,8 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
   // 사진견적/다음공정을 슬러그 시드로 조합해 형제 페이지끼리도 문단이 달라진다).
   const combo = comboProfileFor(keyword);
   // 페이지별 관련성 높은 FAQ — 모디파이어 적합 + 시드 변형(전 페이지 동일 FAQ 제거).
-  const faqSubset = pickFaqs(keyword, 8);
+  // 조합 페이지는 3~5개만 노출(공통 FAQ 전체 반복 방지 — 전체 목록은 /faq 허브에 집중).
+  const faqSubset = pickFaqs(keyword, 5);
   // 바닥재별 철거 특성 비교(현재 품목 강조) — 페이지 정보가치·고유성 강화.
   const compareKey = compareKeyOf(keyword.item);
 
@@ -152,10 +148,12 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
       )
     : [];
   // 1) 실제 비포/애프터 시공 사례 — 같은 지역 사례가 있으면 우선 노출(로컬 실증),
-  //    없으면 전체 풀에서 슬러그 시드로 2건 선택(페이지마다 다른 조합).
+  //    없으면 같은 품목 → 전체 풀 순서로 폴백. 타지역 사례는 아래 렌더에서
+  //    '수도권 유사 품목 사례'로 명시해 해당 지역 실적처럼 보이지 않게 한다.
   const regionCases = keyword.region ? galleryItems.filter((c) => c.region === keyword.region) : [];
-  const casePool = regionCases.length >= 2 ? regionCases : galleryItems;
-  // 시공사례는 수도권 전역 공통(대표) 실적 — 모든 페이지에 공통 노출(3세트).
+  const itemCases = keyword.item ? galleryItems.filter((c) => c.item === keyword.item) : [];
+  const casesAreLocal = regionCases.length >= 2;
+  const casePool = casesAreLocal ? regionCases : itemCases.length >= 2 ? itemCases : galleryItems;
   const cases = rotatePick(casePool, seed, 3);
   // 1-b) 작업 현장(시공중) 실사진 — 슬러그 시드로 3장 회전(페이지마다 다른 조합).
   //      (XOR 결과는 부호가 생길 수 있어 >>> 0 로 부호 없는 정수로 만든다 — 음수 인덱스 방지)
@@ -170,6 +168,8 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
   const regionItemReviews = keyword.region ? itemReviews.filter((r) => r.region === keyword.region) : [];
   const reviewPool = regionItemReviews.length >= 2 ? regionItemReviews : itemReviews.length >= 2 ? itemReviews : reviews;
   const pageReviews = rotatePick(reviewPool, seed, 2);
+  // 노출 후기가 모두 이 지역 작업인지 — 아니면 '수도권 유사 작업 후기'로 명시(지역 실적 오인 방지).
+  const reviewsAreLocal = !keyword.region || pageReviews.every((r) => r.region === keyword.region);
 
   // region-item 계열은 지역 허브(/services/{region})를 중간 단계로 끼워 사일로를 완성한다.
   // 허브 존재 조건은 허브의 generateStaticParams(해당 지역에 region-item 존재)와 일치시킨다.
@@ -318,7 +318,7 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
         <div className="max-w-3xl mx-auto">
           <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">{kw} 포인트 한눈에</p>
           <p className="text-xs text-gray-500 mb-5 leading-relaxed">
-            {applyReplacements(`${keyword.item || "바닥재"}는 부착 방식에 따라 철거 방법이 달라집니다. 아래는 이 바닥재의 실제 시공·철거 특성입니다.`)}
+            {applyReplacements(`${josa(keyword.item || "바닥재", "은는")} 부착 방식에 따라 철거 방법이 달라집니다. 아래는 이 바닥재의 실제 시공·철거 특성입니다.`)}
           </p>
           <dl className="grid grid-cols-1 sm:grid-cols-2 gap-px border border-gray-200 bg-gray-200">
             {itemFactRows.map(([label, value]) => (
@@ -380,7 +380,11 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
       {cases.length > 0 && (
         <section className="py-10 px-5 bg-[#F7F6F3]">
           <div className="max-w-3xl mx-auto">
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-5">실제 시공 사례 · Before / After</p>
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-5">
+              {casesAreLocal
+                ? `${keyword.region} 실제 시공 사례 · Before / After`
+                : "수도권 유사 품목 시공 사례 · Before / After"}
+            </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               {cases.map((c) => (
                 <div key={c.id} className="border border-gray-200">
@@ -397,7 +401,12 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
               ))}
             </div>
             <p className="text-xs text-gray-400 mt-4">
-              {keyword.region ? `${keyword.region} 포함 ` : ""}수도권 전역에서 동일 팀·동일 품질로 진행한 실제 바닥재 철거·샌딩 시공 사례입니다. 더 많은 사례는{" "}
+              {casesAreLocal
+                ? `${keyword.region} 현장에서 진행한 실제 시공 사례입니다. `
+                : keyword.region
+                  ? `아래는 ${keyword.region} 현장이 아닌, 수도권에서 진행한 유사 바닥재 시공 사례입니다(카드에 실제 작업 지역 표기). 같은 팀·같은 방식으로 작업하며, ${keyword.region} 방문 상담이 가능합니다. `
+                  : "수도권 전역에서 동일 팀·동일 품질로 진행한 실제 바닥재 철거·샌딩 시공 사례입니다. "}
+              더 많은 사례는{" "}
               <Link href="/gallery" className="text-[#9A8A2E] underline underline-offset-2">시공 갤러리</Link>에서 보실 수 있습니다.
             </p>
           </div>
@@ -415,13 +424,13 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
                 <GalleryImage
                   key={p.id}
                   src={p.src}
-                  alt={`${keyword.region ? keyword.region + " " : ""}${keyword.item || "바닥재 철거"} 작업 현장 — 직접 시공`}
+                  alt={`${keyword.item || "바닥재 철거"} 작업 현장(수도권) — 직접 시공`}
                   className="aspect-square"
                 />
               ))}
             </div>
             <p className="text-xs text-gray-400 mt-3">
-              저희가 직접 진행한 실제 작업 현장입니다. 철거 → 본드·잔여물 정리까지 한 팀이 끝까지 책임집니다.
+              수도권 각 현장에서 저희가 직접 진행한 실제 작업 사진입니다. 철거 → 본드·잔여물 정리까지 한 팀이 끝까지 책임집니다.
             </p>
           </div>
         </section>
@@ -549,7 +558,9 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
       {pageReviews.length > 0 && (
         <section className="py-10 px-5 bg-[#F7F6F3]">
           <div className="max-w-3xl mx-auto">
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-5">고객 후기</p>
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-5">
+              {reviewsAreLocal ? "고객 후기" : "고객 후기 · 수도권 유사 작업"}
+            </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {pageReviews.map((r) => (
                 <figure key={r.id} className="bg-white border border-gray-200 p-4">
@@ -565,7 +576,10 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
               ))}
             </div>
             <p className="text-xs text-gray-400 mt-4">
-              실제 작업 고객 후기입니다. 더 보기 →{" "}
+              {reviewsAreLocal
+                ? "실제 작업 고객 후기입니다. "
+                : "같은 품목의 수도권 실제 작업 후기입니다(표기 지역 = 실제 작업 지역). "}
+              더 보기 →{" "}
               <Link href="/reviews" className="text-[#9A8A2E] underline underline-offset-2">후기 전체</Link>
             </p>
           </div>
@@ -599,7 +613,7 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
           <div className="max-w-3xl mx-auto">
             <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">{applyReplacements(`지역별 ${keyword.item}`)}</p>
             <p className="text-xs text-gray-500 mb-4 leading-relaxed">
-              {applyReplacements(`${keyword.item}는 서울·경기·인천 수도권 전 지역에서 같은 팀·같은 품질로 진행합니다. 아래에서 작업 지역을 선택하면 해당 지역 ${keyword.item} 안내(현장 특성·비용·사례)를 보실 수 있습니다.`)}
+              {applyReplacements(`${josa(keyword.item!, "은는")} 서울·경기·인천 수도권 전 지역에서 같은 팀·같은 품질로 진행합니다. 아래에서 작업 지역을 선택하면 해당 지역 ${keyword.item} 안내(현장 특성·비용·사례)를 보실 수 있습니다.`)}
             </p>
             <div className="flex flex-wrap gap-2">
               {sameItemRegionLinks.map((k) => (
