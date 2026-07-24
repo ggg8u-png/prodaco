@@ -61,9 +61,28 @@ const businessSameAs: string[] = company.sameAs;
 // 사업자(NAP) 신뢰신호 — businessConfig(company.business)에 값이 있을 때만 JSON-LD에 주입.
 // 미확인 정보(상호·주소·사업자등록번호·대표자)는 넣지 않는다(허위 표기 방지). 값 확보 즉시 자동 반영.
 const b = company.business;
+
+// 주소 문자열을 PostalAddress 구조(광역/시군구/도로명)로 분해 — 로컬 엔티티 신호 강화.
+//   "경기도 파주시 물향기1로 194, 1901호" → region:경기도 · locality:파주시 · street:나머지
+// 표준 형태가 아니면 전체를 streetAddress 로 두어 안전하게 폴백한다(임의 분해로 허위 표기 방지).
+function postalAddressOf(addr: string): Record<string, string> {
+  const parts = addr.trim().split(/\s+/);
+  const region = /(도|특별시|광역시|특별자치시|특별자치도)$/.test(parts[0] || "") ? parts[0] : "";
+  const afterRegion = region ? parts.slice(1) : parts;
+  const locality = /(시|군|구)$/.test(afterRegion[0] || "") ? afterRegion[0] : "";
+  const street = (locality ? afterRegion.slice(1) : afterRegion).join(" ");
+  return {
+    "@type": "PostalAddress",
+    ...(region ? { addressRegion: region } : {}),
+    ...(locality ? { addressLocality: locality } : {}),
+    streetAddress: street || addr,
+    addressCountry: "KR",
+  };
+}
+
 const napJsonLd: Record<string, unknown> = {
   ...(b.legalName ? { legalName: b.legalName } : {}),
-  ...(b.address ? { address: { "@type": "PostalAddress", streetAddress: b.address, addressCountry: "KR" } } : {}),
+  ...(b.address ? { address: postalAddressOf(b.address) } : {}),
   ...(b.registrationNumber ? { taxID: b.registrationNumber } : {}),
   ...(b.representativeName ? { founder: { "@type": "Person", name: b.representativeName } } : {}),
 };

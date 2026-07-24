@@ -94,10 +94,24 @@ export function uniqueDescription(k: KeywordEntry, phone: string): string {
 }
 
 // ─── 고유 타이틀 ───────────────────────────────────────────────────────────────
+// 지역+품목(모디파이어 없음) 기본 접미 후보 — 형제 지역 페이지끼리 title 이 겹치지 않도록
+// 슬러그 시드로 혜택형 문구를 회전 선택한다. (이전에는 1,170개 region-item 이 모두
+// "수도권 바닥재 철거 전문" 한 줄을 공유해 near-duplicate title 신호 + 낮은 CTR 을 유발했다.)
+const REGION_ITEM_HOOKS = [
+  "실측 정산·당일 상담",
+  "본드·잔여물까지 정리",
+  "10년 수도권 전문",
+  "하지 손상 없이 철거",
+  "다음 공정 바로 가능",
+  "사진 한 장 가견적",
+  "평당 참고가 안내",
+];
+
 export function uniqueTitle(k: KeywordEntry): string {
   if (k.tail) return applyReplacements(`${k.keyword} · ${k.tail}`);
   const m = k.modifier || "";
-  let suffix = "수도권 바닥재 철거 전문";
+  // 기본(모디파이어 없음)은 시드 회전 훅으로 페이지마다 다른 접미를 준다.
+  let suffix = REGION_ITEM_HOOKS[seedOf(k.slug) % REGION_ITEM_HOOKS.length];
   if (/(비용|가격|평당)/.test(m)) suffix = "평당 참고가·실측 정산";
   else if (m === "견적") suffix = "사진 한 장 가견적";
   else if (/(추천|잘하는곳|전문업체)/.test(m)) suffix = "10년 전문 비교 안내";
