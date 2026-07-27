@@ -15,6 +15,16 @@ export interface KeyAnswer {
   supplement: string;
 }
 
+// 슬러그 시드(FNV-1a) — 형제 페이지끼리 답변 변형을 다르게 고르는 결정적 시드.
+function slugSeedOf(s: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
 // (export: 감사 스크립트가 제목·본문 품목 일치를 검증할 때 사용)
 export function familyLabel(item: string): string {
   if (/(샌딩|면갈이|마루재생|마루코팅)/.test(item)) return "샌딩(면갈이)";
@@ -139,14 +149,26 @@ export function keyAnswerFor(k: KeywordEntry): KeyAnswer {
   }
 
   // ── 기본(region-item 등) ─────────────────────────────────────────────────────
+  // 형제 페이지(같은 품목, 다른 지역) near-duplicate 완화 — 같은 사실을 다른 문장으로
+  // 서술하는 시드 변형 풀(허위 지역 구체사실 없이 문장만 다르게).
   const where = k.region ? `${k.region} ` : "수도권 ";
+  const fam = familyLabel(item);
+  const seed = slugSeedOf(k.slug);
+  const answers = [
+    // "~는 하지 …"가 '~는 하지 (않고)'로 오독되지 않게 바탕면(하지)로 병기.
+    `${where}${josa(fam, "은는")} 바탕면(하지) 손상 없이 철거한 뒤 본드·잔여물까지 정리해 다음 공정이 바로 가능한 상태로 마무리합니다.`,
+    `${where}현장의 ${josa(fam, "은는")} 재질·부착 방식을 먼저 판단한 뒤, 바탕면을 다치지 않게 철거하고 본드·잔여물 정리까지 한 흐름으로 끝냅니다.`,
+    `${where}${fam} 작업은 뜯는 것보다 마무리가 관건입니다. 바탕면 손상 없이 걷어낸 뒤 접착제 잔여물을 정리해, 다음 시공이 바로 올라갈 수 있는 상태로 인계합니다.`,
+  ];
+  const supplements = [
+    "사진으로 가견적을 안내한 뒤 현장 상태를 확인합니다. 본드 잔여물과 샌딩 범위에 따라 다음 공정 준비 수준이 달라질 수 있습니다. 참고가는 현장별로 상이하며 작업 후 실측 면적으로 정산합니다.",
+    "현장 사진과 대략 면적을 보내주시면 재질·접착 상태를 보고 1차 가견적을 드립니다. 최종 비용은 작업 후 실측 면적 기준으로만 정산하며, 폐기물·출장 등 별도 항목은 미리 안내합니다.",
+    "비용은 바닥재 종류·면적·본드 상태에 따라 달라져 사진 상담을 먼저 권합니다. 작업 완료 후 실측 면적으로 정산하고, 다음 공정(새 바닥재) 계획을 알려주시면 마무리 수준을 그에 맞춥니다.",
+  ];
   return {
     question: `${kw}, 어떻게 진행되나요?`,
-    answer:
-      // "~는 하지 …"가 '~는 하지 (않고)'로 오독되지 않게 바탕면(하지)로 병기.
-      `${where}${josa(familyLabel(item), "은는")} 바탕면(하지) 손상 없이 철거한 뒤 본드·잔여물까지 정리해 다음 공정이 바로 가능한 상태로 마무리합니다.`,
-    supplement:
-      "사진으로 가견적을 안내한 뒤 현장 상태를 확인합니다. 본드 잔여물과 샌딩 범위에 따라 다음 공정 준비 수준이 달라질 수 있습니다. 참고가는 현장별로 상이하며 작업 후 실측 면적으로 정산합니다.",
+    answer: answers[seed % answers.length],
+    supplement: supplements[(seed >> 3) % supplements.length],
   };
 }
 

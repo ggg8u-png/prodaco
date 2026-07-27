@@ -122,10 +122,18 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
   // 사진견적/다음공정을 슬러그 시드로 조합해 형제 페이지끼리도 문단이 달라진다).
   const combo = comboProfileFor(keyword);
   // 페이지별 관련성 높은 FAQ — 모디파이어 적합 + 시드 변형(전 페이지 동일 FAQ 제거).
-  // 조합 페이지는 3~5개만 노출(공통 FAQ 전체 반복 방지 — 전체 목록은 /faq 허브에 집중).
-  const faqSubset = pickFaqs(keyword, 5);
+  // 개수도 시드로 4~5개 변형 — 형제 페이지끼리 FAQ 집합이 더 자주 달라진다.
+  // (전체 목록은 /faq 허브에 집중)
+  const faqSubset = pickFaqs(keyword, 4 + (slugSeed(slug) % 2));
   // 바닥재별 철거 특성 비교(현재 품목 강조) — 페이지 정보가치·고유성 강화.
   const compareKey = compareKeyOf(keyword.item);
+  // 비교표는 현재 품목 행 + 시드 회전 3행만 — 전 6행을 모든 페이지에 반복하지 않는다.
+  const compareOthers = FLOOR_COMPARE.filter((r) => r.key !== compareKey);
+  const compareStart = slugSeed(slug) % Math.max(1, compareOthers.length);
+  const compareRows = [
+    ...FLOOR_COMPARE.filter((r) => r.key === compareKey),
+    ...Array.from({ length: Math.min(3, compareOthers.length) }, (_, i) => compareOthers[(compareStart + i) % compareOthers.length]),
+  ];
 
   // 인근 지역(같은 품목) 실링크 — 로컬 사일로. 실제 존재하는 페이지만 링크.
   const neighborLinks = keyword.region && keyword.item
@@ -437,7 +445,13 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
               ))}
             </div>
             <p className="text-xs text-gray-400 mt-3">
-              수도권 각 현장에서 저희가 직접 진행한 실제 작업 사진입니다. 철거 → 본드·잔여물 정리까지 한 팀이 끝까지 책임집니다.
+              {/* 형제 페이지 공통 문구 완화 — 같은 사실의 시드 변형(허위 지역 실적 없음) */}
+              {[
+                "수도권 각 현장에서 저희가 직접 진행한 실제 작업 사진입니다. 철거 → 본드·잔여물 정리까지 한 팀이 끝까지 책임집니다.",
+                "실제 수도권 현장에서 저희 팀이 작업한 사진입니다. 철거부터 본드·잔여물 정리까지 같은 팀이 마무리합니다.",
+                "저희가 수도권 현장에서 직접 작업한 기록 사진입니다. 걷어내는 것에서 끝나지 않고 잔여물 정리까지 한 팀이 진행합니다.",
+                "수도권 현장 실작업 사진입니다. 철거와 본드·잔여물 정리를 나누지 않고 한 팀이 끝까지 책임지고 마무리합니다.",
+              ][seed % 4]}
             </p>
           </div>
         </section>
@@ -462,7 +476,9 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {FLOOR_COMPARE.map((row) => {
+                {/* 전 6행 반복 대신 현재 품목 + 시드 회전 비교 3행 — 페이지마다 비교 대상이
+                    달라져 형제 페이지 공통 블록이 줄어든다(수치는 동일 실데이터). */}
+                {compareRows.map((row) => {
                   const active = !!compareKey && row.key === compareKey;
                   return (
                     <tr key={row.key} className={active ? "bg-[#FFF8D6]" : ""}>

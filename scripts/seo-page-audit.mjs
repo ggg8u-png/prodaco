@@ -86,6 +86,10 @@ function mainText(html) {
   let b = html.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/g, " ");
   const m = b.indexOf("<main");
   if (m >= 0) b = b.slice(m);
+  // </main> 이후(푸터·사이트 공통 내비)는 본문이 아니다 — 포함하면 사이트 공통
+  // 문구가 전 페이지 유사도를 부풀려 측정이 왜곡된다.
+  const end = b.indexOf("</main>");
+  if (end >= 0) b = b.slice(0, end);
   return b.replace(/<[^>]+>/g, " ").replace(/&[a-z#0-9]+;/gi, " ").replace(/\s+/g, " ").trim();
 }
 
