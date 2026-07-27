@@ -51,3 +51,7 @@ next-env.d.ts
 /tests/
 /scripts/seo-*.mjs
 /scripts/lib/
+# 예외 — 색인 판정/리포트 생성기는 커밋 대상인 content/seo.json 의 extraIndexSlugs 를
+# 만들어내므로 저장소에 있어야 재현·재실행이 가능하다(npm run seo:decide).
+!/scripts/seo-index-decision.mjs
+!/scripts/seo-index-report.mjs

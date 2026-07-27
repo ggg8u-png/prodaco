@@ -12,11 +12,15 @@
     "promote": "node scripts/promote-keywords.mjs",
     "seo:indexnow": "node scripts/indexnow.mjs",
     "seo:audit": "node scripts/audit-seo.mjs",
-    "seo:gate": "npm run test:seo && npm run seo:quality",
+    "seo:gate": "npm run test:seo && npm run seo:quality && npm run seo:validate-index",
     "test:seo": "node scripts/ts-run.mjs scripts/seo-tests.ts",
     "seo:quality": "node scripts/ts-run.mjs scripts/seo-quality-audit.ts",
     "seo:quality:full": "node scripts/ts-run.mjs scripts/seo-quality-audit.ts --full",
     "seo:urls": "node scripts/ts-run.mjs scripts/seo-url-audit.ts",
+    "seo:validate-index": "node scripts/ts-run.mjs scripts/seo-validate-index.ts",
+    "seo:decide": "node scripts/seo-index-decision.mjs",
+    "seo:decide:write": "node scripts/seo-index-decision.mjs --write",
+    "typecheck": "tsc --noEmit",
     "verify:dns": "node scripts/check-dns-txt.mjs"
   },
   "dependencies": {

@@ -14,6 +14,8 @@ export const metadata: Metadata = {
   description:
     "서울·경기·인천 지역별·품목별 바닥 철거·샌딩 안내. 강마루·데코타일·장판·타일 철거와 비용·견적 페이지를 한눈에.",
   alternates: { canonical: `${process.env.NEXT_PUBLIC_SITE_URL || "https://prodaco.kr"}/services` },
+  // og:url 을 명시하지 않으면 루트 레이아웃의 사이트 URL 이 상속돼 canonical 과 어긋난다.
+  openGraph: { url: `${process.env.NEXT_PUBLIC_SITE_URL || "https://prodaco.kr"}/services` },
 };
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://prodaco.kr";

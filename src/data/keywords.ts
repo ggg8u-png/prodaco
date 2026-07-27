@@ -14,6 +14,7 @@ const seo = seoSettings as {
   autoIndexByGalleryCase?: boolean;
   extraIndexSlugs?: string[];
   noindexTypes?: string[];
+  requireEvidenceForIndex?: boolean;
 };
 const AUTO_INDEX_BY_CASE = seo.autoIndexByGalleryCase !== false; // 기본 true
 const EXTRA_INDEX_SLUGS = new Set(seo.extraIndexSlugs || []);
@@ -24,6 +25,22 @@ const EXTRA_INDEX_SLUGS = new Set(seo.extraIndexSlugs || []);
 //   · 단, 실제 시공사례(hasRealCase)나 수동 승인(extraIndexSlugs)은 유형과 무관히 색인(오버라이드).
 // CMS(content/seo.json)의 noindexTypes 로 조정한다. 빈 배열이면 현행(전체 색인)로 복귀.
 const NOINDEX_TYPES = new Set(seo.noindexTypes || []);
+
+// ─── 증거 게이트(requireEvidenceForIndex) ──────────────────────────────────────
+// true 면 "큐레이션 라이브에 있다"는 사실만으로는 색인하지 않는다. 검증된 시공사례
+// (hasRealCase) 또는 수동 승인(extraIndexSlugs)에 해당하는 페이지만 색인 대상이다.
+//
+// 근거(2026-07-27 GSC 실측):
+//   · 라이브 표시 Tier A 1,361개 중 실제 색인 139개. 라이브 여부는 색인 근거가 못 된다.
+//   · 「크롤링됨 - 현재 색인이 생성되지 않음」 829개와 나머지 Tier A 사이에 본문 길이·
+//     FAQ 수·사례 보유율 차이가 없다(1,318자 vs 1,317자 / 2% vs 2%) — 구글이 이미
+//     "지역·품목만 바꾼 같은 페이지"로 판정했다는 뜻.
+//   · 따라서 색인 유지 근거는 콘텐츠 분량이 아니라 실측 증거(검증 사례·클릭·반복 노출)로 둔다.
+//     허용목록은 scripts/seo-index-decision.mjs 가 실측 데이터에서 산출한다.
+//
+// 안전 방향: 설정이 비거나 깨져도 색인이 늘지 않고 noindex 쪽으로 닫힌다.
+// (지역 허브·블로그·코어 정적 페이지는 별도 라우트라 이 게이트의 영향을 받지 않는다.)
+const REQUIRE_EVIDENCE = seo.requireEvidenceForIndex === true;
 
 // 큐레이션 라이브 키워드(검수·고가치) — 항상 생성 + 색인 대상.
 const live = liveData as KeywordEntry[];
@@ -146,7 +163,9 @@ export function isIndexable(k: KeywordEntry | string): boolean {
   if (AUTO_INDEX_BY_CASE && entry && hasRealCase(entry)) return true; // 실제 사례 보유 → 자동 승급
   // ② 약한 롱테일 유형(b2b·synonym·tail 등)은 라이브라도 색인 제외 → noindex,follow
   if (entry && NOINDEX_TYPES.has(String(entry.type))) return false;
-  // ③ 그 외 큐레이션 라이브(region-item 등 핵심 페이지)는 색인
+  // ③ 증거 게이트가 켜져 있으면 여기서 닫는다 — ①을 통과하지 못한 페이지는 색인하지 않는다.
+  if (REQUIRE_EVIDENCE) return false;
+  // ④ 그 외 큐레이션 라이브(region-item 등 핵심 페이지)는 색인
   if (liveSlugSet.has(slug)) return true; // 큐레이션 라이브(검수·고가치)
   return false;
 }
@@ -161,7 +180,10 @@ export function isIndexable(k: KeywordEntry | string): boolean {
 const GENERIC_HUB_ITEMS = new Set(["바닥재철거", "바닥철거"]);
 export function hubCanonicalRegionFor(k: KeywordEntry): string | null {
   if (k.type !== "region-item" || !k.region || !k.item) return null;
-  return GENERIC_HUB_ITEMS.has(k.item) ? k.region : null;
+  if (!GENERIC_HUB_ITEMS.has(k.item)) return null;
+  // 색인 대상일 때만 허브 canonical 을 쓴다. 강등(noindex) 페이지는 self-canonical 이어야
+  // 하므로(indexDecisionFor 불변식 ②) 여기서 제외한다.
+  return isIndexable(k) ? k.region : null;
 }
 
 export interface IndexDecision {
@@ -170,13 +192,21 @@ export interface IndexDecision {
 }
 
 // 페이지의 robots(index 여부)와 canonical 슬러그를 한 번에 결정한다.
+//
+// canonical 불변식(둘 다 GSC 에서 "대체 페이지" 오류를 만든다):
+//   ① canonical 대상은 반드시 색인 가능한 URL 이어야 한다 — 강등된 URL 을 canonical 로
+//      지목하면 canonical→noindex 모순이 된다.
+//   ② noindex 페이지는 self-canonical 을 유지한다 — noindex 와 "다른 URL 로의 canonical"을
+//      함께 내보내면 구글이 noindex 를 canonical 대상까지 옮겨 적용할 수 있다(허브 오염 위험).
+//      신호 통합은 canonical 이 아니라 follow + 내부링크로 처리한다.
 export function indexDecisionFor(k: KeywordEntry): IndexDecision {
   if (isIndexable(k)) {
-    // 라이브: 현행 동작 유지(동의어 꼬리말은 대표 변형으로 canonical).
-    return { index: true, canonicalSlug: canonicalSlugFor(k) };
+    // 동의어 꼬리말은 대표 변형으로 canonical 통합하되, 대표 변형이 강등됐으면
+    // self-canonical 로 되돌린다(불변식 ①).
+    const rep = canonicalSlugFor(k);
+    const repEntry = rep !== k.slug ? bySlug.get(rep) : undefined;
+    return { index: true, canonicalSlug: repEntry && isIndexable(repEntry) ? rep : k.slug };
   }
-  // 자동 추가(staging): noindex + 상위 지역+품목 base 로 canonical(존재 시).
-  const baseSlug = k.region && k.item ? `${k.region}-${k.item}` : null;
-  const canonicalSlug = baseSlug && bySlug.has(baseSlug) ? baseSlug : canonicalSlugFor(k);
-  return { index: false, canonicalSlug };
+  // 강등 페이지: noindex,follow + self-canonical (불변식 ②).
+  return { index: false, canonicalSlug: k.slug };
 }
