@@ -14,6 +14,10 @@ const seoTitle = settings.seoTitle || "바닥재 철거·마루 철거 견적 �
 const seoDescription = settings.seoDescription || "마루·데코타일·장판 철거, 상가·사무실 원상복구 바닥 철거 상담. 현장 사진과 면적을 보내면 작업 범위와 견적 기준을 안내합니다. 서울·경기·인천 수도권. ☎ 010-8470-4965";
 const seoKeywords = (settings.seoKeywords || "바닥재철거,마루철거,데코타일철거,장판철거,타일철거,바닥샌딩,면갈이,상가원상복구,사무실원상복구,수도권바닥철거,서울,경기,인천").split(",").map((k: string) => k.trim());
 const naverVerify = process.env.NEXT_PUBLIC_NAVER_VERIFY || settings.naverVerify || "464f17eada9bd24d089330e0143cb118086cec15";
+// 구글 소유확인 — 기본은 DNS TXT(도메인 속성) 방식이라 코드가 필요 없다(docs/dns-google-verification.md).
+// HTML 태그 방식(URL 접두어 속성)을 병행할 때만 값을 채운다. 이때 넣는 값은 서치콘솔이
+// 'HTML 태그' 방법에서 발급한 토큰이어야 한다 — DNS TXT 토큰을 그대로 넣으면 확인되지 않는다.
+const googleVerify = process.env.NEXT_PUBLIC_GOOGLE_VERIFY || settings.googleVerify || "";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -46,6 +50,7 @@ export const metadata: Metadata = {
     ? { index: true, follow: true, googleBot: { index: true, follow: true } }
     : { index: false, follow: false },
   verification: {
+    ...(googleVerify ? { google: googleVerify } : {}),
     other: {
       "naver-site-verification": naverVerify,
     },

@@ -16,7 +16,8 @@
     "test:seo": "node scripts/ts-run.mjs scripts/seo-tests.ts",
     "seo:quality": "node scripts/ts-run.mjs scripts/seo-quality-audit.ts",
     "seo:quality:full": "node scripts/ts-run.mjs scripts/seo-quality-audit.ts --full",
-    "seo:urls": "node scripts/ts-run.mjs scripts/seo-url-audit.ts"
+    "seo:urls": "node scripts/ts-run.mjs scripts/seo-url-audit.ts",
+    "verify:dns": "node scripts/check-dns-txt.mjs"
   },
   "dependencies": {
     "lucide-react": "^0.460.0",

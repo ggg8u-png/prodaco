@@ -35,6 +35,7 @@ collections:
           - { label: "SEO 설명(메타 디스크립션)", name: "seoDescription", widget: "text", hint: "검색결과 제목 아래 표시되는 설명. 100~160자 권장." }
           - { label: "SEO 키워드(쉼표로 구분)", name: "seoKeywords", widget: "string", hint: "예: 바닥재철거,마루철거,데코타일철거" }
           - { label: "네이버 소유확인 코드", name: "naverVerify", widget: "string", hint: "네이버 서치어드바이저에서 발급받은 인증 코드" }
+          - { label: "구글 소유확인 코드(HTML 태그)", name: "googleVerify", widget: "string", required: false, default: "", hint: "비워두면 됩니다. 구글은 DNS TXT(도메인 속성)로 소유확인합니다. 서치콘솔에서 'HTML 태그' 방법을 쓸 때만 그 방법으로 발급된 코드를 넣으세요(DNS TXT 값은 여기 넣어도 인증되지 않습니다)." }
 
   # ─────────────────────────────────────────────────────────────
   # 2. 업체 정보 — 서비스·강점·진행 과정·차별점
