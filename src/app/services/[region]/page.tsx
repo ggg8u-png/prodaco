@@ -14,6 +14,7 @@ import { reviews } from "@/data/reviews";
 import GalleryImage from "@/components/GalleryImage";
 import KeyAnswer from "@/components/KeyAnswer";
 import { notFound } from "next/navigation";
+import { indexabilityFor } from "@/lib/seo/indexability";
 import ui from "../../../../content/ui.json";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://prodaco.kr";
@@ -49,8 +50,29 @@ function rotatePick<T>(arr: T[], seed: number, n: number): T[] {
   return Array.from({ length: n }, (_, i) => arr[(start + i) % arr.length]);
 }
 
+// 허브 기본 화면에 노출할 핵심 품목(우선순위 순). 지역×품목 18개 전부를 키워드
+// 목록처럼 나열하지 않는다 — 도어웨이 신호이자 noindex 페이지로의 링크 낭비.
+const CORE_HUB_ITEMS = [
+  "마루철거", "강마루철거", "데코타일철거", "장판철거",
+  "타일철거", "바닥샌딩", "에폭시철거", "바닥재철거",
+] as const;
+
+// 허브 링크 영역: 색인 대상(Tier A: index + self-canonical + 사이트맵)인 페이지만,
+// 핵심 품목 우선 정렬로 최대 8개. noindex 페이지는 주요 링크 영역에서 제외한다.
+// 핵심 품목 외라도 색인 페이지(실측 증거로 유지된 페이지)는 뒤에 채워 고아를 막는다.
 function itemsForRegion(region: string) {
-  return getKeywords().filter((k) => k.type === "region-item" && k.region === region);
+  const rank = (item: string) => {
+    const i = (CORE_HUB_ITEMS as readonly string[]).indexOf(item);
+    return i === -1 ? CORE_HUB_ITEMS.length : i;
+  };
+  return getKeywords()
+    .filter((k) => k.type === "region-item" && k.region === region && k.item)
+    .filter((k) => {
+      const ix = indexabilityFor(k);
+      return ix.indexable && ix.inSitemap; // Tier A 만 — canonical 이 허브로 통합된 변형도 제외
+    })
+    .sort((a, b) => rank(a.item as string) - rank(b.item as string))
+    .slice(0, 8);
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ region: string }> }): Promise<Metadata> {
@@ -173,24 +195,29 @@ export default async function RegionHub({ params }: { params: Promise<{ region: 
       {/* GEO/AEO 빠른 답변 — H1 바로 아래(지역 단위), 질문형 + 핵심 답변 + 보충 + CTA */}
       <KeyAnswer {...keyAnswer} />
 
-      {items.length > 0 && (
-        <section className="py-12 px-5">
-          <div className="max-w-3xl mx-auto">
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-5">{ui.regionPage.capabilitiesLabel.replace("{region}", region)}</p>
-            <div className="flex flex-wrap gap-2">
-              {items.map((k) => (
-                <Link
-                  key={k.slug}
-                  href={`/${k.slug}`}
-                  className="text-sm font-medium text-[#16181D] px-3.5 py-2 border border-gray-300 bg-white hover:border-[#9A8A2E] hover:text-[#9A8A2E] transition-colors"
-                >
-                  {applyReplacements(k.keyword)}
-                </Link>
-              ))}
-            </div>
+      <section className="py-12 px-5">
+        <div className="max-w-3xl mx-auto">
+          <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-5">{ui.regionPage.capabilitiesLabel.replace("{region}", region)}</p>
+          <div className="flex flex-wrap gap-2">
+            {items.map((k) => (
+              <Link
+                key={k.slug}
+                href={`/${k.slug}`}
+                className="text-sm font-medium text-[#16181D] px-3.5 py-2 border border-gray-300 bg-white hover:border-[#9A8A2E] hover:text-[#9A8A2E] transition-colors"
+              >
+                {applyReplacements(k.keyword)}
+              </Link>
+            ))}
+            {/* 나머지 품목은 서비스 디렉터리로 — 키워드 나열 대신 허브→허브 링크로 정리 */}
+            <Link
+              href="/services"
+              className="text-sm font-medium text-gray-500 px-3.5 py-2 border border-dashed border-gray-300 hover:border-[#9A8A2E] hover:text-[#9A8A2E] transition-colors"
+            >
+              전체 서비스 보기 →
+            </Link>
           </div>
-        </section>
-      )}
+        </div>
+      </section>
 
       <section className="py-10 px-5 bg-[#F7F6F3]">
         <div className="max-w-3xl mx-auto">

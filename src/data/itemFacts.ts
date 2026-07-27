@@ -179,7 +179,9 @@ export function itemMistakesFor(item: string | undefined): string {
   return FAMILY_MISTAKES[familyKeyOf(item || "바닥재철거")];
 }
 
-function familyKeyOf(item: string): keyof typeof FAMILY {
+// 품목 → 품목군 key. FAQ 스코프(content/faq.json services)와 공유하는 단일 출처 —
+// FAQ 매칭 규칙이 여기와 어긋나면 seo-tests 의 품목-FAQ 일치 검사가 빌드를 막는다.
+export function familyKeyOf(item: string): keyof typeof FAMILY {
   const s = item || "";
   if (/(샌딩|면갈이|마루재생|마루코팅)/.test(s)) return "sanding";
   if (/(에폭시|우레탄)/.test(s)) return "coating";

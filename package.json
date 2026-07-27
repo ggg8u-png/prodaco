@@ -18,6 +18,7 @@
     "seo:quality:full": "node scripts/ts-run.mjs scripts/seo-quality-audit.ts --full",
     "seo:urls": "node scripts/ts-run.mjs scripts/seo-url-audit.ts",
     "seo:validate-index": "node scripts/ts-run.mjs scripts/seo-validate-index.ts",
+    "seo:pages": "node scripts/seo-page-audit.mjs",
     "seo:decide": "node scripts/seo-index-decision.mjs",
     "seo:decide:write": "node scripts/seo-index-decision.mjs --write",
     "typecheck": "tsc --noEmit",

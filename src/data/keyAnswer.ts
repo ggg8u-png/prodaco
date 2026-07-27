@@ -143,7 +143,8 @@ export function keyAnswerFor(k: KeywordEntry): KeyAnswer {
   return {
     question: `${kw}, 어떻게 진행되나요?`,
     answer:
-      `${where}${josa(familyLabel(item), "은는")} 하지 손상 없이 철거한 뒤 본드·잔여물까지 정리해 다음 공정이 바로 가능한 상태로 마무리합니다.`,
+      // "~는 하지 …"가 '~는 하지 (않고)'로 오독되지 않게 바탕면(하지)로 병기.
+      `${where}${josa(familyLabel(item), "은는")} 바탕면(하지) 손상 없이 철거한 뒤 본드·잔여물까지 정리해 다음 공정이 바로 가능한 상태로 마무리합니다.`,
     supplement:
       "사진으로 가견적을 안내한 뒤 현장 상태를 확인합니다. 본드 잔여물과 샌딩 범위에 따라 다음 공정 준비 수준이 달라질 수 있습니다. 참고가는 현장별로 상이하며 작업 후 실측 면적으로 정산합니다.",
   };
@@ -155,7 +156,8 @@ export function keyAnswerForRegion(region: string): KeyAnswer {
   const where = cluster && cluster !== "수도권" ? `${cluster} ` : "수도권 ";
   return normalizeKeyAnswer({
     question: `${region} 바닥재 철거는 어떻게 진행되나요?`,
-    answer: `${josa(region, "을를")} 포함한 ${where}전역을 방문해 마루·데코타일·장판·타일 철거와 바닥 샌딩을 하지 손상 없이 진행합니다.`,
+    // "샌딩을 하지 손상 없이" 오독 방지 — 하지 손상 표현을 문두로(어순 재배치).
+    answer: `${josa(region, "을를")} 포함한 ${where}전역을 방문해 하지 손상 없이 마루·데코타일·장판·타일 철거와 바닥 샌딩을 진행합니다.`,
     supplement: `${region} 현장은 건물 유형과 주차·엘리베이터 여건을 먼저 확인해 반출 동선을 잡습니다. 참고가는 바닥재·면적별로 달라 사진 상담 후 실측 면적으로 정산합니다. 본드·잔여물까지 정리해 다음 공정이 바로 가능하게 마무리합니다.`,
   });
 }
@@ -163,9 +165,13 @@ export function keyAnswerForRegion(region: string): KeyAnswer {
 // 홈(/) 용 — 사이트 단위 대표 질문 + 핵심답변 + 보충설명.
 export function keyAnswerForHome(): KeyAnswer {
   return normalizeKeyAnswer({
-    question: "수도권 바닥재 철거, 프로다는 어떻게 진행하나요?",
+    // 브랜드명+조사 결합 금지 — CMS 전역 치환(content/replacements.json)이 브랜드명을
+    // 삭제하면 "프로다는" → ", 는" 처럼 조사만 남는 문법 오류가 된다.
+    question: "수도권 바닥재 철거, 어떻게 진행하나요?",
+    // "샌딩을 하지 손상 없이"는 '샌딩을 하지 (않고)'로 오독된다 — 하지(下地) 손상 표현은
+    // 목적격 조사 바로 뒤에 두지 않는다(어순 재배치).
     answer:
-      "마루·데코타일·장판·타일 철거와 바닥 샌딩을 하지 손상 없이 진행하고, 본드·잔여물까지 정리해 다음 공정이 바로 가능한 상태로 마무리합니다.",
+      "하지 손상 없이 마루·데코타일·장판·타일 철거와 바닥 샌딩을 진행하고, 본드·잔여물까지 정리해 다음 공정이 바로 가능한 상태로 마무리합니다.",
     supplement:
       "서울·경기·인천 수도권 전역을 방문합니다. 사진 2~3장이면 1차 가견적을 안내하고, 참고가는 현장별로 달라 작업 후 실측 면적으로 정산합니다. 뜯는 것으로 끝내지 않고 샌딩까지 하는 것이 저희 기준입니다.",
   });

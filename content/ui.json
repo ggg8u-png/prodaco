@@ -71,7 +71,7 @@
     "itemSectionLabel": "바닥재(품목)별 비용·견적 안내"
   },
   "regionPage": {
-    "introTemplate": "{region}을(를) 포함한 {cluster} 전역 방문. 강마루·데코타일·장판·타일 철거와 바닥 샌딩까지, {experience} 전문 업체가 하지 손상 없이 철거하고 본드·잔여물까지 정리해 다음 공정이 바로 가능한 상태로 마무리합니다.",
+    "introTemplate": "{region}을(를) 포함한 {cluster} 전역 방문. 강마루·데코타일·장판·타일 철거와 바닥 샌딩까지, {experience} 전문 업체가 바탕면(하지) 손상 없이 철거하고 본드·잔여물까지 정리해 다음 공정이 바로 가능한 상태로 마무리합니다.",
     "capabilitiesLabel": "{region}에서 가능한 작업",
     "pricingLabel": "{region} 바닥재별 철거 비용 참고",
     "pricingDisclaimer": "아래는 일반 시장 참고 범위입니다(2024년 조사 기준 · 보장가 아님). 폐자재 처리·출장비는 별도일 수 있으며, 저희는 유선 가견적 후 ",

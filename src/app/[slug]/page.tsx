@@ -110,7 +110,10 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
   // 전역 문구 치환/삭제(어드민 ⑫) — 화면에 보이는 키워드 텍스트에도 적용(슬러그/URL은 불변).
   const kw = applyReplacements(keyword.keyword);
   const kwTail = keyword.tail ? applyReplacements(keyword.tail) : keyword.tail;
-  const related = getRelatedKeywords(keyword, allKeywords, 10);
+  // 관련 서비스는 색인(Tier A) 페이지만 6개까지 — noindex 페이지로의 링크 나열을 줄인다.
+  const related = getRelatedKeywords(keyword, allKeywords, 10)
+    .filter((k) => indexabilityFor(k).inSitemap)
+    .slice(0, 6);
   // 품목·꼬리말에 맞는 심층 가이드(블로그) 링크 — 프로그래매틱↔필러 사일로 연결.
   const guides = relatedGuidesFor(keyword, 3);
   // GEO/AEO 핵심 답변(질문형) — H1 아래 노출 + FAQ 스키마 맨 앞에 대표 질문으로 병합.
@@ -140,13 +143,14 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
   // 페이지로 링크해 ① 고립을 풀고(크롤·색인 경로 확보) ② 페이지별 고유 '지역 목록'을 더한다.
   // region 페이지엔 이미 neighborLinks 섹션이 있으므로 중복을 피해 렌더하지 않는다.
   // 슬러그 시드로 지역을 회전 선택해 형제 페이지(비용/방법/기간…)끼리도 목록이 달라지게 한다.
-  const sameItemRegionLinks = keyword.item && neighborLinks.length === 0
-    ? rotatePick(
-        allKeywords.filter((k) => k.type === "region-item" && k.item === keyword.item && k.region),
-        seed,
-        24
-      )
+  // 전 지역 나열(24개) 대신 8개만 — 색인(Tier A) 페이지를 우선 배치해 링크 가치를 모은다.
+  const sameItemRegionPool = keyword.item && neighborLinks.length === 0
+    ? allKeywords.filter((k) => k.type === "region-item" && k.item === keyword.item && k.region)
     : [];
+  const sameItemRegionLinks = [
+    ...rotatePick(sameItemRegionPool.filter((k) => indexabilityFor(k).inSitemap), seed, 8),
+    ...rotatePick(sameItemRegionPool.filter((k) => !indexabilityFor(k).inSitemap), seed, 8),
+  ].slice(0, 8);
   // 1) 실제 비포/애프터 시공 사례 — 같은 지역 사례가 있으면 우선 노출(로컬 실증),
   //    없으면 같은 품목 → 전체 풀 순서로 폴백. 타지역 사례는 아래 렌더에서
   //    '수도권 유사 품목 사례'로 명시해 해당 지역 실적처럼 보이지 않게 한다.
@@ -158,8 +162,11 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
   // 1-b) 작업 현장(시공중) 실사진 — 슬러그 시드로 3장 회전(페이지마다 다른 조합).
   //      (XOR 결과는 부호가 생길 수 있어 >>> 0 로 부호 없는 정수로 만든다 — 음수 인덱스 방지)
   const sitePhotos = rotatePick(worksitePhotos, (seed ^ 0x2f) >>> 0, 6);
-  // 2) 품목별 실제 비용 참고표 — 현재 품목 행을 강조.
+  // 2) 품목별 실제 비용 참고표 — 전 품목 표 반복 대신 현재 품목 행만(공통 블록 축소).
+  //    품목 매칭 행이 없는 페이지(b2b 등)만 전체 표 폴백.
   const costKey = costKeyOf(keyword.item);
+  const matchedCostRows = FLOOR_COSTS.filter((r) => r.key === costKey);
+  const costRows = matchedCostRows.length > 0 ? matchedCostRows : FLOOR_COSTS;
   // 3) 실제 고객 후기 — 같은 품목 후기를 우선, 부족하면 시드로 채움.
   const itemReviews = keyword.item
     ? reviews.filter((r) => r.item && keyword.item && r.item.includes(keyword.item.replace(/철거|제거|샌딩|뜯기|걷어내기/g, "").trim()))
@@ -478,7 +485,9 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
 
       <section className="py-10 px-5">
         <div className="max-w-3xl mx-auto">
-          <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">바닥재별 철거 비용 참고</p>
+          <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">
+            {costRows.length === 1 ? `${costRows[0].label} 비용 참고` : "바닥재별 철거 비용 참고"}
+          </p>
           <p className="text-xs text-gray-500 mb-5 leading-relaxed">
             아래는 일반 시장 참고 범위입니다(2024년 조사 기준 · 보장가 아님). 폐자재 처리·출장비는 별도일 수 있으며,
             저희는 유선 가견적 후 <strong>실측 면적 기준으로 최종 정산</strong>합니다.
@@ -493,12 +502,14 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {FLOOR_COSTS.map((row) => {
+                {/* 전 품목 가격표를 모든 조합 페이지에 반복하지 않는다 — 현재 품목 행만.
+                    전체 표는 서비스 디렉터리(/services)와 지역 허브가 담당. */}
+                {costRows.map((row) => {
                   const active = row.key === costKey;
                   return (
                     <tr key={row.key} className={active ? "bg-[#FFF8D6]" : ""}>
                       <td className="px-4 py-2.5 font-medium text-[#16181D]">
-                        {row.label}{active && <span className="ml-1.5 text-[10px] font-bold text-[#9A8A2E]">← 현재 품목</span>}
+                        {row.label}{active && costRows.length > 1 && <span className="ml-1.5 text-[10px] font-bold text-[#9A8A2E]">← 현재 품목</span>}
                       </td>
                       <td className="px-4 py-2.5 text-gray-700 whitespace-nowrap">{perPyeongText(row)}</td>
                       <td className="px-4 py-2.5 text-gray-500 text-xs hidden sm:table-cell">{row.note}</td>
@@ -510,31 +521,10 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
           </div>
           <p className="text-xs text-gray-400 mt-3">
             정확한 비용은 현장 사진·평수·바닥재 종류를 보내주시면 유선으로 안내드립니다. ☎ {company.phone}
+            {costRows.length === 1 && (
+              <> · <Link href="/services" className="underline underline-offset-2 hover:text-[#9A8A2E]">다른 바닥재 비용 참고표 보기</Link></>
+            )}
           </p>
-        </div>
-      </section>
-
-      <section className="py-10 px-5 bg-[#F7F6F3]">
-        <div className="max-w-3xl mx-auto">
-          <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-5">저희 강점</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-0 divide-y sm:divide-y-0 sm:divide-x divide-gray-200">
-            <div className="space-y-0 divide-y divide-gray-200">
-              {company.strengths.slice(0, Math.ceil(company.strengths.length / 2)).map((s) => (
-                <div key={s.label} className="py-4 pr-0 sm:pr-6">
-                  <p className="font-bold text-sm text-[#16181D]">{s.label}</p>
-                  <p className="text-gray-500 text-xs mt-0.5">{s.description}</p>
-                </div>
-              ))}
-            </div>
-            <div className="space-y-0 divide-y divide-gray-200">
-              {company.strengths.slice(Math.ceil(company.strengths.length / 2)).map((s) => (
-                <div key={s.label} className="py-4 pl-0 sm:pl-6">
-                  <p className="font-bold text-sm text-[#16181D]">{s.label}</p>
-                  <p className="text-gray-500 text-xs mt-0.5">{s.description}</p>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
       </section>
 

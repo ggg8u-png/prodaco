@@ -16,7 +16,7 @@ import { josa, josaEnd } from "@/lib/josa";
 import { fillTemplate } from "@/lib/template";
 import { getKeywords, getKeywordBySlug } from "@/data/keywords";
 import { indexabilityFor, keywordUrl, siteUrl } from "@/lib/seo/indexability";
-import { uniqueTitle } from "@/lib/seo";
+import { uniqueTitle, pickFaqs, faqMatchesItem } from "@/lib/seo";
 import { getContentForKeyword, familyOf } from "@/lib/content";
 import { keyAnswerFor, keyAnswerForRegion, familyLabel } from "@/data/keyAnswer";
 import { galleryItems } from "@/data/gallery";
@@ -159,6 +159,57 @@ for (const k of keywords) {
   titles.add(t);
 }
 ok(dupTitle === 0, "색인 대상 title 중복 없음", `dup=${dupTitle}`);
+
+// ── ⑫ 오독 어순·조사 고아(전 페이지 생성 본문) ───────────────────────────────
+// "샌딩을 하지 손상 없이" = '샌딩을 하지 (않고)' 로 오독되는 어순, "철거, 는" 류
+// 치환 삭제 잔존 조사를 생성 엔진 출력 전체에서 차단한다(발견 = 빌드 실패).
+{
+  const BAD = [
+    [/[을를이가은는] 하지 손상/, "조사+하지 손상(오독 어순)"],
+    [/, [는은이가] /, "조사 고아(', 는' 류)"],
+  ] as const;
+  let bad = 0;
+  const samples: string[] = [];
+  for (const k of keywords) {
+    const texts = [getContentForKeyword(k), keyAnswerFor(k).question, keyAnswerFor(k).answer];
+    for (const text of texts)
+      for (const [re, label] of BAD)
+        if (re.test(text)) {
+          bad++;
+          if (samples.length < 5) samples.push(`${k.slug}: ${label} "${(text.match(re) || [])[0]}"`);
+        }
+  }
+  ok(bad === 0, "오독 어순·조사 고아 없음(전 페이지)", `${bad}건 ${samples.join(" · ")}`);
+}
+
+// ── ⑪ 품목-FAQ 일치(전 페이지) ───────────────────────────────────────────────
+// 페이지에 노출되는 FAQ 는 반드시 그 페이지 품목군(services)과 맞아야 한다.
+// 예: 마루철거 페이지에 데코타일 본드 FAQ·타일 방수층 FAQ 금지. 불일치 = 빌드 실패.
+{
+  let mismatched = 0;
+  const samples: string[] = [];
+  for (const k of keywords) {
+    for (const f of pickFaqs(k, 4)) {
+      if (!faqMatchesItem(f, k.item)) {
+        mismatched++;
+        if (samples.length < 5) samples.push(`${k.slug} ← ${f.id}(${f.services?.join("/")})`);
+      }
+    }
+  }
+  ok(mismatched === 0, "품목-FAQ 일치(전 페이지)", `불일치 ${mismatched}건 ${samples.join(", ")}`);
+  // 대표 케이스 고정 검증 — 회귀 방지.
+  const maru = getKeywordBySlug("강남-마루철거");
+  if (maru) {
+    const ids = pickFaqs(maru, 4).map((f) => f.id);
+    ok(!ids.includes("f12"), "마루철거 페이지에 데코타일 본드 FAQ(f12) 없음", ids.join(","));
+    ok(!ids.includes("f14"), "마루철거 페이지에 타일 방수층 FAQ(f14) 없음", ids.join(","));
+  }
+  const epoxy = getKeywordBySlug("강남-에폭시철거") || keywords.find((k) => k.item === "에폭시철거");
+  if (epoxy) {
+    const efs = pickFaqs(epoxy, 4);
+    ok(efs.every((f) => faqMatchesItem(f, "에폭시철거")), "에폭시 페이지 FAQ 전부 품목 일치");
+  }
+}
 
 // ── 결과 ─────────────────────────────────────────────────────────────────────
 if (errors.length) {

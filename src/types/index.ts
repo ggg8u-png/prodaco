@@ -35,6 +35,8 @@ export interface FAQ {
   question: string;
   answer: string;
   category: string;
+  /** 적용 품목군(itemFacts 의 family key) 또는 "all". 누락 시 "all" 로 간주(범용 FAQ). */
+  services?: string[];
 }
 
 export interface BlogPost {

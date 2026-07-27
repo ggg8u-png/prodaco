@@ -3,6 +3,7 @@ import type { FAQ } from "@/types";
 import { faqs } from "@/data/faq";
 import { clusterLabelOf } from "@/data/regions";
 import { FLOOR_COSTS, costKeyOf, perPyeongText } from "@/data/costs";
+import { familyKeyOf } from "@/data/itemFacts";
 import { applyReplacements } from "@/lib/replacements";
 
 // ─── 시드 유틸 (페이지별 결정적 변형) ──────────────────────────────────────────
@@ -48,13 +49,26 @@ function preferredCategories(k: KeywordEntry): string[] {
   return ["상담", "비용", "작업방법"];
 }
 
-// 페이지별로 관련성 높은 FAQ n개를 고른다 — 모디파이어 적합 2개 + 시드 변형 2개.
-// 같은 4개가 전 페이지에 반복되던 중복 신호를 제거한다.
+// ─── 품목-FAQ 일치 ──────────────────────────────────────────────────────────────
+// FAQ 의 services(content/faq.json)가 페이지 품목군과 맞아야만 노출 후보가 된다.
+// 마루철거 페이지에 데코타일 본드 FAQ·타일 방수층 FAQ 가 섞여 나오던 문제의 단일 차단점.
+// services 누락 FAQ 는 범용("all")으로 간주 — 새 FAQ 를 CMS 에서 추가해도 깨지지 않는다.
+export function faqMatchesItem(f: FAQ, item: string | undefined): boolean {
+  const services = f.services && f.services.length ? f.services : ["all"];
+  if (services.includes("all")) return true;
+  if (!item) return false; // 품목 없는 페이지에는 품목 특화 FAQ 를 내보내지 않는다
+  return services.includes(familyKeyOf(item));
+}
+
+// 페이지별로 관련성 높은 FAQ n개를 고른다 — 품목 일치 풀 안에서 모디파이어 적합
+// 절반 + 시드 변형 절반. 같은 4개가 전 페이지에 반복되던 중복 신호를 제거하면서,
+// 현재 품목과 무관한 FAQ(예: 마루 페이지의 타일 방수층)는 후보에서 원천 제외한다.
 export function pickFaqs(k: KeywordEntry, n = 4): FAQ[] {
   const seed = seedOf(k.slug);
+  const allowed = faqs.filter((f) => faqMatchesItem(f, k.item));
   const prefs = preferredCategories(k);
   const preferred = rotate(
-    faqs.filter((f) => prefs.includes(f.category)),
+    allowed.filter((f) => prefs.includes(f.category)),
     seed
   );
   const chosen: FAQ[] = [];
@@ -63,7 +77,7 @@ export function pickFaqs(k: KeywordEntry, n = 4): FAQ[] {
     if (chosen.length >= half) break;
     chosen.push(f);
   }
-  const pool = shuffle(seed, faqs.filter((f) => !chosen.includes(f)));
+  const pool = shuffle(seed, allowed.filter((f) => !chosen.includes(f)));
   for (const f of pool) {
     if (chosen.length >= n) break;
     chosen.push(f);
