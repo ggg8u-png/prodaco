@@ -4,7 +4,7 @@
 //
 // 표기 원칙: 섹션 제목·alt·문구에 확인되지 않은 지역명·공정명을 쓰지 않는다.
 // (해당 지역 시공사례처럼 보이게 하지 않기 — 고지 문구 포함)
-import { selectWorkPhotos, workPhotoAlt, workPhotoFootnote } from "@/lib/workPhotos";
+import { selectWorkPhotos, workPhotoAlt, workPhotoFootnote, attestedRegionLabel, allAttested } from "@/lib/workPhotos";
 
 interface WorkPhotosProps {
   /** 결정적 선택 키 — 페이지 고유 경로(slug, "services/서울", "/", "gallery" 등) */
@@ -19,6 +19,8 @@ interface WorkPhotosProps {
   tone?: "white" | "offwhite";
   /** 첫 줄 소개 문구(선택) */
   intro?: string;
+  /** 페이지 지역 — 운영자 확인 지역 그룹(region-attestation)이 활성일 때만 라벨에 반영 */
+  region?: string;
 }
 
 export default function WorkPhotos({
@@ -28,9 +30,19 @@ export default function WorkPhotos({
   wide = false,
   tone = "white",
   intro,
+  region,
 }: WorkPhotosProps) {
-  const photos = selectWorkPhotos(routeKey, Math.min(count, 12));
+  const photos = selectWorkPhotos(routeKey, Math.min(count, 12), { region });
   if (photos.length === 0) return null;
+
+  // 지역 그룹 라벨은 ① 운영자 확인(confirmed) ② 페이지 지역이 그룹에 속함
+  // ③ 노출 사진 전량이 확인 풀 출신 — 세 조건이 모두 참일 때만 표기한다.
+  const groupLabel = attestedRegionLabel(region);
+  const attested = groupLabel !== null && allAttested(photos);
+  const finalHeading = attested ? `${heading} · ${groupLabel}` : heading;
+  const attestedFootnote = attested
+    ? `이 사진들은 저희 팀이 ${groupLabel}에서 작업하며 촬영한 기록입니다. 사진 속 공정은 이 페이지의 품목과 다를 수 있습니다.`
+    : null;
 
   const cols =
     photos.length >= 8
@@ -40,7 +52,7 @@ export default function WorkPhotos({
   return (
     <section className={`py-10 px-5 ${tone === "offwhite" ? "bg-[#F7F6F3]" : ""} border-t border-gray-100`}>
       <div className={`${wide ? "max-w-[1200px]" : "max-w-3xl"} mx-auto`}>
-        <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">{heading}</p>
+        <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">{finalHeading}</p>
         {intro && <p className="text-xs text-gray-500 mb-5 leading-relaxed">{intro}</p>}
         <div className={`grid ${cols} gap-2 sm:gap-3 ${intro ? "" : "mt-3"}`}>
           {photos.map((p) => (
@@ -56,7 +68,7 @@ export default function WorkPhotos({
             />
           ))}
         </div>
-        <p className="text-xs text-gray-400 mt-3 leading-relaxed">{workPhotoFootnote(routeKey)}</p>
+        <p className="text-xs text-gray-400 mt-3 leading-relaxed">{attestedFootnote ?? workPhotoFootnote(routeKey)}</p>
       </div>
     </section>
   );

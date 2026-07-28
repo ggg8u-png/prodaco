@@ -12,6 +12,8 @@
 //   · 사진은 지역·공정을 특정하지 않는 참고 자료로만 쓴다 — alt/문구에 확인되지 않은
 //     지역명·공정명을 넣지 않는다(섹션 제목도 "프로다 작업 현장 사진"류 중립 명칭).
 // =============================================================================
+import fs from "node:fs";
+import path from "node:path";
 import workPhotosData from "@/data/work-photos.json";
 
 export interface WorkPhoto {
@@ -32,6 +34,36 @@ interface WorkPhotoPool {
 
 const pool = workPhotosData as WorkPhotoPool;
 
+// ── 운영자 증언 기반 지역 그룹(content/photos/region-attestation.json) ─────────
+// 운영자가 "이 사진들은 강남·서초·송파 현장 촬영"이라고 확인한 사진 ID 집합.
+// confirmed:true 일 때만 활성 — 해당 지역 페이지에서 이 풀을 우선 선택하고
+// 섹션 라벨을 그룹 단위 사실("강남·서초·송파 현장")로 표기한다.
+// 개별 사진의 세부 구(區)·공정은 여전히 미확인이므로 사진 단위 단정은 하지 않는다.
+interface RegionAttestation {
+  regions: string[];
+  label: string;
+  confirmed: boolean;
+  photoIds: string[];
+}
+function loadAttestation(): RegionAttestation | null {
+  try {
+    const p = path.join(process.cwd(), "content", "photos", "region-attestation.json");
+    const a = JSON.parse(fs.readFileSync(p, "utf8")) as RegionAttestation;
+    if (a && a.confirmed === true && Array.isArray(a.photoIds) && a.photoIds.length > 0) return a;
+  } catch {
+    /* 파일 없음/파싱 실패 → 비활성 */
+  }
+  return null;
+}
+const attestation = loadAttestation();
+const attestedSet = new Set(attestation?.photoIds ?? []);
+
+/** 이 지역 페이지에 운영자 확인 지역 그룹 라벨을 쓸 수 있는가(활성 시에만). */
+export function attestedRegionLabel(region?: string): string | null {
+  if (!attestation || !region) return null;
+  return attestation.regions.includes(region) ? attestation.label : null;
+}
+
 // FNV-1a 32bit — [slug]/content.ts 의 slugSeed 와 동일 계열(의존 없이 자체 보유).
 function fnv1a(s: string): number {
   let h = 2166136261;
@@ -51,15 +83,30 @@ export function workPhotoCount(): number {
  * URL(라우트 키)별 고정 사진 n장 — 렌데부 해싱.
  * 같은 routeKey 는 항상 같은 결과, 한 페이지 안에서 중복 없음.
  * 인접 페이지는 서로 독립된 순열이라 조합이 자연스럽게 달라진다.
+ *
+ * opts.region: 운영자 확인 지역 그룹이 활성이고 region 이 그 그룹에 속하면
+ * 확인된 사진 풀 안에서만 선택한다(전량 확보 가능할 때만 — 혼합 표기 방지).
  */
-export function selectWorkPhotos(routeKey: string, count: number): WorkPhoto[] {
+export function selectWorkPhotos(routeKey: string, count: number, opts?: { region?: string }): WorkPhoto[] {
   if (pool.photos.length === 0 || count <= 0) return [];
-  const scored = pool.photos.map((p) => ({
+  let candidates = pool.photos;
+  if (opts?.region && attestedRegionLabel(opts.region)) {
+    const attested = pool.photos.filter((p) => attestedSet.has(p.id));
+    // 확인 풀만으로 요청 장수를 채울 수 있을 때만 제한 — 미확인 사진이 지역 라벨
+    // 아래 섞여 들어가는 것을 구조적으로 차단한다.
+    if (attested.length >= count) candidates = attested;
+  }
+  const scored = candidates.map((p) => ({
     p,
     score: fnv1a(`${routeKey}|${p.id}`),
   }));
   scored.sort((a, b) => b.score - a.score || (a.p.id < b.p.id ? -1 : 1));
   return scored.slice(0, Math.min(count, scored.length)).map((s) => s.p);
+}
+
+/** 선택 결과가 전부 운영자 확인 풀에서 나왔는지(라벨 표기 가능 여부 최종 판정). */
+export function allAttested(photos: WorkPhoto[]): boolean {
+  return photos.length > 0 && photos.every((p) => attestedSet.has(p.id));
 }
 
 // 중립 alt 변형 — 지역·공정 단정 없음. 페이지×사진별로 회전해 동일 alt 반복을 피하되

@@ -432,7 +432,7 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
 
       {/* 작업 현장 사진 — 중립 제목(특정 지역·공정 시공사례로 표기하지 않음),
           URL별 고정 조합 + 오인 방지 고지 문구는 컴포넌트가 담당 */}
-      <WorkPhotos routeKey={slug} count={workPhotoCount} />
+      <WorkPhotos routeKey={slug} count={workPhotoCount} region={keyword.region} />
 
       <section className="py-10 px-5 bg-[#F7F6F3]">
         <div className="max-w-3xl mx-auto">

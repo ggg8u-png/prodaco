@@ -279,7 +279,7 @@ export default async function RegionHub({ params }: { params: Promise<{ region: 
       )}
 
       {/* 작업 현장 사진 — 지역과 무관한 참고 사진(중립 제목 + 오인 방지 고지는 컴포넌트 담당) */}
-      <WorkPhotos routeKey={`services/${region}`} count={6} />
+      <WorkPhotos routeKey={`services/${region}`} count={6} region={region} />
 
       {pageReviews.length > 0 && (
         <section className="py-10 px-5 bg-[#F7F6F3]">
