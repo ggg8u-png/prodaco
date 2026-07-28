@@ -5,7 +5,7 @@ import { getKeywords, getKeywordBySlug } from "@/data/keywords";
 import { indexabilityFor } from "@/lib/seo/indexability";
 import { getContentForKeyword, getRelatedKeywords } from "@/lib/content";
 import { company } from "@/data/company";
-import { galleryItems, worksitePhotos } from "@/data/gallery";
+import { galleryItems } from "@/data/gallery";
 import { reviews } from "@/data/reviews";
 import { FLOOR_COSTS, costKeyOf, perPyeongText } from "@/data/costs";
 import { itemFactsFor, FLOOR_COMPARE, compareKeyOf, itemMistakesFor } from "@/data/itemFacts";
@@ -17,6 +17,7 @@ import { comboProfileFor } from "@/data/comboProfiles";
 import { applyReplacements } from "@/lib/replacements";
 import GalleryImage from "@/components/GalleryImage";
 import KeyAnswer from "@/components/KeyAnswer";
+import WorkPhotos from "@/components/WorkPhotos";
 import { notFound } from "next/navigation";
 import { josa, josaEnd } from "@/lib/josa";
 
@@ -167,9 +168,10 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
   const casesAreLocal = regionCases.length >= 2;
   const casePool = casesAreLocal ? regionCases : itemCases.length >= 2 ? itemCases : galleryItems;
   const cases = rotatePick(casePool, seed, 3);
-  // 1-b) 작업 현장(시공중) 실사진 — 슬러그 시드로 3장 회전(페이지마다 다른 조합).
-  //      (XOR 결과는 부호가 생길 수 있어 >>> 0 로 부호 없는 정수로 만든다 — 음수 인덱스 방지)
-  const sitePhotos = rotatePick(worksitePhotos, (seed ^ 0x2f) >>> 0, 6);
+  // 1-b) 작업 현장 사진 — WorkPhotos 컴포넌트가 URL 렌데부 해싱으로 고정 선택.
+  //      (풀이 커져도 기존 페이지 조합이 일괄 재배치되지 않음 — src/lib/workPhotos.ts)
+  //      장수는 4~6장으로 시드 변형해 형제 페이지 간 구성 차이를 만든다.
+  const workPhotoCount = 4 + (seed % 3);
   // 2) 품목별 실제 비용 참고표 — 전 품목 표 반복 대신 현재 품목 행만(공통 블록 축소).
   //    품목 매칭 행이 없는 페이지(b2b 등)만 전체 표 폴백.
   const costKey = costKeyOf(keyword.item);
@@ -428,34 +430,9 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
         </section>
       )}
 
-      {sitePhotos.length > 0 && (
-        <section className="py-10 px-5 border-t border-gray-100">
-          <div className="max-w-3xl mx-auto">
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-5">
-              {applyReplacements(`작업 현장 · ${keyword.item || "바닥재 철거"} 시공중`)}
-            </p>
-            <div className="grid grid-cols-3 gap-2 sm:gap-3">
-              {sitePhotos.map((p) => (
-                <GalleryImage
-                  key={p.id}
-                  src={p.src}
-                  alt={`${keyword.item || "바닥재 철거"} 작업 현장(수도권) — 직접 시공`}
-                  className="aspect-square"
-                />
-              ))}
-            </div>
-            <p className="text-xs text-gray-400 mt-3">
-              {/* 형제 페이지 공통 문구 완화 — 같은 사실의 시드 변형(허위 지역 실적 없음) */}
-              {[
-                "수도권 각 현장에서 저희가 직접 진행한 실제 작업 사진입니다. 철거 → 본드·잔여물 정리까지 한 팀이 끝까지 책임집니다.",
-                "실제 수도권 현장에서 저희 팀이 작업한 사진입니다. 철거부터 본드·잔여물 정리까지 같은 팀이 마무리합니다.",
-                "저희가 수도권 현장에서 직접 작업한 기록 사진입니다. 걷어내는 것에서 끝나지 않고 잔여물 정리까지 한 팀이 진행합니다.",
-                "수도권 현장 실작업 사진입니다. 철거와 본드·잔여물 정리를 나누지 않고 한 팀이 끝까지 책임지고 마무리합니다.",
-              ][seed % 4]}
-            </p>
-          </div>
-        </section>
-      )}
+      {/* 작업 현장 사진 — 중립 제목(특정 지역·공정 시공사례로 표기하지 않음),
+          URL별 고정 조합 + 오인 방지 고지 문구는 컴포넌트가 담당 */}
+      <WorkPhotos routeKey={slug} count={workPhotoCount} />
 
       <section className="py-10 px-5 bg-[#F7F6F3]">
         <div className="max-w-3xl mx-auto">

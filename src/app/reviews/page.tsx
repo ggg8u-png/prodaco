@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import ReviewsClient from "./ReviewsClient";
 import { buildReviewJsonLd } from "@/lib/reviewSchema";
+import WorkPhotos from "@/components/WorkPhotos";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://prodaco.kr";
 const desc =
@@ -41,6 +42,8 @@ export default function ReviewsPage() {
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(reviewJsonLd) }} />
       )}
       <ReviewsClient />
+      {/* 후기와 별도 배치한 일반 작업사진 섹션 — 후기 사진처럼 보이지 않게 중립 제목·고지 포함 */}
+      <WorkPhotos routeKey="reviews" count={4} />
     </>
   );
 }

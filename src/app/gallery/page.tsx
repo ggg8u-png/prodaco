@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { galleryItems, worksitePhotos } from "@/data/gallery";
+import { galleryItems } from "@/data/gallery";
+import { selectWorkPhotos, workPhotoAlt, workPhotoCount } from "@/lib/workPhotos";
 import { company } from "@/data/company";
 import GalleryImage from "@/components/GalleryImage";
 import { Phone } from "lucide-react";
@@ -79,22 +80,31 @@ export default function GalleryPage() {
         </div>
       </section>
 
-      {/* 작업 현장 */}
+      {/* 작업 현장 — 승인된 자체 호스팅 풀에서 고정 24장(전체 나열은 모바일 성능상 제외) */}
       <section className="py-14 px-5 bg-[#F7F6F3]">
         <div className="max-w-5xl mx-auto">
           <div className="border-b border-gray-200 pb-4 mb-10">
             <h2 className="text-xl font-black">{ui.galleryPage.worksiteLabel}</h2>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            {worksitePhotos.map((photo) => (
-              <GalleryImage
+            {selectWorkPhotos("gallery", 24).map((photo) => (
+              <img
                 key={photo.id}
-                src={photo.src}
-                alt={photo.alt}
-                className="aspect-square"
+                src={photo.thumb}
+                alt={workPhotoAlt("gallery", photo.id)}
+                width={photo.thumbWidth}
+                height={photo.thumbHeight}
+                loading="lazy"
+                decoding="async"
+                className="aspect-square w-full object-cover bg-[#EDEBE4]"
               />
             ))}
           </div>
+          {workPhotoCount() > 24 && (
+            <p className="text-xs text-gray-400 mt-4 leading-relaxed">
+              전체 {workPhotoCount()}장 중 일부입니다. 사진은 특정 지역·공정 순서와 무관한 실제 작업 현장 기록입니다.
+            </p>
+          )}
         </div>
       </section>
 

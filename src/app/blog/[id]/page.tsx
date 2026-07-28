@@ -5,6 +5,7 @@ import { posts } from "@/data/posts";
 import { company } from "@/data/company";
 import { faqs } from "@/data/faq";
 import CtaBand from "@/components/CtaBand";
+import WorkPhotos from "@/components/WorkPhotos";
 import { relatedServicesForPost } from "@/lib/relatedGuides";
 import { PhoneIcon, KakaoIcon } from "@/components/icons";
 import ui from "../../../../content/ui.json";
@@ -283,6 +284,9 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
           )}
         </div>
       </section>
+
+      {/* 작업 현장 사진 — 글 주제와 무관할 수 있는 일반 현장 기록(고지 문구 포함) */}
+      <WorkPhotos routeKey={`blog/${id}`} count={3} tone="offwhite" />
 
       {/* 상담 CTA — 홈/전 페이지와 동일한 연락 채널 */}
       <CtaBand heading="바닥재 철거, 사진 한 장이면 견적 상담 시작" />

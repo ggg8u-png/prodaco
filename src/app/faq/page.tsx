@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { faqs } from "@/data/faq";
 import ui from "../../../content/ui.json";
+import WorkPhotos from "@/components/WorkPhotos";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://prodaco.kr";
 
@@ -78,6 +79,9 @@ export default function FaqPage() {
           ))}
         </div>
       </section>
+
+      {/* 작업 현장 사진 — 특정 지역·공정 표기 없는 참고 사진 */}
+      <WorkPhotos routeKey="faq" count={4} tone="offwhite" />
 
     </div>
   );

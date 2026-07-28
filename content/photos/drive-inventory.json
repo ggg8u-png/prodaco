@@ -1,0 +1,1844 @@
+{
+  "scannedAt": "2026-07-28T04:38:43.993Z",
+  "source": "google-drive-embeddedfolderview(공개 링크)",
+  "folders": {
+    "worksite": "1RLyyr7y4pAF2qBGuVgxDp8rt7ZJVylNY",
+    "beforeAfter": "1STQ5cgJIWE1sZlo8juSqbnJtZnvwL1v2"
+  },
+  "counts": {
+    "total": 261,
+    "worksite": 247,
+    "beforeAfter": 14,
+    "nonImage": 0
+  },
+  "warnings": [],
+  "files": [
+    {
+      "driveFileId": "1t3g4NpLa0oWdVD2OpmFSiqz1RshDmI1g",
+      "originalFilename": "1759138244398.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1NQgMC9fWqeoe6UOdekUY_kIok9YJrk-f",
+      "originalFilename": "1759284166782.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1hC27fEcXp0uRIy4VIc-XGVqNi1qQU4Kt",
+      "originalFilename": "1759390589242.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1LTck2E9oIxseYtLGkjD5HAT65Xnx3T2N",
+      "originalFilename": "1759390595868.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1Fm5T6FgiqxVqv1pJGm7sJFypbCOsCnMA",
+      "originalFilename": "1760512665225.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1-9Xx4EzsXhAVWHr5cdAAz2tKFEnrWlB5",
+      "originalFilename": "1760677154905.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1N2xgaZtGlJaUClLs6K3iTV_JCRMMsgE-",
+      "originalFilename": "1761901761014.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1vgTaMQtgFKcTZy0239hjdLusqTpDhgOR",
+      "originalFilename": "1761901761387.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1vtoPT7E5etyMHcVEYwgqjGoRtIsedWwH",
+      "originalFilename": "1761901761491.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1mPq9ioVxVWrFfc2F_t2FMjGL0fEk8F8H",
+      "originalFilename": "20250605_091348.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1zdJpAlymFP7cfbwZJCZMjghNR_J-v69Z",
+      "originalFilename": "20250929_094337.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1w8S6JlZr269oH9U5r8HLL6C1cGOCS0-m",
+      "originalFilename": "20250929_134528.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1yYfy9icBcJNeIKDPvR0S_dFtYVs8hcij",
+      "originalFilename": "20251001_084900.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1q5VHx4noEKMgfjMWdAfAzVkP3s527qmK",
+      "originalFilename": "20251001_084910.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1blOLwAD99CtHULhwb0rQHJfGMiJXRI1p",
+      "originalFilename": "20251001_131300.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1TFzwdy--9RICa3jduUc-myrZKqBMfb7v",
+      "originalFilename": "20251001_140344.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1aY9QA-ioJ-8GFbNMTU4LyBVOLz7psz_l",
+      "originalFilename": "20251002_201952.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1_8AqcX56jXlYzyYWVvnYIKUozsIPph1J",
+      "originalFilename": "20251013_092301.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1AMu4fLuau1fL1yEn4jpaX0VdRkrWVE4P",
+      "originalFilename": "20251013_132218.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1KEBRbZzYegVpgdi2KFyTD-SqlbVRQl_b",
+      "originalFilename": "20251013_132229.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1KGJo0YlHMaclvYxLVGOmpCXMjKvsx9vz",
+      "originalFilename": "20251013_132421.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1_Q33Z8xYfDo8f1owiCvl1rRkMr5bjBm4",
+      "originalFilename": "20251014_084300.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1OKF8F142Xp2UzZGSfYuP_UWNNOXczJKb",
+      "originalFilename": "20251014_084329.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "18eKYt--lIbo1a0iDj7IdyF0E66w_Tn0d",
+      "originalFilename": "20251014_084333.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1IXa2Q57jdfNkztPsIC1mtvD77mbHyyPJ",
+      "originalFilename": "20251015_082404.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1pNPY3qGmpfS6q2TYEAGN0SGw6tYwZgyR",
+      "originalFilename": "20251015_085654.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "15YCOhFUEFpfCNjrHCCP1VDHVS6dyhX1e",
+      "originalFilename": "20251015_144937.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1kNMqsXNilTdRSf6-xPAQSEN1Aj2R0Crg",
+      "originalFilename": "20251015_145026.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1TSyz5_WANaIyJn4QZYwGsXGsyKzdzDt5",
+      "originalFilename": "20251016_080842.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1972GfWcZ1157TX8GZylpAtgqW4tFcKyk",
+      "originalFilename": "20251016_080851.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1u1tuyqZxSlkaslnTqSiOSXYhLaFw5MFo",
+      "originalFilename": "20251016_142352 (1).jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1hQ_2KBOl5wsIybniDajhedrVZ3-y02oC",
+      "originalFilename": "20251016_142352.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1UgP_JIfjQEPrcwExf3LWhTFarzOw1w-N",
+      "originalFilename": "20251016_151157.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1NH09FRGP-rjpMPh21H8SFZCgAJ53jvMU",
+      "originalFilename": "20251016_151213.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1P1uj_Ji5cp7Jcr2bWa8G9t5_QEHYu1QI",
+      "originalFilename": "20251017_083030.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1-BdAUvxQTTa3jf7o9vWGHv3ImQCKtWyb",
+      "originalFilename": "20251017_083139.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1NmEXtO17D99fBweP8J2aAN2EVu2gBSWb",
+      "originalFilename": "20251017_135329.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1Uxpc1sit5rAeBN934vF4lsAIz4e9NSFj",
+      "originalFilename": "20251017_135343.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "14xCM8NPMIMaTXCvfYPVY2PneHHWjbJHH",
+      "originalFilename": "20251020_125809.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "19tKWI_nXLgePsQxBbdzxQtXO39sPN7wq",
+      "originalFilename": "20251020_132211.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1-GqXXMyZFyBj7RzG7pU9rEqI_EBFEyOg",
+      "originalFilename": "20251020_132218.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1-NiXlL4Mjk170h_i01_U4Wl-s_1gc_OU",
+      "originalFilename": "20251021_082144.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1IGIeQwG9rBLK5nbfQTbWhw4VClsFrHuZ",
+      "originalFilename": "20251021_101528.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1vjVT5zYI33oPm_FkY2rA-LGMnXziz5ZP",
+      "originalFilename": "20251022_081317.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1yXwYL-y-5QAcUITuTMPQueKGzSfv2NK8",
+      "originalFilename": "20251022_081334.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "14pfPwX8Y4KZG9tMuUdOkVrQFmJrh7bZr",
+      "originalFilename": "20251022_081339.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1Ao9EnKOlTAO6D1F3T_D3wv_iJ1txQ0O_",
+      "originalFilename": "20251022_114624.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1sYxThWu2W3n5BcD-pX3TLosdEkm7NqVz",
+      "originalFilename": "20251022_114643.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1j-V2zxoMzVc06dtsqMVgRw3QOr3Zfrqn",
+      "originalFilename": "20251022_132351.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1CL5WixBmoseBq5gIFJ1g6DijTXCECCKH",
+      "originalFilename": "20251028_080519.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1jhLBVzh1gFWRW8oAfplfUHVCddEmQk-p",
+      "originalFilename": "20251028_080539.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1vcCxbSRcAzKl9uTBzA2ITyzpqjwPnMse",
+      "originalFilename": "20251028_080557.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1-ImYy-r11B9429j9BjGkeDbhqYCQDJxl",
+      "originalFilename": "20251028_161016.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1_b2DnyRvZ8q4l5H74dWxO2t9z6gJaeOq",
+      "originalFilename": "20251028_161027.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1pdjZlEYgEh51xxiV6OD-ffJ4mWiMysP6",
+      "originalFilename": "20251104_082927.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1j1SDF7z6ur9VmUw4xB7LTxqwFeSC3HZr",
+      "originalFilename": "20251104_082941.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1dhqPeBbMdp-upZAhqxDCXUkPXys4zEe-",
+      "originalFilename": "20251104_120135.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1y5KcdGCseQQpgIqV0GV0zDEKdzWoRsyB",
+      "originalFilename": "20251104_120142.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1O4PSRmmjnRBM2vDq_hoX_3yIkx3Om3fu",
+      "originalFilename": "20251104_120226.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1N8gwLffNRRo4pRmeHSOUVgxv6VS2tCkH",
+      "originalFilename": "20251106_163213.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1x5-WimruTNyQHX_MoE_yeHredR2O3e79",
+      "originalFilename": "20251106_163235.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1SivoFnjjFFGbOHWsTAJXUYlNnhhaqEWa",
+      "originalFilename": "20251106_163246.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1Xd0ACLm40dmB1pjm9A2iYWAlS37L0Qd9",
+      "originalFilename": "20251107_091309.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1UogCjVDvtLdNj9__IpkYspoGVF0qIvcu",
+      "originalFilename": "20251107_091313.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1ZXGDneqqezM_Po4DrvkCnp73fPjBMhv4",
+      "originalFilename": "20251107_155355.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1O6zamNA6OJCrNFyd0tbgKyqAvQAhq0yQ",
+      "originalFilename": "20251107_155405.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1-QQCjjiN4LAMvpVVsThhy7lkqagoZ1iL",
+      "originalFilename": "20251108_100310.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1x3aJbcUwXNvoSTU0eKS1aPcxPOywXAop",
+      "originalFilename": "20251110_083217.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1Djd3RgQ9TjR7CsmdkzxsYHQCoM7FJkjN",
+      "originalFilename": "20251110_083225.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1vssJamxRAbbqUrmuGjBguTN5V5S-JZHZ",
+      "originalFilename": "20251110_124651.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1PuByjtHO9N9vEGjkjqtDohx30PRoi93k",
+      "originalFilename": "20251112_131525.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1vIN0tUqO3L0oJXr2RKj50Z8nKw2ccxPk",
+      "originalFilename": "20251112_131530.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1MjYbAYMalzfEQmq0Fd23Q15RniTRBqVB",
+      "originalFilename": "20251112_142943.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1xnGdY8qfCnSzvNXbZBNr3ecQa6yXTCag",
+      "originalFilename": "20251112_142946.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1WTjO_qemdcVSO1P8CBqiJYJkciQ1XY6a",
+      "originalFilename": "20251113_082649.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1WRwsvN2UrDjr_75QlYYt2dCKq8hrnCB8",
+      "originalFilename": "20251113_082728.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1oNWCbknvVB-6eK0-NdqySxVJpbTLonrw",
+      "originalFilename": "20251113_104924.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1G9ufQS2PWowpKHwOp3aBgaaMPWQkbBoc",
+      "originalFilename": "20251113_114726.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "15bjBl-0yCfebqDQTsb1Kkys3utvx07kB",
+      "originalFilename": "20251114_105947.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1z7qDqQXIrJzvtd7m0hnb3DyebH3qXBaA",
+      "originalFilename": "20251114_120955.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1a_y4LeJAb3LdQjqE2P9O4c8nw30pzIvT",
+      "originalFilename": "20251114_122525.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1YcOdav2oIU8eK8_b094Fjl7tfTRaWqvY",
+      "originalFilename": "20251114_155953.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1pB8wjDrJdt5DMbSpKWYolxhWXq52FGqZ",
+      "originalFilename": "20251114_155959.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "15o44F2qbSE9fmHaJryy8D3z6GGpONYAX",
+      "originalFilename": "20251117_085941.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "18vLevZiWjVszBOUR6sIsK2_NhFVTJUlF",
+      "originalFilename": "20251117_085945.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1DtGb6O7NZ2a9PUbK2tytgFVQl9VXsjsx",
+      "originalFilename": "20251117_140300.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1s8ZKzXeI83DBR6wAkNL2-LqOjxFcrflS",
+      "originalFilename": "20251117_140335.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1PRtEG9W8PEnlY_oLjh1-5vODavpzjCrU",
+      "originalFilename": "20251119_082018.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1Hs4H-rVnuOaTNowtwPCBvDjcW8GIG-Lw",
+      "originalFilename": "20251119_082026.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1yqDsdrgow_tsRf69rmfamaxZkpx9McaU",
+      "originalFilename": "20251119_104716.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1QbznwGLh0PHkz39lkO5EXhcs59ed2DOf",
+      "originalFilename": "20251119_104719.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1U3QHFjgaPi5Y07QNdTC7QZFcXZWgPyM8",
+      "originalFilename": "20251119_104726.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1yjHvzNRzgAubFsr0qAecFNuSxp2YkNxm",
+      "originalFilename": "20251121_090944.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1UWcoORrWr140GlP-bWCERth61GciuvPW",
+      "originalFilename": "20251121_090947.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1-EvjmSfduyG4YM1Qq7aaeE0nsez_Rlh7",
+      "originalFilename": "20251125_092643.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "11WSWPYn3r5WB5E96HuKddy2ZsG76jEul",
+      "originalFilename": "20251125_092646.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1xUjeHkUjJZQELhBFYg-mo4Ggurd5CNqf",
+      "originalFilename": "20251125_104849.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1EGD75pRQGACH67ed3F-Ji4344NN1pd9p",
+      "originalFilename": "20251125_120825.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1uBXuy5BJ1nsCsLYGvnqa_FCVs4xeW9pu",
+      "originalFilename": "20251125_131336.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1aiQXx1lfIZPGGxfWtnxAZ-KkTkPGASiU",
+      "originalFilename": "20251125_131346.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1FcDugCnbXoeF56AyUo87XcVrbDwdVi4j",
+      "originalFilename": "20251127_082315.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1GnLIGDsj870jYv6vY4KiPbcJGQNppt-g",
+      "originalFilename": "20251127_103323.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1CbQX26ELdwDxT8oCviPwHZtfHHlbcOxX",
+      "originalFilename": "20251128_115323.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "10flctW8XErY5gBmO8b6WtxFdk3UCGftv",
+      "originalFilename": "20251128_141950.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1pgvx9JzNf5vKQaXuQZ8-rTGMovT3QpBq",
+      "originalFilename": "20251128_145147.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1MNHsGaDqTVcHCOJsf8tvlhqWjrpaqZLQ",
+      "originalFilename": "20251128_145150.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1Sgr5DYpG6uVgM2t2iqrkO0flQO8qtbI6",
+      "originalFilename": "20251129_082910.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1cr7ijTTzzo4mz9omMKyucBWJfHATAXZI",
+      "originalFilename": "20251129_100008.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1G6MpoyfpoB2ev44b52YcLNC0DsNwEdO3",
+      "originalFilename": "20251129_162057.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1t1iNqwvc-31RuTDoJSK64_Uo6f9x-URu",
+      "originalFilename": "20251201_082513.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "15k9JU22NrMpWc5PLQgR3f6kW5OmGEbY4",
+      "originalFilename": "20251201_082519.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1D_bt3dpTjMMmAGKtMlF_aHRsUFFwr6Ae",
+      "originalFilename": "20251201_082547.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1TMJFJxBycvlkcOwbH0rakIcgrWvri0fB",
+      "originalFilename": "20251201_162438.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1cNDesrWAQU-paDaq1zxHMGM_jnu5pa2U",
+      "originalFilename": "20251201_162450.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1EaKGh9rvDEpzZG1O0mH7seJkyEMmPMEN",
+      "originalFilename": "20251203_082500.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "19qg4H02tFSG1oU898tGB2O4OSGiWO6N5",
+      "originalFilename": "20251203_082509.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1_MMzdeu1TWddX57Rzh8ywees67hVGJq7",
+      "originalFilename": "20251203_155300.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1ZCXz_IibHMWiiTL9tnnqFVEHFkSr42gG",
+      "originalFilename": "20251204_152739.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1oD66cNY8kesTriXPnNOajG3Np37SCU8s",
+      "originalFilename": "20251212_083033.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1II74i0rCgWnXKVrH7iMhB1e7nHKXV1UH",
+      "originalFilename": "20251212_134549.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1B_aAGRYJF6jLxnxJKtYMjhh69_cEWBY_",
+      "originalFilename": "20251212_141801.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1flzoiXIvFZThYA1mMqPXnzQ6HqxI-uq7",
+      "originalFilename": "20251212_141809.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1hMVZdKbNoWLl62_JA3jE6HswSn-NNPbP",
+      "originalFilename": "20251212_151930.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1ZV0y_kG1hNJ4v4rE9Eeo_Jmj46CHDLhb",
+      "originalFilename": "20251216_082825.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1LVz0t0VULZI0xk8U2l-QHSJ84cjHd1c6",
+      "originalFilename": "20251216_152613.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1Pmppuv4e_20CytTYOk5LDI0LaloOU2kZ",
+      "originalFilename": "20251216_152620.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1L71QgrQ__pMAsuxI-Kp9zGTpGQDUvreU",
+      "originalFilename": "20251216_152625.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1zydaON2a-evDIaG5R2OGuPQ3uFXPkVDV",
+      "originalFilename": "20251217_080838.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1eERS3Y1C6qMp768nf-mjWACzp4TwTT3Q",
+      "originalFilename": "20251217_080858.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1rLdHLiko4nf16MW7ByukXZ4OSw9yU4lp",
+      "originalFilename": "20251217_134231.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1KzKrj3tyOtW42gqKNS4URkrHaSn6e64H",
+      "originalFilename": "20251217_134235.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1bOytalGLQlWy1GyaBl9b_xqaNcVjq8hj",
+      "originalFilename": "20251219_135812.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "121MhuwzEIfvptR8rRBgwIhEMuwildK01",
+      "originalFilename": "20251219_135816 (1).jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1oou_g1y_F989QGnN8PIXJwiSueQ8YOBV",
+      "originalFilename": "20251219_135816.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1my0890HprZC69kZsnK2V-RkyprtxnfMH",
+      "originalFilename": "20251219_165252.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1FHdbKnlixIb6sp1c8ni7aT0fEJNcmiLM",
+      "originalFilename": "20251219_165312.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1C5P1MEniPSzL-c1_QrmU18KqVA1LMe5U",
+      "originalFilename": "20251222_094117.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1XCDdXdCL-ezFtAbnaCey6hLnD95pAR_G",
+      "originalFilename": "20251222_100243.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1-iX2j7YfVP-zQxu2lkodwDUpZ8alAfa7",
+      "originalFilename": "20251222_153922.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1EjA1RthEN-jnglU4yJAgrX46LfB98WjE",
+      "originalFilename": "20251223_112523.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1B4Gx1nlvOJHRPmeuJ3lfK0jCbeaaeYXU",
+      "originalFilename": "20251223_112525.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1zGzPUM1nK89EBaBJ0W4MoadPi5t5uUaF",
+      "originalFilename": "20251223_112548.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1djdXUgie-UqiD0F9xH-ljVB8sk1XzJnQ",
+      "originalFilename": "20251223_112553.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1b0y0bPUtj8_QXWCCodH6c-OBfWET0E0b",
+      "originalFilename": "20251223_141623.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1i5ucpB49Bwgnq-tj6IEx8X6cJagAmmHi",
+      "originalFilename": "20251223_141757.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1Hy3kAHYaVOAE0zKDj7E1VLxiO8Iu6Zpc",
+      "originalFilename": "20251224_095416.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1BYNOS0y2j1t-po-CRbZ6dMnycOSWHZba",
+      "originalFilename": "20251224_095425.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "151vRFM28gFXGP4uF87gP2zxgQP5FJ8iz",
+      "originalFilename": "20251224_095428.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1TBtGogiGbbOmF09XClAFPl9AsB2INUDB",
+      "originalFilename": "20251224_122035.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1TnNKReAEOTTPm-USocKgsmJ4Ofvrw3Xt",
+      "originalFilename": "20251224_122039.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "13O8Y380ePHZhDG_Rp2ieMfH40Ux_HwR8",
+      "originalFilename": "20251226_064526.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1vd-c8wRHv-4tt1x9PzDa2nMfporgWxh-",
+      "originalFilename": "20251226_064531.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1ha8VAmCHxobAcCnhHNuCCF5HHXRA3xFz",
+      "originalFilename": "20251226_064534.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1DSXiFK-ajMbEfXJZB5qc2xJPiF6dmhEv",
+      "originalFilename": "20251226_083558.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1oPrAmJO6tANVRsR7SbZx70tO7zFRytiS",
+      "originalFilename": "20251226_110051.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1MSSLyDWdVrdiKfLZxwPdjqwlynBnW1Z2",
+      "originalFilename": "20251226_110103.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1vL-0v_AoyYDQiXuiyQCgzOhxeqJ5q3k-",
+      "originalFilename": "20251226_162217.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1Afv4MhqEe5XclgUnhQTHhF-lE3lNbQTo",
+      "originalFilename": "20251229_120214.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1icCKzbS9e0gfg56vGoyTKboZRh0PGFQT",
+      "originalFilename": "20251229_120225.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1FrSBYLEXt60rr4jPoJ4AHHm51v1Q897p",
+      "originalFilename": "20251229_152002.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "14K-ow_18jtvYR7uslwykPqT8dU-oaYhd",
+      "originalFilename": "20251230_120858.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1ndjp4NTw70Ndlz95aue8JYTgRu0Nsskr",
+      "originalFilename": "20251230_142019.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1O0DpnTAtGKtmi8kYGq-AGew9-pUDPRW4",
+      "originalFilename": "20251230_142030.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1Xw5q3UfxJQN5rCtcn--Ru5QNmo4my-01",
+      "originalFilename": "20251231_085233.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "12WY2AQISOTzc-GRgVaoJTaCfzmkP9Pd2",
+      "originalFilename": "20251231_110759.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1VeKpE-lcpZPRCO84vbCeg8osThFr9KZi",
+      "originalFilename": "20251231_110801.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1cNKPEz_nrKny268oEKRKQthmuO--5Y-j",
+      "originalFilename": "20260102_090104.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1FVN3mNPJQvFKDbruQkgGs9YKyrPNgCcM",
+      "originalFilename": "20260102_090113.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1q2a18H-2HPnV2bMIOqGQ8QkYALcpC2jh",
+      "originalFilename": "20260102_131435 (1).jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1hcXrpUIYqO6VpLeByZpm95STc3qDsPIR",
+      "originalFilename": "20260102_131435.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1lNhFg812MZfDTcPv7fH8DirC-5HfHWqg",
+      "originalFilename": "20260102_141717.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1zyVEVgxz9SKisdK2yivc50TXlXopX-qi",
+      "originalFilename": "20260102_141724.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1R4jAirpCDhI4Oxu8wpQu791zGFlE7g9-",
+      "originalFilename": "20260105_145137.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "117yCQ-ms3EjB8L2OOU2IAqENzv-Pamfn",
+      "originalFilename": "20260105_145200.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1nwwtY1cCsJSlyb33t8UG1UoQQvh8aT9n",
+      "originalFilename": "20260105_145202.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1XQdf2pWZx8fysVcmoaY2886CVZP8bn_W",
+      "originalFilename": "20260107_082720.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "11nurJNiDNuLOdB0Ik9MvZeUJ6rETVHfG",
+      "originalFilename": "20260107_123359.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1jKIO_BRFDrVelwbXvgDTqIKbyV9M4_3R",
+      "originalFilename": "20260107_123406.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1B2Fpze_oT6PeCvo5Sa005WJEXDwradxW",
+      "originalFilename": "20260107_123415.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1rtlSZQNxJ0f4MWLYXMHZvX7PUccO2G67",
+      "originalFilename": "20260109_104139.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1qEjTHMoEh4C5E6IVshgs4qQys3BOULZ9",
+      "originalFilename": "20260109_104143.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1xilGeIzeSwPef2MAFOpcvR9nNFoaLYYQ",
+      "originalFilename": "20260109_104207.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1CqrOa9p_fWByiHiRCEZrHihiHxogrHtb",
+      "originalFilename": "20260109_154323.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1iqjnqHVZQXDOO5g0K7AMxmZWcJr60Tz0",
+      "originalFilename": "20260112_090446.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1y665LzidsWEIF9TWjtlLHHUtkX65_gaF",
+      "originalFilename": "20260112_090451.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "10vbHM7NrbmpkivuFITtR2CI4dkpTNqaE",
+      "originalFilename": "20260112_090453.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1-v8_zGQrFjnzhNpZdRJ0YAfsOWDc-Vc6",
+      "originalFilename": "20260112_140459.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1oAcb3dnyg36F-Fysqr46X_W_DNTgLE9V",
+      "originalFilename": "20260112_140509.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1uOOJubaRAMnI-PgOBk_I-1sYfPqt-KFj",
+      "originalFilename": "20260114_091747 (1).jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "135SeM2UZrhHhAjId4BTtM4WGk2zQdl4Q",
+      "originalFilename": "20260114_091747.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1FLfB6XbVgHvXNDBwqjNgAuLamnilU_5F",
+      "originalFilename": "20260114_091751.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1fR32ugLusxxTP_j3L_9ahog31PMiG5u5",
+      "originalFilename": "20260114_152836.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1pWd9YU_9WWuUR-eU05wgOPOXsNv-9QqT",
+      "originalFilename": "20260114_152851.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1xb44BeOZ5_InIJ3O32s1uDvnLzpJhGhD",
+      "originalFilename": "20260114_152928.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1Ydc03-LZ5a7ZxnzKybGYQzbRkbsyyuKt",
+      "originalFilename": "20260114_152938.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1LaoXYDwAycogFTpoL2GTvU2wH8cEDEdb",
+      "originalFilename": "20260116_082409.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "19RRcbOJfeC1uY8vmkyk4br7nZ6gkRM4B",
+      "originalFilename": "20260116_082413.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1uUeSBC4_o6B71HlppXPZDiBMJYDF9K5e",
+      "originalFilename": "20260116_082420.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "130oNmFFV_QXo7TPzU2neBamf7L7yFQ4h",
+      "originalFilename": "20260116_082432.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1kU_3U48yd7kLa5hhaiMvRwVw8t6anhkH",
+      "originalFilename": "20260117_105549.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1bMyCfXwxN2lJcxDlFs7kVXwVbsamxKJo",
+      "originalFilename": "20260117_105600.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1bL-LI8U-I_lFB_uGL7w9Aof_FoAiVtZL",
+      "originalFilename": "20260119_091146.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1AsyCjZiK6TZfNBk5TIWrq_E-mI_vdojY",
+      "originalFilename": "20260119_094059.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1sJdaK7ARRwXDpUp5jpkqu6FAO1XFwikC",
+      "originalFilename": "20260119_094601.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "18lI5XsYdmycUj2_trDeEjEsdIuLEvctR",
+      "originalFilename": "20260119_113040.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "19nWeN4m86pDyJ6YqlEo9-_gKPDxbD0_H",
+      "originalFilename": "20260119_113044.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1p33L-2K7_xk8ldYpej_utNBJ4i3zYBkx",
+      "originalFilename": "20260119_123517.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "13ZMIKkyNgeJzltqyKXuLAiWSn00GSUCV",
+      "originalFilename": "20260119_123525.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "10aanHbTQLnWRck1p01AunIwlBFgzhVmp",
+      "originalFilename": "20260120_102731.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1HGbPK4pKlX3yYbpFOBw0ILtNI9fZUzhJ",
+      "originalFilename": "20260120_102733.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1bfpL30vn8-u1DqdMUhCG48mmYfKZsHfO",
+      "originalFilename": "20260120_102737.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1F1ffiwuIh_DXxt7Krz4eFNpJnLKGciE6",
+      "originalFilename": "20260120_102745.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1VG3mlVREyMU5YcEHIjyHWXXxfIJo7GM9",
+      "originalFilename": "20260120_114427.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1MeYw-uI4gIRzLGHk6kpVFjLrGISJ0MrF",
+      "originalFilename": "20260120_123329.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "12z8NiGbM4y6kYG_l6syVFWfTaDZpNDHM",
+      "originalFilename": "20260120_123337.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1Ot7Zkj4a7lBUkR2abNJTNRheZm03lxI-",
+      "originalFilename": "20260122_082603.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "10QrqykgTPAeo-pzmSIPAvuy2PIzSLfE5",
+      "originalFilename": "20260122_143004.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1FF8p3MgRgC3kJHVN97ji98Qam9JpiDxG",
+      "originalFilename": "20260122_143010.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1lkcacHxVuxJTxWel4u3eg3888eZiOzmF",
+      "originalFilename": "20260122_143023.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "17onff9-a-vtQRcUteWShcguBCLkJEItM",
+      "originalFilename": "20260122_143056.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "13CWkyl0XgSeJycr6YciGi5AUCIa5eWi5",
+      "originalFilename": "20260127_080629.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1CqwovJnDpmwNvMGR3x1QfY3cfP9wq0TN",
+      "originalFilename": "20260127_080632.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1QzlEhvqL9_4FJIArxTdOJMCXZ_jdtZOA",
+      "originalFilename": "20260127_130652.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1q432XbUVLhP0gE70ROlbMjxUwO8xHwFU",
+      "originalFilename": "20260127_130900.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1-RbZmVLvMtfsxwLi0Xfdgy3uAe6bPFqy",
+      "originalFilename": "20260127_143339.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1ULLkPodpbmuDslu0Pvkzh10JoqgKuxqL",
+      "originalFilename": "20260127_161914.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1FiafHuuBDWOexIci7rHhJxMjsKpU-J7q",
+      "originalFilename": "20260127_161935.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1Fw3cQ8-P25IuBOeXPAiEGWP7z9DVc3oE",
+      "originalFilename": "20260128_091917.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1Qr35Hz4J30t7wrlpGVgOrKlrvIdeulX8",
+      "originalFilename": "20260128_091926.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1_grnUebTS3SgTRCKb1jhi3cQ0FSEkxkv",
+      "originalFilename": "20260128_091932.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1sqRDkGrx2Bt7ZmfCXClXSFlqqlkHsand",
+      "originalFilename": "20260128_114637.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1E-Fp-cC5Ir9AftzzF1o0iV6bFe6I80k3",
+      "originalFilename": "20260128_114640.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1TUXjkC5NJAhpvH373uqZQdCVohslK20o",
+      "originalFilename": "20260129_081710.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1HS3StAYq2tDRK3Oh6Cfe4O4I_8zyG4e6",
+      "originalFilename": "20260129_081715.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1K0wmzaaV6sNXNIsq-epbSJV0MmpoSBHe",
+      "originalFilename": "20260129_115845.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "16hbtDIT8gbJuXqutma-xLONI2EsT11tS",
+      "originalFilename": "20260130_102802.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1nWdWGZTweFBDBQ-oVQOVI6g6D0E8mrrG",
+      "originalFilename": "20260130_102809.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1gEOAddzsJk2MXYk3F1CFEK1vYYEEkQZy",
+      "originalFilename": "20260130_144228.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1uqF7JEI57oRo0PZjXVuy0dzArFXkeQkU",
+      "originalFilename": "20260130_144232.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1iexyGi9Czig3sNtge8QyKcXlRse8r42O",
+      "originalFilename": "20260130_144234.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1hDay-7bzIbIbljA0FAczGATO84nJ1Wc_",
+      "originalFilename": "20260202_095038.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "10HHcmr-J6OrBZlr6ofwl9NxiNrMvqJS6",
+      "originalFilename": "20260406_093915.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1LByKCoSldrHB-Iq-CRY697FFtfHDpdb1",
+      "originalFilename": "20260504_105537.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1KZ3yojjw-lZxJPUvTMrT4lueoAIYM7ke",
+      "originalFilename": "20260515_123345.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1RpQbAeyXeR4-SLPNj34oP_yOmxabxYye",
+      "originalFilename": "IMG_0959.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1aLZk5weenrkuw8pxqPKPCcncgiZETLCC",
+      "originalFilename": "IMG_0961.jpg",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1JI9hqp2dLl-HxAilWw8CROr4d0zQkqLM",
+      "originalFilename": "Screenshot_20251001_105507_KakaoTalk.png",
+      "folder": "3.사진_작업현장",
+      "category": "worksite",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1YLdwnXX05Oj7htnNSMtfxNdsqDwjKAB7",
+      "originalFilename": "20260615_084127.jpg",
+      "folder": "2.사진_비포애프터/１",
+      "category": "before-after",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1b2uPpyYWnOOqJzPND6mMOXbE5pQj71bi",
+      "originalFilename": "20260615_143658.jpg",
+      "folder": "2.사진_비포애프터/１",
+      "category": "before-after",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1tJKOX0qvcNJOQDq4jl25a6ZZhDbN03gv",
+      "originalFilename": "20260610_081354.jpg",
+      "folder": "2.사진_비포애프터/２",
+      "category": "before-after",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1ekZZwhDpz75n_p16yHn52Bb3uN_9YWt1",
+      "originalFilename": "20260610_150134.jpg",
+      "folder": "2.사진_비포애프터/２",
+      "category": "before-after",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1iaZRpDZ7l--1j3sbb7f4b3c06l4gBL10",
+      "originalFilename": "20260102_131435.jpg",
+      "folder": "2.사진_비포애프터/３",
+      "category": "before-after",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1mnMpkemoJ3bjeHirkyCxXm62zbgBaiEK",
+      "originalFilename": "20260102_141717.jpg",
+      "folder": "2.사진_비포애프터/３",
+      "category": "before-after",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1jIGVYfr_-Gv0nHqQiith6hIJDuzEq8mP",
+      "originalFilename": "20251226_064531.jpg",
+      "folder": "2.사진_비포애프터/４",
+      "category": "before-after",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1JuAwrdBoiWPurYfRS_Ct9ViHB2bv1wYJ",
+      "originalFilename": "20251226_083558.jpg",
+      "folder": "2.사진_비포애프터/４",
+      "category": "before-after",
+      "isImage": true
+    },
+    {
+      "driveFileId": "18npwF9EXWg9kwFFEJd3v41EgASLpoFVo",
+      "originalFilename": "20250625_080831.jpg",
+      "folder": "2.사진_비포애프터/５",
+      "category": "before-after",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1dYR2cuHiS0YSguqfyRklTdcp_CRJED5N",
+      "originalFilename": "20250625_132002.jpg",
+      "folder": "2.사진_비포애프터/５",
+      "category": "before-after",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1Rru0j_g7vJnHad2uwnvyTZVSt-lF37yb",
+      "originalFilename": "20250710_080847.jpg",
+      "folder": "2.사진_비포애프터/６",
+      "category": "before-after",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1t2gUxIUuMdfTbgxIaFr4-yIo_uiNMBNO",
+      "originalFilename": "20250710_115944.jpg",
+      "folder": "2.사진_비포애프터/６",
+      "category": "before-after",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1CuWDxS5ZrknC1sK5QdGIyhR9Q0YTzL6v",
+      "originalFilename": "20250530_063155.jpg",
+      "folder": "2.사진_비포애프터/７",
+      "category": "before-after",
+      "isImage": true
+    },
+    {
+      "driveFileId": "1l6f6l4KNOU1lntGQJwXQMo1mKrfEUQEJ",
+      "originalFilename": "20250530_093711.jpg",
+      "folder": "2.사진_비포애프터/７",
+      "category": "before-after",
+      "isImage": true
+    }
+  ]
+}

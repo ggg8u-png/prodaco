@@ -12,6 +12,7 @@ import QuoteChecklist from "@/components/QuoteChecklist";
 import CtaBand from "@/components/CtaBand";
 import CallbackForm from "@/components/CallbackForm";
 import ReviewsMarquee from "@/components/ReviewsMarquee";
+import WorkPhotos from "@/components/WorkPhotos";
 import { PhoneIcon, KakaoIcon, MessageIcon } from "@/components/icons";
 import { keyAnswerForHome } from "@/data/keyAnswer";
 import home from "../../content/home.json";
@@ -364,6 +365,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* 작업 현장 사진 — 지역·공정 특정 없는 현장 기록(홈 8장, 고정 조합) */}
+      <WorkPhotos routeKey="/" count={8} wide tone="offwhite" />
 
       <CtaBand heading={home.midrollGalleryHeading} />
 
