@@ -18,6 +18,7 @@ import { applyReplacements } from "@/lib/replacements";
 import GalleryImage from "@/components/GalleryImage";
 import KeyAnswer from "@/components/KeyAnswer";
 import WorkPhotos from "@/components/WorkPhotos";
+import { caseGroupLabelFor } from "@/lib/caseGroups";
 import { notFound } from "next/navigation";
 import { josa, josaEnd } from "@/lib/josa";
 
@@ -166,7 +167,19 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
   const regionCases = keyword.region ? galleryItems.filter((c) => c.region === keyword.region) : [];
   const itemCases = keyword.item ? galleryItems.filter((c) => c.item === keyword.item) : [];
   const casesAreLocal = regionCases.length >= 2;
-  const casePool = casesAreLocal ? regionCases : itemCases.length >= 2 ? itemCases : galleryItems;
+  // 권역 그룹 사례(예: 강남·서초·송파) — 특정 구는 미확인이지만 권역은 운영자 확인 사실.
+  // 정확 지역 사례가 부족할 때, 해당 권역 페이지에서는 "수도권 유사"보다 앞서 노출하고
+  // 라벨도 권역 사실 그대로("강남·서초·송파 시공사례") 표기한다. "실제" 수식어는 쓰지 않는다.
+  const groupLabel = caseGroupLabelFor(keyword.region);
+  const groupCases = groupLabel ? galleryItems.filter((c) => c.region === groupLabel) : [];
+  const casesAreGroup = !casesAreLocal && groupCases.length >= 1;
+  const casePool = casesAreLocal
+    ? regionCases
+    : casesAreGroup
+      ? groupCases
+      : itemCases.length >= 2
+        ? itemCases
+        : galleryItems;
   const cases = rotatePick(casePool, seed, 3);
   // 1-b) 작업 현장 사진 — WorkPhotos 컴포넌트가 URL 렌데부 해싱으로 고정 선택.
   //      (풀이 커져도 기존 페이지 조합이 일괄 재배치되지 않음 — src/lib/workPhotos.ts)
@@ -400,7 +413,9 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
             <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-5">
               {casesAreLocal
                 ? `${keyword.region} 실제 시공 사례 · Before / After`
-                : "수도권 유사 품목 시공 사례 · Before / After"}
+                : casesAreGroup
+                  ? `${groupLabel} 시공사례 · Before / After`
+                  : "수도권 유사 품목 시공 사례 · Before / After"}
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               {cases.map((c) => (
@@ -420,9 +435,11 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
             <p className="text-xs text-gray-400 mt-4">
               {casesAreLocal
                 ? `${keyword.region} 현장에서 진행한 실제 시공 사례입니다. `
-                : keyword.region
-                  ? `아래는 ${keyword.region} 현장이 아닌, 수도권에서 진행한 유사 바닥재 시공 사례입니다(카드에 실제 작업 지역 표기). 같은 팀·같은 방식으로 작업하며, ${keyword.region} 방문 상담이 가능합니다. `
-                  : "수도권 전역에서 동일 팀·동일 품질로 진행한 실제 바닥재 철거·샌딩 시공 사례입니다. "}
+                : casesAreGroup
+                  ? `${groupLabel} 권역에서 저희 팀이 진행한 시공사례입니다(카드 표기 = 작업 권역 기준). ${keyword.region} 방문 상담이 가능합니다. `
+                  : keyword.region
+                    ? `아래는 ${keyword.region} 현장이 아닌, 수도권에서 진행한 유사 바닥재 시공 사례입니다(카드에 실제 작업 지역 표기). 같은 팀·같은 방식으로 작업하며, ${keyword.region} 방문 상담이 가능합니다. `
+                    : "수도권 전역에서 동일 팀·동일 품질로 진행한 실제 바닥재 철거·샌딩 시공 사례입니다. "}
               더 많은 사례는{" "}
               <Link href="/gallery" className="text-[#9A8A2E] underline underline-offset-2">시공 갤러리</Link>에서 보실 수 있습니다.
             </p>

@@ -16,6 +16,7 @@ import KeyAnswer from "@/components/KeyAnswer";
 import WorkPhotos from "@/components/WorkPhotos";
 import { notFound } from "next/navigation";
 import { indexabilityFor } from "@/lib/seo/indexability";
+import { caseGroupLabelFor } from "@/lib/caseGroups";
 import ui from "../../../../content/ui.json";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://prodaco.kr";
@@ -112,7 +113,11 @@ export default async function RegionHub({ params }: { params: Promise<{ region: 
   // 이 지역 실제 사례가 충분하면 우선 노출, 아니면 수도권 유사 사례로 명시(지역 실적 오인 방지).
   const regionCases = galleryItems.filter((c) => c.region === region);
   const casesAreLocal = regionCases.length >= 2;
-  const cases = rotatePick(casesAreLocal ? regionCases : galleryItems, seed, 3);
+  // 권역 그룹 사례(강남·서초·송파 등) — 구 단정 없이 권역 사실 그대로 우선 노출.
+  const groupLabel = caseGroupLabelFor(region);
+  const groupCases = groupLabel ? galleryItems.filter((c) => c.region === groupLabel) : [];
+  const casesAreGroup = !casesAreLocal && groupCases.length >= 1;
+  const cases = rotatePick(casesAreLocal ? regionCases : casesAreGroup ? groupCases : galleryItems, seed, 3);
   const pageReviews = rotatePick(reviews, seed, 2);
   const reviewsAreLocal = pageReviews.every((r) => r.region === region);
   const faqSubset = pickFaqs({ slug: `region-${region}`, keyword: `${region} 바닥재 철거`, type: "region-item", region, item: "바닥재 철거" }, 4);
@@ -253,11 +258,17 @@ export default async function RegionHub({ params }: { params: Promise<{ region: 
         <section className="py-10 px-5">
           <div className="max-w-3xl mx-auto">
             <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-5">
-              {casesAreLocal ? `${region} ${ui.regionPage.casesLabel}` : `수도권 유사 시공 사례 · Before / After`}
+              {casesAreLocal
+                ? `${region} ${ui.regionPage.casesLabel}`
+                : casesAreGroup
+                  ? `${groupLabel} 시공사례 · Before / After`
+                  : `수도권 유사 시공 사례 · Before / After`}
             </p>
             {!casesAreLocal && (
               <p className="text-xs text-gray-400 -mt-3 mb-5 leading-relaxed">
-                아래는 {region} 현장이 아닌 수도권에서 진행한 유사 바닥재 시공 사례입니다(카드에 실제 작업 지역 표기). 같은 팀·같은 방식으로 작업하며, {region} 방문 상담이 가능합니다.
+                {casesAreGroup
+                  ? `${groupLabel} 권역에서 저희 팀이 진행한 시공사례입니다(카드 표기 = 작업 권역 기준). ${region} 방문 상담이 가능합니다.`
+                  : `아래는 ${region} 현장이 아닌 수도권에서 진행한 유사 바닥재 시공 사례입니다(카드에 실제 작업 지역 표기). 같은 팀·같은 방식으로 작업하며, ${region} 방문 상담이 가능합니다.`}
               </p>
             )}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
