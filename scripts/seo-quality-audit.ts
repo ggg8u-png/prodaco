@@ -31,6 +31,7 @@ import { josaEnd } from "@/lib/josa";
 import { clusterLabelOf } from "@/data/regions";
 import { entriesForGroup, SITEMAP_GROUPS } from "@/lib/sitemap";
 import { posts } from "@/data/posts";
+import { blogIdFromUrl } from "@/lib/blogUrl";
 import { company } from "@/data/company";
 import { regions as REGION_VOCAB, itemsDemo, itemsSanding, synonyms } from "@/data/taxonomy";
 import ui from "../content/ui.json";
@@ -256,7 +257,7 @@ function checkSitemap(): void {
 
       if (coreUrls.has(e.loc) || hubs.has(e.loc)) continue;
       if (e.loc.startsWith(`${siteUrl}/blog/`)) {
-        const id = e.loc.slice(`${siteUrl}/blog/`.length);
+        const id = blogIdFromUrl(siteUrl, e.loc) ?? "";
         if (!postIds.has(id)) fail("사이트맵 무효 블로그", group, e.loc);
         continue;
       }

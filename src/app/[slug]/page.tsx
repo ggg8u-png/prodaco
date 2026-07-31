@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { blogPath } from "@/lib/blogUrl";
 import { Phone, MessageCircle } from "lucide-react";
 import { getKeywords, getKeywordBySlug } from "@/data/keywords";
 import { indexabilityFor } from "@/lib/seo/indexability";
@@ -639,7 +640,7 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
             </p>
             <div className="divide-y divide-gray-100 border-t border-gray-200">
               {guides.map((g) => (
-                <Link key={g.id} href={`/blog/${g.id}`} className="group flex items-center justify-between gap-3 py-3.5">
+                <Link key={g.id} href={blogPath(g.id)} className="group flex items-center justify-between gap-3 py-3.5">
                   <span className="text-sm font-semibold text-[#16181D] group-hover:text-[#9A8A2E] transition-colors">{g.title}</span>
                   <span aria-hidden className="text-gray-300 group-hover:text-[#9A8A2E] shrink-0 transition-colors">→</span>
                 </Link>

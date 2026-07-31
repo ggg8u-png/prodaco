@@ -45,11 +45,14 @@ function loadCmsGallery(): GalleryItem[] {
     try {
       const g = JSON.parse(fs.readFileSync(path.join(CMS_GALLERY_DIR, f), "utf8"));
       if (g && g.beforeImage && g.afterImage) {
+        const region = g.region || "수도권";
+        const item = g.item || "바닥재 철거";
         out.push({
+          // id·제목은 CMS 에서 입력하지 않는다 — 파일명(자동 슬러그)과 지역·품목으로 채운다.
           id: g.id || f.replace(/\.json$/, ""),
-          title: g.title || "시공 사례",
-          region: g.region || "수도권",
-          item: g.item || "바닥재 철거",
+          title: g.title || `${region} ${item} 시공사례`,
+          region,
+          item,
           beforeImage: g.beforeImage,
           afterImage: g.afterImage,
           description: g.description || "",

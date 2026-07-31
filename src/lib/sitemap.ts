@@ -9,6 +9,7 @@
 import { getKeywords } from "@/data/keywords";
 import { indexabilityFor } from "@/lib/seo/indexability";
 import { posts } from "@/data/posts";
+import { blogUrl } from "@/lib/blogUrl";
 import type { KeywordEntry } from "@/data/taxonomy";
 
 export const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://prodaco.kr";
@@ -116,7 +117,7 @@ export function entriesForGroup(group: SitemapGroup): SitemapEntry[] {
       return posts
         .filter((p) => typeof p.id === "string" && p.id.length > 0)
         .map((p) => ({
-          loc: `${siteUrl}/blog/${p.id}`,
+          loc: blogUrl(siteUrl, p.id),
           lastmod: safeLastmod(p.updatedAt, p.date),
           changefreq: "monthly",
           priority: 0.8,

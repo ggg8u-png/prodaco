@@ -14,6 +14,7 @@ import { indexabilityFor, siteUrl, keywordUrl, regionHubUrl } from "@/lib/seo/in
 import { entriesForGroup, SITEMAP_GROUPS } from "@/lib/sitemap";
 import { uniqueTitle, uniqueDescription } from "@/lib/seo";
 import { posts } from "@/data/posts";
+import { blogUrl } from "@/lib/blogUrl";
 import { company } from "@/data/company";
 
 const ROOT = process.cwd();
@@ -47,8 +48,8 @@ for (const region of hubRegions) {
 }
 
 for (const p of posts) {
-  nodes.push({ url: `${siteUrl}/blog/${p.id}`, kind: "blog", index: true, inSitemap: true,
-    canonical: `${siteUrl}/blog/${p.id}`, title: p.title, description: p.excerpt || "", hasEvidence: true, bodyEvidence: "blog" });
+  nodes.push({ url: blogUrl(siteUrl, p.id), kind: "blog", index: true, inSitemap: true,
+    canonical: blogUrl(siteUrl, p.id), title: p.title, description: p.excerpt || "", hasEvidence: true, bodyEvidence: "blog" });
 }
 
 for (const k of getKeywords()) {

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { posts } from "@/data/posts";
+import { blogPath } from "@/lib/blogUrl";
 import ui from "../../../content/ui.json";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://prodaco.kr";
@@ -53,7 +54,7 @@ export default function BlogPage() {
           {posts.map((post) => (
             <Link
               key={post.id}
-              href={`/blog/${post.id}`}
+              href={blogPath(post.id)}
               className="group flex flex-col md:flex-row gap-4 py-7 hover:bg-gray-50 -mx-2 px-2 transition-colors"
             >
               <div className="md:w-24 md:pt-0.5 shrink-0">

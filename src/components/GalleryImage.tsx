@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { originalImage, uploadedImage } from "@/lib/cdnImage";
 
 interface Props {
   src: string;
@@ -19,13 +20,15 @@ function driveId(url: string): string | null {
 // 1) lh3(구글 이미지 CDN) URL로 우선 로드 → 2) 실패 시 drive thumbnail로 자동 폴백 →
 // 3) 그래도 실패하면 브랜드 톤 '시공 사진 준비 중' 플레이스홀더.
 export default function GalleryImage({ src, alt, label, className = "", priority = false }: Props) {
-  const [current, setCurrent] = useState(src);
+  // CMS(/admin) 업로드 사진(/uploads/…)은 Netlify Image CDN 으로 리사이즈·WebP 변환해서 쓴다.
+  // (운영자가 폰 원본을 그대로 올려도 화면에는 가벼운 이미지가 나가도록.)
+  const [current, setCurrent] = useState(() => uploadedImage(src));
   const [triedFallback, setTriedFallback] = useState(false);
   const [failed, setFailed] = useState(false);
 
   // src prop이 바뀌면 상태 초기화
   useEffect(() => {
-    setCurrent(src);
+    setCurrent(uploadedImage(src));
     setTriedFallback(false);
     setFailed(false);
   }, [src]);
@@ -46,6 +49,12 @@ export default function GalleryImage({ src, alt, label, className = "", priority
   }
 
   const handleError = () => {
+    // Image CDN 변환 실패 → 업로드 원본 경로로 1회 폴백(플레이스홀더보다 먼저)
+    const raw = originalImage(current);
+    if (raw) {
+      setCurrent(raw);
+      return;
+    }
     const id = driveId(current);
     // lh3 실패 → drive thumbnail 형식으로 1회 폴백
     if (id && !triedFallback) {

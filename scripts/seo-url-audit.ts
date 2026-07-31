@@ -15,6 +15,7 @@ import { uniqueTitle, uniqueDescription, pickFaqs } from "@/lib/seo";
 import { getContentForKeyword } from "@/lib/content";
 import { galleryItems } from "@/data/gallery";
 import { posts } from "@/data/posts";
+import { blogUrl } from "@/lib/blogUrl";
 import { company } from "@/data/company";
 
 const ROOT = process.cwd();
@@ -147,13 +148,13 @@ function main(): void {
   for (const p of posts) {
     if (!p.id) continue;
     rows.push({
-      url: `${siteUrl}/blog/${p.id}`,
+      url: blogUrl(siteUrl, p.id),
       routeType: "blog",
       region: "",
       service: "",
       title: p.title || p.id,
       description: (p.excerpt || "").slice(0, 120),
-      canonical: `${siteUrl}/blog/${p.id}`,
+      canonical: blogUrl(siteUrl, p.id),
       robots: "index,follow",
       inSitemap: true,
       expectedStatus: 200,

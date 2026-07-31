@@ -1,4 +1,5 @@
 import { posts } from "@/data/posts";
+import { blogUrl } from "@/lib/blogUrl";
 import settings from "../../../content/settings.json";
 
 // 네이버 서치어드바이저 RSS 제출용 블로그 피드. 빌드 타임에 정적 생성(외부 의존 없음).
@@ -26,7 +27,7 @@ export function GET(): Response {
 
   const items = posts
     .map((p) => {
-      const url = `${siteUrl}/blog/${p.id}`;
+      const url = blogUrl(siteUrl, p.id);
       const pubDate = new Date(p.date).toUTCString();
       const cats = (p.tags || [])
         .map((t) => `<category>${xmlEscape(t)}</category>`)

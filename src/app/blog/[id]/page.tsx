@@ -7,6 +7,8 @@ import { faqs } from "@/data/faq";
 import CtaBand from "@/components/CtaBand";
 import WorkPhotos from "@/components/WorkPhotos";
 import { relatedServicesForPost } from "@/lib/relatedGuides";
+import { renderMarkdown } from "@/lib/markdown";
+import { blogPath, blogUrl, decodeBlogId } from "@/lib/blogUrl";
 import { PhoneIcon, KakaoIcon } from "@/components/icons";
 import ui from "../../../../content/ui.json";
 
@@ -17,10 +19,11 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
-  const { id } = await params;
-  const post = posts.find((p) => p.id === id);
+  const { id: rawId } = await params;
+  // 한글 id 는 런타임에 퍼센트 인코딩되어 들어온다 — 디코딩 후 조회.
+  const post = posts.find((p) => p.id === decodeBlogId(rawId));
   if (!post) return {};
-  const url = `${siteUrl}/blog/${id}`;
+  const url = blogUrl(siteUrl, post.id);
   return {
     // 레이아웃 template이 "| 프로다"를 붙이므로 제목만 지정 (이중 접미사 방지)
     title: post.title,
@@ -40,11 +43,12 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 }
 
 export default async function BlogPostPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+  const { id: rawId } = await params;
+  const id = decodeBlogId(rawId);
   const post = posts.find((p) => p.id === id);
   if (!post) notFound();
 
-  const postUrl = `${siteUrl}/blog/${id}`;
+  const postUrl = blogUrl(siteUrl, post.id);
 
   // 관련 글 — 같은 카테고리 우선, 부족하면 다른 글로 채움 (내부 링크 → SEO)
   const rest = posts.filter((p) => p.id !== post.id);
@@ -129,51 +133,8 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
 
       <section className="py-12 px-5">
         <div className="max-w-3xl mx-auto">
-          <article className="space-y-4">
-            {post.content.split("\n\n").map((block, i) => {
-              if (block.startsWith("## ")) {
-                return (
-                  <h2 key={i} className="text-lg font-black mt-10 mb-3 pt-6 border-t border-gray-100">
-                    {block.slice(3)}
-                  </h2>
-                );
-              }
-              if (block.startsWith("### ")) {
-                return <h3 key={i} className="text-base font-bold mt-6 mb-2">{block.slice(4)}</h3>;
-              }
-              if (block.startsWith("> ")) {
-                return (
-                  <blockquote key={i} className="border-l-[3px] border-[#FFD400] pl-4 text-gray-600 text-sm italic my-4">
-                    {block.slice(2)}
-                  </blockquote>
-                );
-              }
-              if (block.match(/^[1-9]\. /)) {
-                const items = block.split("\n").filter(Boolean);
-                return (
-                  <ol key={i} className="space-y-2 my-4">
-                    {items.map((item, j) => (
-                      <li key={j} className="text-gray-700 text-sm flex gap-3">
-                        <span className="text-[#9A8A2E] font-bold shrink-0">{j + 1}.</span>
-                        <span>{item.replace(/^\d+\.\s*/, "")}</span>
-                      </li>
-                    ))}
-                  </ol>
-                );
-              }
-              if (block.startsWith("- ")) {
-                const items = block.split("\n").filter(Boolean);
-                return (
-                  <ul key={i} className="space-y-2 my-4 border-l-2 border-gray-100 pl-4">
-                    {items.map((item, j) => (
-                      <li key={j} className="text-gray-700 text-sm">{item.replace(/^-\s*/, "")}</li>
-                    ))}
-                  </ul>
-                );
-              }
-              return <p key={i} className="text-gray-700 text-sm leading-relaxed">{block}</p>;
-            })}
-          </article>
+          {/* 본문 — CMS 서식(굵게·목록·인용·사진·표)을 그대로 렌더 (src/lib/markdown.tsx) */}
+          <article className="space-y-4">{renderMarkdown(post.content)}</article>
 
           {/* 태그 */}
           {post.tags.length > 0 && (
@@ -265,7 +226,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
               <p className="mb-4 font-mono-pd text-xs font-bold uppercase tracking-[0.16em] text-[#9A8A2E]">{ui.blogPost.relatedLabel}</p>
               <div className="divide-y divide-gray-100 border-t border-gray-200">
                 {relatedPosts.map((p) => (
-                  <Link key={p.id} href={`/blog/${p.id}`} className="group flex items-start gap-3 py-4">
+                  <Link key={p.id} href={blogPath(p.id)} className="group flex items-start gap-3 py-4">
                     <span className="font-mono-pd text-[11px] font-bold uppercase text-[#9A8A2E] shrink-0 pt-0.5 w-14">{p.category}</span>
                     <span className="flex-1 min-w-0">
                       <span className="block text-[15px] font-bold text-[#16181D] group-hover:text-[#9A8A2E] transition-colors leading-snug">{p.title}</span>
