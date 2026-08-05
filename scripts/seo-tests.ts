@@ -20,7 +20,7 @@ import { uniqueTitle, pickFaqs, faqMatchesItem } from "@/lib/seo";
 import { getContentForKeyword, familyOf } from "@/lib/content";
 import { keyAnswerFor, keyAnswerForRegion, familyLabel } from "@/data/keyAnswer";
 import { galleryItems } from "@/data/gallery";
-import { entriesForGroup, SITEMAP_GROUPS, renderUrlset, renderIndex } from "@/lib/sitemap";
+import { entriesForGroup, SITEMAP_GROUPS, renderUrlset, renderIndex, nonEmptyGroups, SITE_LASTMOD } from "@/lib/sitemap";
 import robots from "@/app/robots";
 
 let passed = 0;
@@ -133,6 +133,30 @@ ok(!/<loc>[^<]*[가-힣][^<]*<\/loc>/.test(urlset), "urlset loc 퍼센트 인코
 const index = renderIndex();
 ok(index.includes("<sitemapindex"), "sitemap index 루트");
 ok((index.match(/<sitemap>/g) || []).length >= 4, "sitemap index 그룹 4+");
+
+// ── ⑧-2 lastmod 회귀 방지 ────────────────────────────────────────────────────
+// 2026-06-23 고정 상수를 그대로 내보내면서 7월 콘텐츠 개편을 전부 진행한 적이 있다.
+// 사이트맵이 "안 바뀜"을 알리는 동안 GSC 색인 수는 139에서 5주간 멈춰 있었다.
+// content/lastmod.json(빌드 전 생성)이 있는데도 폴백 상수가 나오면 배선이 끊긴 것이다.
+{
+  const hasMap = fs.existsSync(path.join(process.cwd(), "content", "lastmod.json"));
+  const all = SITEMAP_GROUPS.flatMap((g) => entriesForGroup(g));
+  ok(all.every((e) => /^\d{4}-\d{2}-\d{2}$/.test(e.lastmod)), "사이트맵 lastmod 전부 YYYY-MM-DD");
+  if (hasMap) {
+    const stale = all.filter((e) => e.lastmod === SITE_LASTMOD && !e.loc.includes("/blog/"));
+    ok(
+      stale.length === 0,
+      "lastmod.json 이 있으면 폴백 상수(SITE_LASTMOD)가 남지 않음",
+      `잔존 ${stale.length}건 ${stale.slice(0, 3).map((e) => decodeURIComponent(e.loc)).join(", ")}`
+    );
+  }
+  // 하위 sitemap 의 인덱스 lastmod 는 그 안의 최신 항목과 같아야 한다.
+  for (const g of nonEmptyGroups()) {
+    const entries = entriesForGroup(g.group);
+    const newestInGroup = entries.map((e) => e.lastmod).sort().slice(-1)[0];
+    ok(g.lastmod === newestInGroup, `sitemap index lastmod = ${g.group} 최신 항목`, `${g.lastmod} vs ${newestInGroup}`);
+  }
+}
 
 // ── ⑨ HTTP/www 단일 301 (netlify.toml) ───────────────────────────────────────
 const toml = fs.readFileSync(path.join(process.cwd(), "netlify.toml"), "utf8");

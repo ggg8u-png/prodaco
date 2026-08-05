@@ -5,7 +5,11 @@
 //   · isIndexable(k) && canonicalSlugFor(k) === k.slug  → 200·index·self-canonical 만 포함
 //   · 동의어 꼬리말 등 비-canonical, noindex, 관리자/유틸 URL 은 제외
 //   · 한글 슬러그는 encodeURIComponent 로 인코딩해 페이지 canonical(인코딩형)과 정확히 일치
-//   · lastmod 는 고정 상수(SITE_LASTMOD) — 매 빌드 변경 신호를 내지 않으면서 크롤 기준 날짜 제공
+//   · lastmod 는 그 페이지 콘텐츠가 실제로 바뀐 날(git 커밋 날짜) — content/lastmod.json.
+//     같은 커밋을 다시 빌드하면 값이 같아 "매 빌드 갱신 신호" 는 여전히 나지 않는다.
+//     파일이 없으면(git 없는 환경) SITE_LASTMOD 로 폴백한다.
+import fs from "node:fs";
+import path from "node:path";
 import { getKeywords } from "@/data/keywords";
 import { indexabilityFor } from "@/lib/seo/indexability";
 import { posts } from "@/data/posts";
@@ -14,8 +18,58 @@ import type { KeywordEntry } from "@/data/taxonomy";
 
 export const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://prodaco.kr";
 
-// 콘텐츠 버전 날짜 — 정적 페이지 lastmod 기준(매 빌드 갱신 신호 방지).
+// 폴백 콘텐츠 버전 날짜 — content/lastmod.json 이 없을 때만 쓰인다.
 export const SITE_LASTMOD = "2026-06-23";
+
+// ─── 실제 수정일(content/lastmod.json) ──────────────────────────────────────────
+// scripts/build-lastmod.mjs 가 빌드 전에 git 커밋 날짜로 생성한다(커밋되지 않는 산출물).
+interface LastmodMap {
+  core?: string;
+  keywords?: string;
+  hubs?: string;
+  regions?: Record<string, string>;
+  slugs?: Record<string, string>;
+}
+
+const lastmodMap: LastmodMap = (() => {
+  try {
+    const raw = fs.readFileSync(path.join(process.cwd(), "content", "lastmod.json"), "utf8");
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? (parsed as LastmodMap) : {};
+  } catch {
+    return {};
+  }
+})();
+
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+/** 후보 날짜 중 가장 최신. 유효한 값이 하나도 없으면 SITE_LASTMOD. */
+function newest(...candidates: (string | undefined)[]): string {
+  const valid = candidates.filter((d): d is string => !!d && DATE_RE.test(d));
+  return valid.length ? valid.sort().slice(-1)[0] : SITE_LASTMOD;
+}
+
+/** 코어 정적 페이지(홈·서비스·갤러리·후기·FAQ·블로그 목록)의 수정일. */
+function coreLastmod(): string {
+  return newest(lastmodMap.core);
+}
+
+/** 지역 허브 수정일 — 허브 템플릿 변경과 그 지역 시공사례 추가 중 늦은 쪽. */
+function hubLastmod(region: string): string {
+  return newest(lastmodMap.hubs, lastmodMap.regions?.[region]);
+}
+
+/**
+ * 조합 페이지 수정일 — 조합 데이터(키워드·색인 허용목록) 변경과
+ * 그 페이지에 걸린 시공사례 추가 중 늦은 쪽.
+ */
+function keywordLastmod(k: KeywordEntry): string {
+  return newest(
+    lastmodMap.keywords,
+    lastmodMap.slugs?.[k.slug],
+    k.region ? lastmodMap.regions?.[k.region] : undefined
+  );
+}
 
 export interface SitemapEntry {
   loc: string;
@@ -56,7 +110,7 @@ function indexableKeywords(): KeywordEntry[] {
 function keywordEntry(k: KeywordEntry): SitemapEntry {
   return {
     loc: `${siteUrl}/${encodeURIComponent(k.slug)}`,
-    lastmod: SITE_LASTMOD,
+    lastmod: keywordLastmod(k),
     changefreq: "monthly",
     priority: keywordPriority(String(k.type)),
   };
@@ -86,19 +140,23 @@ function hubRegions(): string[] {
 export function entriesForGroup(group: SitemapGroup): SitemapEntry[] {
   const kws = indexableKeywords();
   switch (group) {
-    case "core":
+    case "core": {
+      // 갤러리 목록은 시공사례가 추가되면 실제로 바뀐다 → 사례 날짜까지 반영.
+      const core = coreLastmod();
+      const galleryLastmod = newest(core, ...Object.values(lastmodMap.regions ?? {}));
       return [
-        { loc: siteUrl, lastmod: SITE_LASTMOD, changefreq: "weekly", priority: 1.0 },
-        { loc: `${siteUrl}/services`, lastmod: SITE_LASTMOD, changefreq: "weekly", priority: 0.9 },
-        { loc: `${siteUrl}/gallery`, lastmod: SITE_LASTMOD, changefreq: "monthly", priority: 0.75 },
-        { loc: `${siteUrl}/reviews`, lastmod: SITE_LASTMOD, changefreq: "weekly", priority: 0.8 },
-        { loc: `${siteUrl}/faq`, lastmod: SITE_LASTMOD, changefreq: "monthly", priority: 0.85 },
-        { loc: `${siteUrl}/blog`, lastmod: SITE_LASTMOD, changefreq: "weekly", priority: 0.75 },
+        { loc: siteUrl, lastmod: core, changefreq: "weekly", priority: 1.0 },
+        { loc: `${siteUrl}/services`, lastmod: core, changefreq: "weekly", priority: 0.9 },
+        { loc: `${siteUrl}/gallery`, lastmod: galleryLastmod, changefreq: "monthly", priority: 0.75 },
+        { loc: `${siteUrl}/reviews`, lastmod: core, changefreq: "weekly", priority: 0.8 },
+        { loc: `${siteUrl}/faq`, lastmod: core, changefreq: "monthly", priority: 0.85 },
+        { loc: `${siteUrl}/blog`, lastmod: newest(core, ...posts.map((p) => p.updatedAt || p.date)), changefreq: "weekly", priority: 0.75 },
       ];
+    }
     case "regions":
       return hubRegions().map((region) => ({
         loc: `${siteUrl}/services/${encodeURIComponent(region)}`,
-        lastmod: SITE_LASTMOD,
+        lastmod: hubLastmod(region),
         changefreq: "weekly",
         priority: 0.8,
       }));
@@ -129,7 +187,9 @@ export function entriesForGroup(group: SitemapGroup): SitemapEntry[] {
 export function nonEmptyGroups(): { group: SitemapGroup; lastmod: string; count: number }[] {
   return SITEMAP_GROUPS.map((group) => {
     const entries = entriesForGroup(group);
-    return { group, lastmod: SITE_LASTMOD, count: entries.length };
+    // 인덱스의 lastmod 는 그 하위 sitemap 안에서 가장 최근 수정일이어야 한다
+    // (구글은 인덱스의 날짜를 보고 하위 sitemap 재수집 여부를 정한다).
+    return { group, lastmod: newest(...entries.map((e) => e.lastmod)), count: entries.length };
   }).filter((g) => g.count > 0);
 }
 

@@ -67,7 +67,16 @@ export default async function OgImage() {
     ),
     {
       ...size,
-      fonts: kr ? [{ name: "Pretendard", data: fontData as ArrayBuffer, weight: 700 as const, style: "normal" as const }] : [],
+      // 폰트 실패 시에는 fonts 키 자체를 넘기지 않는다.
+      // 빈 배열([])을 넘기면 next/og 가 "No fonts are loaded" 로 던져 빌드가 통째로 깨진다
+      // (= 로마자 폴백이 한 번도 동작한 적 없었다). 생략하면 내장 기본 폰트로 렌더된다.
+      ...(kr
+        ? {
+            fonts: [
+              { name: "Pretendard", data: fontData as ArrayBuffer, weight: 700 as const, style: "normal" as const },
+            ],
+          }
+        : {}),
     }
   );
 }

@@ -52,6 +52,10 @@ next-env.d.ts
 /content/photos/originals/
 /content/photos/derived/
 
+# 사이트맵 lastmod 맵 — 빌드 전에 git 커밋 날짜에서 생성(scripts/build-lastmod.mjs).
+# 커밋하면 매 배포마다 diff 가 생기므로 산출물로 둔다. 없으면 SITE_LASTMOD 폴백.
+/content/lastmod.json
+
 # internal SEO QA artifacts (not part of the deployed site)
 /reports/
 /tests/
