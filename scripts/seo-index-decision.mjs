@@ -210,9 +210,14 @@ if (WRITE) {
   const seoPath = path.join(ROOT, "content/seo.json");
   const seo = JSON.parse(fs.readFileSync(seoPath, "utf8"));
   seo.requireEvidenceForIndex = true;
-  seo.extraIndexSlugs = allowSlugs;
+  // extraIndexSlugs 만 재생성한다. manualIndexSlugs(운영자 수동 승인)는 건드리지 않는다 —
+  // 예전에는 이 자리에 수동 승인을 같이 넣어 두어서, 재실행 한 번에 7건이 조용히 사라졌다.
+  seo.extraIndexSlugs = allowSlugs.filter((s) => !(seo.manualIndexSlugs || []).includes(s));
   fs.writeFileSync(seoPath, JSON.stringify(seo, null, 2) + "\n", "utf8");
-  console.log(`[seo:decide] content/seo.json 갱신 — extraIndexSlugs ${allowSlugs.length}개, requireEvidenceForIndex=true`);
+  const manualCount = (seo.manualIndexSlugs || []).length;
+  console.log(
+    `[seo:decide] content/seo.json 갱신 — extraIndexSlugs ${seo.extraIndexSlugs.length}개(자동) + manualIndexSlugs ${manualCount}개(수동, 보존), requireEvidenceForIndex=true`
+  );
 }
 
 const byDecision = {};

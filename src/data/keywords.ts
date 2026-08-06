@@ -9,15 +9,21 @@ import seoSettings from "../../content/seo.json";
 //  · generateCount        : 생성할 키워드 페이지 수(아래 GENERATE_COUNT 기본값).
 //  · autoIndexByGalleryCase: 지역+품목 일치 시공사례가 있으면 자동 색인 승급(기본 on).
 //  · extraIndexSlugs       : 사례 없이도 색인을 강제할 슬러그 목록(실제 콘텐츠를 채운 뒤에만 사용).
+//                            ⚠ scripts/seo-index-decision.mjs --write 가 통째로 재생성한다.
+//                            사람이 손으로 넣은 값은 다음 실행에서 지워지므로 여기 두지 말 것.
+//  · manualIndexSlugs      : 운영자가 직접 승인한 슬러그. 자동 산출이 건드리지 않는 영구 목록.
+//                            (2026-07-28 수동 승인 7건이 재생성 시 전부 삭제되는 걸 확인하고 분리)
 const seo = seoSettings as {
   generateCount?: number;
   autoIndexByGalleryCase?: boolean;
   extraIndexSlugs?: string[];
+  manualIndexSlugs?: string[];
   noindexTypes?: string[];
   requireEvidenceForIndex?: boolean;
 };
 const AUTO_INDEX_BY_CASE = seo.autoIndexByGalleryCase !== false; // 기본 true
-const EXTRA_INDEX_SLUGS = new Set(seo.extraIndexSlugs || []);
+// 자동 산출 허용목록 ∪ 운영자 수동 승인 — 색인 판정은 둘을 합쳐서 본다.
+const EXTRA_INDEX_SLUGS = new Set([...(seo.extraIndexSlugs || []), ...(seo.manualIndexSlugs || [])]);
 // 약한 롱테일 유형은 noindex,follow 로 강등한다(색인 경쟁에서 제외).
 //   · 지역+품목(region-item)·지역 허브는 색인 유지(핵심 로컬 페이지).
 //   · b2b·synonym·consumer·target·item-tail 등 얇은 템플릿 유형은 색인 제외 →

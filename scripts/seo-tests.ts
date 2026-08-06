@@ -184,6 +184,27 @@ ok((index.match(/<sitemap>/g) || []).length >= 4, "sitemap index 그룹 4+");
   }
 }
 
+// ── ⑧-4 수동 승인 슬러그 보존 ────────────────────────────────────────────────
+// seo:decide --write 가 extraIndexSlugs 를 통째로 재생성한다. 예전에는 수동 승인을
+// 같은 배열에 넣어 두어서, 재실행 한 번에 7/28 승인 7건이 조용히 사라지는 상태였다.
+// 운영자 승인은 manualIndexSlugs 에 두고, 실제로 Tier A 로 살아 있어야 한다.
+{
+  const seoJson = JSON.parse(fs.readFileSync(path.join(process.cwd(), "content", "seo.json"), "utf8")) as {
+    extraIndexSlugs?: string[];
+    manualIndexSlugs?: string[];
+  };
+  const manual = seoJson.manualIndexSlugs || [];
+  const auto = seoJson.extraIndexSlugs || [];
+  ok(manual.length > 0, "manualIndexSlugs 존재(운영자 승인 목록)", `${manual.length}개`);
+  const overlap = manual.filter((s) => auto.includes(s));
+  ok(overlap.length === 0, "수동 승인이 자동 재생성 배열과 겹치지 않음", `중복 ${overlap.join(", ")}`);
+  const notLive = manual.filter((s) => {
+    const k = getKeywordBySlug(s);
+    return !k || !indexabilityFor(k).inSitemap;
+  });
+  ok(notLive.length === 0, "수동 승인 슬러그가 전부 Tier A(사이트맵 포함)", `미반영 ${notLive.join(", ")}`);
+}
+
 // ── ⑨ HTTP/www 단일 301 (netlify.toml) ───────────────────────────────────────
 const toml = fs.readFileSync(path.join(process.cwd(), "netlify.toml"), "utf8");
 for (const from of ["http://prodaco.kr/*", "http://www.prodaco.kr/*", "https://www.prodaco.kr/*"]) {
