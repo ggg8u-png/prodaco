@@ -13,6 +13,7 @@ import { itemFactsFor, FLOOR_COMPARE, compareKeyOf, itemMistakesFor } from "@/da
 import { neighborsOf, clusterLabelOf } from "@/data/regions";
 import { pickFaqs, uniqueDescription, uniqueTitle } from "@/lib/seo";
 import { relatedGuidesFor } from "@/lib/relatedGuides";
+import { itemGuidesFor } from "@/lib/itemGuides";
 import { keyAnswerFor, normalizeKeyAnswer } from "@/data/keyAnswer";
 import { comboProfileFor } from "@/data/comboProfiles";
 import { applyReplacements } from "@/lib/replacements";
@@ -162,6 +163,10 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
     ...rotatePick(sameItemRegionPool.filter((k) => indexabilityFor(k).inSitemap), seed, 8),
     ...rotatePick(sameItemRegionPool.filter((k) => !indexabilityFor(k).inSitemap), seed, 8),
   ].slice(0, 8);
+
+  // 같은 품목의 정보형 페이지(비용·평당비용·방법…) 중 색인 대상만 역방향 링크 —
+  // 사일로를 양방향으로 닫는다(선택 규칙·근거는 src/lib/itemGuides.ts).
+  const itemGuideLinks = rotatePick(itemGuidesFor(keyword.item, keyword.slug), seed, 5);
   // 1) 실제 비포/애프터 시공 사례 — 같은 지역 사례가 있으면 우선 노출(로컬 실증),
   //    없으면 같은 품목 → 전체 풀 순서로 폴백. 타지역 사례는 아래 렌더에서
   //    '수도권 유사 품목 사례'로 명시해 해당 지역 실적처럼 보이지 않게 한다.
@@ -618,6 +623,28 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
             </p>
             <div className="flex flex-wrap gap-2">
               {sameItemRegionLinks.map((k) => (
+                <Link
+                  key={k.slug}
+                  href={`/${k.slug}`}
+                  className="text-xs font-medium text-[#16181D] px-3 py-1.5 border border-gray-300 bg-white hover:border-[#9A8A2E] hover:text-[#9A8A2E] transition-colors"
+                >
+                  {applyReplacements(k.keyword)}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {itemGuideLinks.length > 0 && (
+        <section className="py-10 px-5">
+          <div className="max-w-3xl mx-auto">
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">{applyReplacements(`${keyword.item} 비용·작업 안내`)}</p>
+            <p className="text-xs text-gray-500 mb-4 leading-relaxed">
+              {applyReplacements(`${keyword.item} 평당 참고가와 작업 순서를 항목별로 정리했습니다. 견적 전에 확인하시면 현장 상담이 빨라집니다.`)}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {itemGuideLinks.map((k) => (
                 <Link
                   key={k.slug}
                   href={`/${k.slug}`}

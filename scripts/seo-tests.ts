@@ -22,6 +22,7 @@ import { keyAnswerFor, keyAnswerForRegion, familyLabel } from "@/data/keyAnswer"
 import { galleryItems } from "@/data/gallery";
 import { entriesForGroup, SITEMAP_GROUPS, renderUrlset, renderIndex, nonEmptyGroups, SITE_LASTMOD } from "@/lib/sitemap";
 import robots from "@/app/robots";
+import { itemGuidesFor } from "@/lib/itemGuides";
 
 let passed = 0;
 const errors: string[] = [];
@@ -155,6 +156,31 @@ ok((index.match(/<sitemap>/g) || []).length >= 4, "sitemap index 그룹 4+");
     const entries = entriesForGroup(g.group);
     const newestInGroup = entries.map((e) => e.lastmod).sort().slice(-1)[0];
     ok(g.lastmod === newestInGroup, `sitemap index lastmod = ${g.group} 최신 항목`, `${g.lastmod} vs ${newestInGroup}`);
+  }
+}
+
+// ── ⑧-3 품목 정보형 페이지 내부링크 ──────────────────────────────────────────
+// 마루철거-비용·바닥철거-비용 같은 상업 의도 최상위 페이지가 색인 대상인데도
+// /services 한 곳에서만 링크를 받고 있었다(지역 페이지는 70~90개). 링크가 안 모이면
+// 색인 대상이어도 크롤·평가 우선순위에서 밀린다. 같은 품목 지역 페이지가 반드시
+// 역링크를 걸도록 고정한다.
+{
+  const tierATails = keywords.filter((k) => k.type === "item-tail" && indexabilityFor(k).inSitemap);
+  ok(tierATails.length > 0, "Tier A 품목 정보형 페이지 존재", `${tierATails.length}개`);
+  const starved: string[] = [];
+  for (const tail of tierATails) {
+    // 같은 품목의 지역 페이지(색인 여부 무관 — noindex,follow 도 링크는 전달한다)가
+    // 이 정보형 페이지를 링크 대상으로 잡는지 확인.
+    const linkers = keywords.filter(
+      (k) => k.type === "region-item" && k.item === tail.item && itemGuidesFor(k.item, k.slug).some((g) => g.slug === tail.slug)
+    );
+    if (linkers.length === 0) starved.push(tail.slug);
+  }
+  ok(starved.length === 0, "Tier A 품목 정보형 페이지가 지역 페이지에서 역링크 수신", `고립 ${starved.length}건 ${starved.slice(0, 5).join(", ")}`);
+  // 사장님 지정 핵심 품목 — 마루철거·바닥철거는 정보형 페이지가 반드시 살아 있어야 한다.
+  for (const item of ["마루철거", "바닥철거"]) {
+    const guides = keywords.filter((k) => k.type === "item-tail" && k.item === item && indexabilityFor(k).inSitemap);
+    ok(guides.length >= 2, `${item} 정보형 색인 페이지 2개 이상`, `${guides.length}개`);
   }
 }
 
