@@ -175,19 +175,21 @@ export default async function RegionHub({ params }: { params: Promise<{ region: 
       { "@type": "ListItem", position: 3, name: `${region} 바닥재 철거`, item: `${siteUrl}/services/${encodeURIComponent(region)}` },
     ],
   };
-  const localBusinessJsonLd = {
+  // ⚠ 예전에는 이 자리에서 LocalBusiness 를 다시 정의했다. @id 는 루트 레이아웃과 같은
+  // `${siteUrl}/#business` 인데 address 는 { addressRegion: region } 이었다 —
+  // 즉 허브 65개가 같은 업체 엔티티를 각각 강남·수원·인천 주소로 재정의하고 있었다.
+  // 실제 사업장은 파주 한 곳이고, 이 구조는 검색엔진에 '지역마다 지점이 있다'로 읽힌다
+  // (로컬 스팸 신호). 업체 엔티티는 루트 레이아웃이 실제 NAP 로 한 번만 선언하고,
+  // 이 페이지는 '그 업체가 이 지역에 서비스한다'는 관계만 Service 로 표현한다.
+  const serviceJsonLd = {
     "@context": "https://schema.org",
-    "@type": "LocalBusiness",
-    "@id": `${siteUrl}/#business`,
-    name: company.brandName,
-    description: company.geoSummary,
-    telephone: company.phone,
-    url: `${siteUrl}/services/${encodeURIComponent(region)}`,
-    image: `${siteUrl}/opengraph-image`,
-    priceRange: "평당 1만~8만원대 (바닥재·면적별, 실측 정산)",
+    "@type": "Service",
+    name: `${region} 바닥재 철거`,
+    serviceType: "바닥재 철거",
+    description: `${region} 지역 현장 방문 바닥재 철거·바닥 샌딩 서비스.`,
     areaServed: { "@type": "City", name: region },
-    knowsAbout: company.services.map((s) => s.name),
-    address: { "@type": "PostalAddress", addressRegion: region, addressCountry: "KR" },
+    provider: { "@id": `${siteUrl}/#business` },
+    url: `${siteUrl}/services/${encodeURIComponent(region)}`,
   };
   const faqJsonLd = {
     "@context": "https://schema.org",
@@ -207,7 +209,7 @@ export default async function RegionHub({ params }: { params: Promise<{ region: 
   return (
     <div className="pb-20 md:pb-0">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
 
       <section className="bg-[#16181D] text-white pt-14 pb-12 px-5">

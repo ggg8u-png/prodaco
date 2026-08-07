@@ -496,6 +496,56 @@ ok((index.match(/<sitemap>/g) || []).length >= 4, "sitemap index 그룹 4+");
   ok(company.priceRange === "" || company.priceRange.length > 0, "priceRange: 설정된 값만 사용");
 }
 
+// ── ⑧-9 로컬 신뢰 신호 게이트 (가짜 지점 방지) ───────────────────────────────
+// 프로다는 사업장이 파주 한 곳이고 수도권 전역에 '출장'으로 서비스한다.
+// 예전에는 지역 허브 65개와 키워드 페이지 1,546개가 각각 LocalBusiness 를 다시
+// 선언하면서, @id 는 루트와 같은 #business 인데 address 는 { addressRegion: "강남" }
+// 처럼 지역명을 넣고 있었다 — 같은 업체 엔티티를 65개 주소로 재정의한 셈이고,
+// 검색엔진에는 '지역마다 지점이 있다'(로컬 스팸)로 읽힌다. 그 구조를 고정해서 막는다.
+{
+  // 주석은 제거하고 검사한다 — 설명 주석에 적어 둔 '과거 잘못된 코드' 예시를
+  // 실제 코드로 오탐하지 않기 위해서다.
+  const stripComments = (t: string) => t.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+  const read = (...seg: string[]) => stripComments(fs.readFileSync(path.join(process.cwd(), ...seg), "utf8"));
+  const src = read("src", "app", "services", "[region]", "page.tsx");
+  const slugSrc = read("src", "app", "[slug]", "page.tsx");
+  const layoutSrc = read("src", "app", "layout.tsx");
+
+  // ① 지역 페이지는 LocalBusiness 엔티티를 선언하지 않는다(참조만 한다).
+  ok(!/"@type":\s*"LocalBusiness"/.test(src), "지역 허브: LocalBusiness 엔티티 재선언 없음");
+  ok(!/"@type":\s*"LocalBusiness"/.test(slugSrc), "키워드 페이지: LocalBusiness 엔티티 재선언 없음");
+
+  // ② 지역 변수를 주소 필드에 넣지 않는다 — 가짜 지점 주소의 직접적 형태.
+  ok(!/addressRegion:\s*region/.test(src), "지역 허브: addressRegion 에 지역 변수 사용 없음");
+  ok(!/addressRegion:\s*"수도권"/.test(slugSrc), "키워드 페이지: 가짜 addressRegion 없음");
+
+  // ③ 공식 주소·전화의 출처는 company 하나여야 한다(페이지마다 달라지면 NAP 불일치).
+  ok(/napJsonLd/.test(layoutSrc), "업체 NAP 은 루트 레이아웃의 단일 출처에서만 선언");
+  ok(!!company.phone && company.phone === company.phone.trim(), "전화번호 단일 출처 존재", company.phone);
+
+  // ④ sameAs 는 공식 소유 프로필만 — 저장소에 값이 있는 슬롯만 나간다.
+  const allowedHosts = ["map.naver.com", "share.google", "google.com", "instagram.com", "youtube.com", "blog.naver.com", "pf.kakao.com", "map.kakao.com"];
+  const bad = Object.values(company.business.sameAs)
+    .filter((u): u is string => typeof u === "string" && u.length > 0)
+    .filter((u) => !allowedHosts.some((h) => u.includes(h)));
+  ok(bad.length === 0, "sameAs 는 허용된 공식 프로필 호스트만", bad.join(", "));
+
+  // ⑤ 후기 스키마는 증거 게이트를 통과할 때만 활성 — 자체 후기로 별점을 내보내지 않는다.
+  const seoJson = JSON.parse(fs.readFileSync(path.join(process.cwd(), "content", "seo.json"), "utf8")) as {
+    reviewSchema?: { enabled?: boolean; minVerified?: number };
+  };
+  const rs = seoJson.reviewSchema || {};
+  ok(rs.enabled !== true || (rs.minVerified ?? 0) > 0, "후기 스키마: 활성화 시 검증 최소 건수 필요", JSON.stringify(rs));
+  ok(!/aggregateRating/.test(layoutSrc), "AggregateRating 미사용(self-serving 리치결과 금지)");
+
+  // ⑥ meta keywords 를 다시 넣지 않는다(키워드 스터핑 신호).
+  ok(!/^\s*keywords:\s*seoKeywords/m.test(layoutSrc), "meta keywords 태그 미사용");
+
+  // ⑦ 지역명을 지점/매장처럼 표현하는 메타데이터가 없어야 한다.
+  const branchWord = /(지점|점포|매장|영업소)/;
+  ok(!branchWord.test(src), "지역 허브 문구에 지점·매장 표현 없음");
+}
+
 // ── ⑨ HTTP/www 단일 301 (netlify.toml) ───────────────────────────────────────
 const toml = fs.readFileSync(path.join(process.cwd(), "netlify.toml"), "utf8");
 for (const from of ["http://prodaco.kr/*", "http://www.prodaco.kr/*", "https://www.prodaco.kr/*"]) {

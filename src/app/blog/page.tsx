@@ -11,7 +11,11 @@ const desc = "바닥재 철거 비용, 방법, 주의사항 — 10년 현장 경
 export const metadata: Metadata = {
   title: "바닥재 철거 정보",
   description: desc,
-  alternates: { canonical: `${siteUrl}/blog` },
+  alternates: {
+    canonical: `${siteUrl}/blog`,
+    // 블로그 목록은 RSS 의 실제 대상 페이지다 — 여기서도 피드를 명시한다.
+    types: { "application/rss+xml": `${siteUrl}/rss.xml` },
+  },
   openGraph: {
     title: "바닥재 철거 정보 | 프로다",
     description: desc,

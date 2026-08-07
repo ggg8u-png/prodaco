@@ -276,31 +276,15 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
     areaServed: keyword.region
       ? { "@type": "City", name: keyword.region }
       : { "@type": "AdministrativeArea", name: "서울·경기·인천 수도권" },
-    provider: { "@type": "LocalBusiness", "@id": `${siteUrl}/#business` },
+    provider: { "@id": `${siteUrl}/#business` },
     url: pageUrl,
   };
 
-  // Service.provider 가 참조하는 실제 LocalBusiness 노드(실 NAP·권역) — 로컬 신호 강화.
-  const localBusinessJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "LocalBusiness",
-    "@id": `${siteUrl}/#business`,
-    name: company.brandName,
-    description: company.geoSummary,
-    telephone: company.phone,
-    url: siteUrl,
-    image: `${siteUrl}/opengraph-image`,
-    // 실제 비용표(FLOOR_COSTS) 범위 기반 — 일반 참고가, 실측 정산.
-    priceRange: "평당 1만~8만원대 (바닥재·면적별, 실측 정산)",
-    areaServed: [
-      ...(keyword.region ? [{ "@type": "City", name: keyword.region }] : []),
-      { "@type": "AdministrativeArea", name: "서울특별시" },
-      { "@type": "AdministrativeArea", name: "경기도" },
-      { "@type": "AdministrativeArea", name: "인천광역시" },
-    ],
-    knowsAbout: company.services.map((s) => s.name),
-    address: { "@type": "PostalAddress", addressRegion: "수도권", addressCountry: "KR" },
-  };
+  // ⚠ 예전에는 여기서 LocalBusiness 를 다시 선언했다. @id 가 루트 레이아웃과 같은데
+  // address 는 { addressRegion: "수도권" } 이라 실제 주소(파주)와 충돌했다.
+  // 같은 @id 로 서로 다른 address·url 을 내보내면 검색엔진이 엔티티를 병합할 때
+  // 모순된 정의를 받는다. 업체 엔티티는 루트 레이아웃 한 곳에서만 실제 NAP 로 선언하고,
+  // 이 페이지는 Service.provider 로 그 엔티티를 참조만 한다.
 
   // 핵심 답변(가시 텍스트와 동일)을 FAQ 스키마 맨 앞 대표 질문으로 병합.
   // 중복 방지: 같은 질문이 faqSubset 에 없을 때만 추가한다.
@@ -323,7 +307,6 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
   return (
     <div className="pb-20 md:pb-0">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
 

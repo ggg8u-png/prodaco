@@ -26,7 +26,13 @@ export const metadata: Metadata = {
   // 네이버 서치어드바이저 권고(80자 이내) — settings.json seoDescription(72자)과 통일.
   description:
     "마루·데코타일·장판·타일 철거와 바닥 샌딩 전문. 사진 가견적 후 실측 정산. 서울·경기·인천 수도권 ☎ 010-8470-4965",
-  alternates: { canonical: siteUrl },
+  alternates: {
+    canonical: siteUrl,
+    // page 에서 alternates 를 선언하면 루트 레이아웃의 alternates 가 통째로 교체된다
+    // (부분 병합이 아님 — openGraph 와 같은 규칙). types 를 다시 명시하지 않으면
+    // RSS 링크 태그가 사라져 네이버 서치어드바이저·구독기가 피드를 발견하지 못한다.
+    types: { "application/rss+xml": `${siteUrl}/rss.xml` },
+  },
 };
 
 const faqJsonLd = {
