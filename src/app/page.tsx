@@ -5,7 +5,8 @@ import { allReviews } from "@/data/reviews";
 import { faqs } from "@/data/faq";
 import { galleryItems } from "@/data/gallery";
 import { quoteFactors, consultPrep, ctaConfig } from "@/data/landing";
-import { getKeywords } from "@/data/keywords";
+import { getKeywords, hubDecisionFor } from "@/data/keywords";
+import { itemGuidesFor, itemAnchorFor } from "@/lib/itemGuides";
 import GalleryImage from "@/components/GalleryImage";
 import KeyAnswer from "@/components/KeyAnswer";
 import QuoteChecklist from "@/components/QuoteChecklist";
@@ -57,10 +58,31 @@ export default function Home() {
 
   // 홈 → 지역 허브(/services/{region}) 내부링크. 주요 지역 허브로 연결해
   // 키워드 페이지의 고립을 풀고 크롤·색인 깊이를 낮춘다(허브가 롱테일로 권위 전파).
+  // 후보는 손으로 고르되, 실제 링크는 INDEX 허브만 남긴다 — 홈의 링크 권한을
+  // 색인 대상에 모은다. 하드코딩 목록에 SUPPORT 허브(부천·안양)가 섞여 있어
+  // 홈에서 noindex 페이지로 권한이 새고 있었다(링크 그래프 실측).
   const FEATURED_REGIONS = ["서울", "강남", "송파", "마포", "성남", "수원", "용인", "고양", "부천", "인천", "부평", "안양"];
   const regionLinks = (() => {
     const hubRegions = new Set(getKeywords().filter((k) => k.type === "region-item" && k.region).map((k) => k.region));
-    return FEATURED_REGIONS.filter((r) => hubRegions.has(r));
+    return FEATURED_REGIONS.filter((r) => hubRegions.has(r) && hubDecisionFor(r as string).index);
+  })();
+
+  // 홈 → 품목(서비스) 축. 지금까지 홈의 내부링크는 지역 허브 축 하나뿐이었고,
+  // 서비스 카드는 전부 카카오톡 외부링크라 품목으로 가는 크롤 경로가 아예 없었다.
+  // 품목 단독 허브(/마루철거 등)는 존재하지 않으므로 새로 만들지 않고,
+  // 그 품목의 색인 대상 안내 페이지(비용·방법 등) 중 대표 1개로 연결한다.
+  const itemLinks = (() => {
+    const CORE_ITEMS = ["마루철거", "강마루철거", "온돌마루철거", "데코타일철거", "장판철거", "타일철거", "바닥샌딩", "면갈이", "에폭시철거"];
+    const out: { item: string; slug: string; label: string }[] = [];
+    for (const item of CORE_ITEMS) {
+      const guides = itemGuidesFor(item, "");
+      if (!guides.length) continue;
+      // 비용 > 방법 > 그 외 순으로 대표 페이지를 고른다(검색 의도가 가장 큰 순).
+      const rank = (m?: string) => (m === "비용" ? 0 : m === "평당비용" ? 1 : m === "방법" ? 2 : 3);
+      const rep = [...guides].sort((x, y) => rank(x.modifier) - rank(y.modifier))[0];
+      out.push({ item, slug: rep.slug, label: itemAnchorFor(item) });
+    }
+    return out;
   })();
 
   return (
@@ -212,6 +234,23 @@ export default function Home() {
               );
             })}
           </div>
+
+          {itemLinks.length > 0 && (
+            <div className="mt-10 border-t-2 border-[#16181D] pt-7">
+              <p className="mb-3 font-mono-pd text-xs font-bold uppercase tracking-[0.14em] text-[#9A8A2E]">바닥재별 철거 안내</p>
+              <div className="flex flex-wrap gap-2">
+                {itemLinks.map((x) => (
+                  <Link
+                    key={x.slug}
+                    href={`/${x.slug}`}
+                    className="border border-[#16181D]/20 bg-white px-3 py-1.5 text-[13px] font-semibold text-[#16181D] transition-colors hover:border-[#9A8A2E] hover:text-[#9A8A2E]"
+                  >
+                    {x.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
 
           {regionLinks.length > 0 && (
             <div className="mt-10 border-t-2 border-[#16181D] pt-7">

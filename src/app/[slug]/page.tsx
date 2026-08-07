@@ -140,10 +140,33 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
   ];
 
   // 인근 지역(같은 품목) 실링크 — 로컬 사일로. 실제 존재하는 페이지만 링크.
+  //
+  // 크롤 경로 우선순위: 색인 대상(Tier A)을 앞에 세운다.
+  // 링크 그래프 실측에서 noindex → noindex 엣지가 12,314개(전체 34%)였다. 인접 지역
+  // 블록이 티어를 보지 않고 지리적 순서로만 뽑아, 크롤러가 색인도 안 되는 형제 사이를
+  // 계속 도는 구조를 만들고 있었다. 개수는 그대로 두고 순서만 바꾼다 —
+  // 링크를 없애면 3차에서 해결한 고아 문제가 되살아나므로 배제가 아니라 정렬로 푼다.
+  // 이 페이지 자신이 색인 대상인가 — 아래 링크 예산을 여기서 나눈다.
+  //
+  // 링크 그래프 실측: noindex → noindex 엣지가 12,314개로 전체의 34%였다. noindex
+  // 페이지 1,095개가 서로를 12개씩 링크해, 크롤러가 색인도 되지 않는 유사 URL 사이를
+  // 계속 도는 구조였다(과거 「크롤링됨-현재 색인 안 됨」 829건과 같은 성격의 소비).
+  // 그래서 '색인 대상 페이지'는 링크 예산을 그대로 두고, 'noindex 페이지'에서만
+  // noindex 형제로 나가는 링크 수를 줄인다. 배제가 아니라 축소이고, 남길 대상은
+  // 슬러그 시드로 회전 선택하므로 형제 전체가 여전히 누군가에게서 링크를 받는다
+  // (3차에서 해결한 고아 9건이 되살아나지 않게 하는 장치).
+  const selfIndexable = indexabilityFor(keyword).inSitemap;
+  const noindexFill = selfIndexable ? 6 : 2;
+
   const neighborLinks = keyword.region && keyword.item
-    ? neighborsOf(keyword.region, 6)
-        .map((nb) => getKeywordBySlug(`${nb}-${keyword.item}`))
-        .filter((k): k is NonNullable<typeof k> => Boolean(k))
+    ? (() => {
+        const pool = neighborsOf(keyword.region as string, 10)
+          .map((nb) => getKeywordBySlug(`${nb}-${keyword.item}`))
+          .filter((k): k is NonNullable<typeof k> => Boolean(k));
+        const a = pool.filter((k) => indexabilityFor(k).inSitemap);
+        const b = pool.filter((k) => !indexabilityFor(k).inSitemap);
+        return [...a, ...rotatePick(b, slugSeed(slug), noindexFill)].slice(0, 6);
+      })()
     : [];
   const clusterLabel = clusterLabelOf(keyword.region);
 
@@ -183,7 +206,7 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
     );
     const a = pool.filter((k) => indexabilityFor(k).inSitemap);
     const b = pool.filter((k) => !indexabilityFor(k).inSitemap);
-    return [...rotatePick(a, seed, 6), ...rotatePick(b, seed, 6)].slice(0, 6);
+    return [...rotatePick(a, seed, 6), ...rotatePick(b, seed, noindexFill)].slice(0, 6);
   })();
   // 1) 실제 비포/애프터 시공 사례 — 같은 지역 사례가 있으면 우선 노출(로컬 실증),
   //    없으면 같은 품목 → 전체 풀 순서로 폴백. 타지역 사례는 아래 렌더에서

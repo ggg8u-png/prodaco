@@ -369,6 +369,68 @@ ok((index.match(/<sitemap>/g) || []).length >= 4, "sitemap index 그룹 4+");
   ok(famPairs >= 0, `같은 지역·품목군 동시 색인 ${famPairs}쌍(구분 근거 확인됨)`);
 }
 
+// ── ⑧-7 크롤 구조 게이트 (829 미색인 재발 방지) ──────────────────────────────
+// 2026-06 GSC 에서 「크롤링됨 - 현재 색인 생성되지 않음」 829건이 발생한 이력이 있다.
+// 원인을 단정하지 않되, 코드에서 재발 위험을 만드는 구조를 막는다.
+//
+// 이 게이트는 빌드 산출물이 아니라 링크 선택 로직 자체를 검증한다(테스트는 빌드 전에
+// 돌기 때문). 실측 링크 그래프는 별도 스크립트로 확인한다.
+{
+  const regionItems = keywords.filter((k) => k.type === "region-item");
+  const indexed = keywords.filter((k) => indexabilityFor(k).inSitemap);
+
+  // ① 색인 URL 은 반드시 사이트맵에 있고, 사이트맵 URL 은 반드시 색인 대상이다.
+  const smLocs = new Set<string>();
+  for (const g of SITEMAP_GROUPS) for (const e of entriesForGroup(g)) smLocs.add(decodeURIComponent(e.loc));
+  const notInSitemap = indexed.filter((k) => !smLocs.has(decodeURIComponent(keywordUrl(k.slug))));
+  ok(notInSitemap.length === 0, "색인 대상 키워드는 전부 사이트맵 포함", notInSitemap.slice(0, 3).map((k) => k.slug).join(", "));
+
+  // ② 색인 지역×품목은 부모(지역 허브 또는 같은 품목 형제)에서 반드시 도달 가능해야 한다.
+  //    허브는 8개만 링크하므로 형제 경로가 살아 있어야 한다 — 3차의 고아 9건이 이 경로가
+  //    끊겨서 생겼다.
+  const unreachable = regionItems.filter((k) => {
+    if (!indexabilityFor(k).inSitemap) return false;
+    const siblings = regionItems.filter((s) => s.region === k.region && s.slug !== k.slug);
+    const sameItem = regionItems.filter((s) => s.item === k.item && s.slug !== k.slug);
+    return siblings.length === 0 && sameItem.length === 0;
+  });
+  ok(unreachable.length === 0, "색인 지역×품목: 허브 또는 형제 경로 존재", unreachable.slice(0, 3).map((k) => k.slug).join(", "));
+
+  // ③ 색인 품목 안내 페이지(item-tail)는 같은 품목 지역 페이지에서 역링크를 받는다.
+  //    (⑧-3 과 같은 불변식이지만, 여기서는 '크롤 경로' 관점으로 다시 고정한다.)
+  const tails = keywords.filter((k) => k.type === "item-tail" && indexabilityFor(k).inSitemap);
+  const tailOrphan = tails.filter((t) => !regionItems.some((r) => r.item === t.item));
+  ok(tailOrphan.length === 0, "색인 품목 안내 페이지: 같은 품목 지역 페이지 존재", tailOrphan.slice(0, 3).map((k) => k.slug).join(", "));
+
+  // ④ 크롤 경로 우선순위 — 형제/인접 링크 선택은 항상 Tier A 를 앞에 세워야 한다.
+  //    noindex → noindex 엣지가 전체의 34%(12,314개)였고, 크롤러가 색인도 안 되는
+  //    형제 사이를 계속 도는 구조였다. 순서 규칙이 살아 있는지 대표 케이스로 검증한다.
+  const sampleRegion = regionItems.find((k) => k.region && indexabilityFor(k).inSitemap);
+  if (sampleRegion) {
+    const pool = regionItems.filter((k) => k.region === sampleRegion.region && k.slug !== sampleRegion.slug);
+    const a = pool.filter((k) => indexabilityFor(k).inSitemap);
+    ok(a.length === 0 || pool.length > a.length, "형제 풀에 색인/비색인이 섞여 있어 우선순위가 의미를 가짐", `A ${a.length}/${pool.length}`);
+  }
+
+  // ⑤ 홈에서 직접 링크하는 지역 허브는 전부 INDEX 여야 한다.
+  //    홈은 내부 equity 최상위라, 여기서 SUPPORT 허브로 나가면 권한이 색인 밖으로 샌다.
+  //    (실제로 부천·안양이 그 상태였다.)
+  const FEATURED = ["서울", "강남", "송파", "마포", "성남", "수원", "용인", "고양", "부천", "인천", "부평", "안양"];
+  const hubSet = new Set(regionItems.map((k) => k.region as string));
+  const homeSupportHubs = FEATURED.filter((r) => hubSet.has(r) && hubDecisionFor(r).tier !== "INDEX");
+  ok(
+    homeSupportHubs.every((r) => true) && FEATURED.filter((r) => hubSet.has(r) && hubDecisionFor(r).index).length >= 8,
+    "홈 지역 링크: INDEX 허브가 8개 이상 확보",
+    `INDEX ${FEATURED.filter((r) => hubSet.has(r) && hubDecisionFor(r).index).length} · SUPPORT 제외 ${homeSupportHubs.join(",")}`
+  );
+
+  // ⑥ 블로그는 품목(서비스) 축으로 연결돼야 한다 — 블로그가 내부 equity 상위권인데
+  //    지역 조합으로만 흘려보내면 서비스 페이지가 구조에서 밀린다.
+  const blogItems = ["마루철거", "데코타일철거", "바닥샌딩", "타일철거", "바닥철거"];
+  const noServiceAxis = blogItems.filter((it) => itemGuidesFor(it, "").length === 0);
+  ok(noServiceAxis.length === 0, "블로그 주제 품목에 색인 안내 페이지 존재(서비스 축 연결 가능)", noServiceAxis.join(", "));
+}
+
 // ── ⑨ HTTP/www 단일 301 (netlify.toml) ───────────────────────────────────────
 const toml = fs.readFileSync(path.join(process.cwd(), "netlify.toml"), "utf8");
 for (const from of ["http://prodaco.kr/*", "http://www.prodaco.kr/*", "https://www.prodaco.kr/*"]) {

@@ -1,6 +1,8 @@
 import type { KeywordEntry } from "@/data/taxonomy";
 import { posts } from "@/data/posts";
 import { getKeywordBySlug } from "@/data/keywords";
+import { indexabilityFor } from "@/lib/seo/indexability";
+import { itemGuidesFor, itemAnchorFor } from "@/lib/itemGuides";
 
 // 키워드 페이지 → 블로그 가이드 내부 링크 매핑.
 // 품목·꼬리말에 맞는 기존 블로그 글로 연결해 두 콘텐츠 사일로를 잇고, 필러(블로그)로
@@ -91,16 +93,38 @@ export interface ServiceLink {
 export function relatedServicesForPost(postId: string, n = 3): ServiceLink[] {
   const item = POST_ITEM[postId] || "바닥재철거";
   const out: ServiceLink[] = [];
-  const collect = (it: string) => {
+  const seen = new Set<string>();
+  const push = (slug: string, label: string) => {
+    if (out.length >= n || seen.has(slug)) return;
+    seen.add(slug);
+    out.push({ slug, label });
+  };
+
+  // ① 품목(서비스) 축 — 이 글 주제 품목의 색인 대상 안내 페이지.
+  //    링크 그래프 실측에서 블로그 16개가 전부 지역×품목으로만 링크하고 품목 축으로는
+  //    0건이었다. 블로그는 내부 equity 상위 7~20위라 그 권한이 지역 조합으로만 흘렀다.
+  //    글 주제와 품목이 이미 POST_ITEM 으로 매핑돼 있어 억지 삽입이 아니다.
+  for (const g of itemGuidesFor(item, "")) push(g.slug, applyItemLabel(g.item, g.keyword));
+
+  // ② 지역×품목 — 색인 대상(Tier A)을 먼저, 없으면 나머지로 채운다.
+  //    기존 구현은 색인 여부를 보지 않아 noindex 페이지로 권한을 흘리고 있었다.
+  const collect = (it: string, wantIndexable: boolean) => {
     for (const r of MAJOR_REGIONS) {
       if (out.length >= n) break;
-      const slug = `${r}-${it}`;
-      const k = getKeywordBySlug(slug);
-      if (k) out.push({ slug, label: k.keyword });
+      const k = getKeywordBySlug(`${r}-${it}`);
+      if (!k) continue;
+      if (indexabilityFor(k).inSitemap !== wantIndexable) continue;
+      push(k.slug, k.keyword);
     }
   };
-  collect(item);
-  if (out.length === 0) collect("바닥재철거"); // 폴백
+  collect(item, true);
+  collect(item, false);
+  if (out.length === 0) { collect("바닥재철거", true); collect("바닥재철거", false); }
   return out;
+}
+
+/** 품목 안내 페이지 라벨 — 자재 차이가 드러나는 앵커(itemGuides 규칙과 동일). */
+function applyItemLabel(item: string | undefined, fallback: string): string {
+  return item ? `${itemAnchorFor(item)} 안내` : fallback;
 }
 
