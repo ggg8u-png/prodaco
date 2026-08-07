@@ -16,7 +16,7 @@ import { josa, josaEnd } from "@/lib/josa";
 import { fillTemplate } from "@/lib/template";
 import { getKeywords, getKeywordBySlug, hubDecisionFor } from "@/data/keywords";
 import { indexabilityFor, keywordUrl, siteUrl } from "@/lib/seo/indexability";
-import { uniqueTitle, pickFaqs, faqMatchesItem } from "@/lib/seo";
+import { uniqueTitle, uniqueDescription, pickFaqs, faqMatchesItem } from "@/lib/seo";
 import { getContentForKeyword, familyOf } from "@/lib/content";
 import { keyAnswerFor, keyAnswerForRegion, familyLabel } from "@/data/keyAnswer";
 import { galleryItems } from "@/data/gallery";
@@ -544,6 +544,86 @@ ok((index.match(/<sitemap>/g) || []).length >= 4, "sitemap index 그룹 4+");
   // ⑦ 지역명을 지점/매장처럼 표현하는 메타데이터가 없어야 한다.
   const branchWord = /(지점|점포|매장|영업소)/;
   ok(!branchWord.test(src), "지역 허브 문구에 지점·매장 표현 없음");
+}
+
+// ── ⑧-10 SERP metadata 품질 게이트 ───────────────────────────────────────────
+// 목표는 "SEO스러운 title"이 아니라, 검색결과만 읽어도 ① 어떤 질문에 답하는지
+// ② 비슷한 페이지와 뭐가 다른지 알 수 있게 하는 것이다.
+// 글자 수는 극단적 이상치 탐지에만 쓰고 통과 기준으로 삼지 않는다.
+{
+  const idx = keywords.filter((k) => indexabilityFor(k).inSitemap);
+  ok(idx.length > 0, "색인 키워드 존재", String(idx.length));
+
+  // ① title·description 결측/중복
+  const titles = new Map<string, string[]>();
+  const descs = new Map<string, string[]>();
+  for (const k of idx) {
+    const t = uniqueTitle(k);
+    const d = uniqueDescription(k, company.phone);
+    ok(!!t && !!d, `metadata 결측 없음: ${k.slug}`);
+    (titles.get(t) || titles.set(t, []).get(t))!.push(k.slug);
+    (descs.get(d) || descs.set(d, []).get(d))!.push(k.slug);
+  }
+  const dupT = [...titles.values()].filter((v) => v.length > 1);
+  const dupD = [...descs.values()].filter((v) => v.length > 1);
+  ok(dupT.length === 0, "색인 title 중복 없음", dupT.slice(0, 2).map((v) => v.join("/")).join(" · "));
+  ok(dupD.length === 0, "색인 description 중복 없음", dupD.slice(0, 2).map((v) => v.join("/")).join(" · "));
+
+  // ② 지역×품목 title 에 다른 지역·품목이 섞이면 안 된다(치환 오류 탐지).
+  const wrongMix = idx.filter((k) => {
+    if (k.type !== "region-item" || !k.region || !k.item) return false;
+    const t = uniqueTitle(k);
+    return !t.includes(k.region) || !t.includes(k.item);
+  });
+  ok(wrongMix.length === 0, "지역×품목 title 에 자기 지역·품목 포함", wrongMix.slice(0, 3).map((k) => k.slug).join(", "));
+
+  // ③ 꼬리말 페이지의 접미는 그 꼬리말이 답하는 질문과 맞아야 한다.
+  //    예전에는 매칭되지 않는 꼬리말이 시드 회전 접미로 떨어져
+  //    "폐기물처리 | 평당 참고가 안내" 같은 의도 불일치가 34개 중 10개였다.
+  const INTENT: Array<[RegExp, RegExp]> = [
+    [/폐기물/, /폐기물|반출|폐자재/],
+    [/원상복구/, /원상복구|인계/],
+    [/기간/, /기간|일정|소요/],
+    [/후기/, /후기|사례|기록/],
+    [/(업체추천|잘하는곳|전문업체)/, /비교|추천|기준/],
+    [/(비용|가격|평당)/, /참고가|정산|비용/],
+    [/견적/, /가견적|견적/],
+  ];
+  const mismatch = idx.filter((k) => {
+    const m = k.modifier || "";
+    if (!m) return false;
+    const rule = INTENT.find(([re]) => re.test(m));
+    if (!rule) return false;
+    const suffix = uniqueTitle(k).split("|")[1] || "";
+    return !rule[1].test(suffix);
+  });
+  ok(mismatch.length === 0, "꼬리말 페이지: title 접미가 검색 의도와 일치", mismatch.slice(0, 3).map((k) => k.slug).join(", "));
+
+  // ④ 증거 없는 우월성·약속 표현 금지.
+  //    "당일 상담" 은 근거가 없다 — settings.responseTimeText 는 "영업시간 내 빠르게
+  //    답변드립니다" 로 당일을 보장하지 않는다. 최저가·1위·무료도 마찬가지.
+  //    ('전문' 은 업종 서술로 자연스러워 기계적으로 막지 않는다.)
+  const BANNED = /(당일 상담|최저가|업계 최고|국내 1위|No\.?1|무료 견적|100%|누적 \d)/;
+  const banned = idx.filter((k) => BANNED.test(uniqueTitle(k)) || BANNED.test(uniqueDescription(k, company.phone)));
+  ok(banned.length === 0, "증거 없는 우월성·약속 표현 없음", banned.slice(0, 3).map((k) => k.slug).join(", "));
+
+  // ⑤ 근거 없는 품목에 억지 수식어를 붙이지 않았는지 — itemFacts 오버라이드가 0인
+  //    품목은 접미 없이 담백한 title 이어야 한다(NEEDS_REAL_DATA 로 보고 중).
+  const forced = idx.filter(
+    (k) => k.type === "region-item" && k.item && itemFactOverrideCount(k.item) === 0 && uniqueTitle(k).split("|").length > 2
+  );
+  ok(forced.length === 0, "근거 없는 품목에 억지 수식어 없음", forced.slice(0, 3).map((k) => k.slug).join(", "));
+
+  // ⑥ 극단적 이상치만 탐지(통과 기준 아님) — title 이 비정상적으로 길거나 비면 신호.
+  const outlier = idx.filter((k) => { const t = uniqueTitle(k); return t.length < 4 || t.length > 70; });
+  ok(outlier.length === 0, "title 길이 극단 이상치 없음", outlier.slice(0, 3).map((k) => `${k.slug}(${uniqueTitle(k).length})`).join(", "));
+
+  // ⑦ 같은 입력은 항상 같은 metadata — 시드·난수 기반 생성 금지.
+  const sample = idx.slice(0, 20);
+  ok(
+    sample.every((k) => uniqueTitle(k) === uniqueTitle(k) && uniqueDescription(k, company.phone) === uniqueDescription(k, company.phone)),
+    "metadata 생성이 결정적(동일 입력 → 동일 출력)"
+  );
 }
 
 // ── ⑨ HTTP/www 단일 301 (netlify.toml) ───────────────────────────────────────

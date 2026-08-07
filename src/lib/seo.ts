@@ -3,7 +3,7 @@ import type { FAQ } from "@/types";
 import { faqs } from "@/data/faq";
 import { clusterLabelOf } from "@/data/regions";
 import { FLOOR_COSTS, costKeyOf, perPyeongText } from "@/data/costs";
-import { familyKeyOf } from "@/data/itemFacts";
+import { familyKeyOf, itemFactsFor } from "@/data/itemFacts";
 import { applyReplacements } from "@/lib/replacements";
 
 // ─── 시드 유틸 (페이지별 결정적 변형) ──────────────────────────────────────────
@@ -88,49 +88,92 @@ export function pickFaqs(k: KeywordEntry, n = 4): FAQ[] {
 // ─── 고유 메타 설명 (description) ───────────────────────────────────────────────
 // 품목·지역·실제 비용·권역을 엮어 페이지마다 다른 설명을 만든다(중복 description 방지).
 export function uniqueDescription(k: KeywordEntry, phone: string): string {
-  const seed = seedOf(k.slug);
   const item = k.item || "바닥재 철거";
   const reg = k.region;
-  const where = reg ? `${reg} ` : "";
   const cluster = reg && reg !== "수도권" ? clusterLabelOf(reg) : "수도권";
-  const ckey = costKeyOf(item);
-  const row = FLOOR_COSTS.find((r) => r.key === ckey);
+  const row = FLOOR_COSTS.find((r) => r.key === costKeyOf(item));
   const costPhrase = row && row.perPyeong ? `참고가 ${perPyeongText(row)}. ` : "";
+  const facts = itemFactsFor(item);
 
-  // k.keyword 는 페이지마다 유일하므로 앞에 두어 description 중복을 방지한다.
-  const kw = k.keyword;
-  const variants = [
-    `${kw} 전문 업체. ${costPhrase}${where}본드·잔여물까지 정밀 정리해 다음 공정 바로 가능. 실측 면적 정산, 당일 상담. ${cluster} 방문 ☎ ${phone}`,
-    `${kw} 어디 맡길지 고민이라면 — ${item} 10년 전문 업체. ${costPhrase}하지 손상 없이 철거하고 실측으로만 정산합니다. ${cluster} 출장 ☎ ${phone}`,
-    `${kw} 견적·작업 안내. ${costPhrase}뜯고 끝이 아니라 본드 제거·평탄도까지. 사진 한 장이면 가견적, 실측 정산. ${cluster} ☎ ${phone}`,
-  ];
-  return applyReplacements(variants[seed % variants.length]);
+  // 페이지 내용에서 설명을 만든다. 예전에는 판매 문구 3종을 시드로 회전시켜,
+  // 지역·품목만 바뀌고 실제 정보는 같은 설명이 1,170개 깔렸다. 지금은
+  // itemFacts(그 자재의 실제 철거 특징)를 앞세워 페이지마다 내용이 실제로 다르다.
+  //
+  // 문구 정책: '당일 상담' 은 뺐다 — settings.responseTimeText 가 "영업시간 내
+  // 빠르게 답변드립니다" 라 당일을 보장하지 않는다. 없는 약속을 스니펫에 쓰지 않는다.
+  const lead = k.keyword;
+  const detail = trimSentence(facts.removal, 60) || trimSentence(facts.attach, 60);
+  const where = reg ? `${cluster} 방문 작업. ` : "수도권 방문 작업. ";
+  return applyReplacements(`${lead} 안내. ${detail} ${costPhrase}${where}사진으로 가견적, 작업 후 실측 면적 정산 ☎ ${phone}`);
 }
 
+/** 문장 하나만 잘라 쓴다(문장 중간에서 끊기지 않게). */
+function trimSentence(text: string, max: number): string {
+  if (!text) return "";
+  const first = text.split(/(?<=\.)\s/)[0] || text;
+  return first.length <= max ? first : "";
+}
+
+
 // ─── 고유 타이틀 ───────────────────────────────────────────────────────────────
-// 지역+품목(모디파이어 없음) 기본 접미 후보 — 형제 지역 페이지끼리 title 이 겹치지 않도록
-// 슬러그 시드로 혜택형 문구를 회전 선택한다. (이전에는 1,170개 region-item 이 모두
-// "수도권 바닥재 철거 전문" 한 줄을 공유해 near-duplicate title 신호 + 낮은 CTR 을 유발했다.)
-const REGION_ITEM_HOOKS = [
-  "실측 정산·당일 상담",
-  "본드·잔여물까지 정리",
-  "10년 수도권 전문",
-  "하지 손상 없이 철거",
-  "다음 공정 바로 가능",
-  "사진 한 장 가견적",
-  "평당 참고가 안내",
+// 접미(suffix)는 '그 페이지가 답하는 질문'에서 나온다. 시드 회전으로 홍보 문구를
+// 돌려 쓰지 않는다 — 그렇게 하면 폐기물처리 페이지에 "평당 참고가 안내"가 붙는
+// 식으로 검색 의도와 어긋난다(실측: 정보성 34개 중 10개가 그 상태였다).
+//
+// 표현 근거:
+//   · "10년" 은 content/settings.json 의 experience 값(운영자 입력).
+//   · "당일 상담" 은 제거했다. settings.responseTimeText 의 실제 문구는
+//     "영업시간 내 빠르게 답변드립니다" 로, 당일을 보장하지 않는다.
+//   · 그 밖에 최저가·1위·무료 같은 근거 없는 우월성 표현은 쓰지 않는다.
+
+// 꼬리말(modifier) → 그 페이지가 답하는 질문. 모든 실제 modifier 를 덮는다.
+const MODIFIER_SUFFIX: Array<[RegExp, string]> = [
+  [/(비용|가격|평당)/, "평당 참고가·실측 정산"],
+  [/견적/, "사진 한 장 가견적"],
+  [/(방법|순서)/, "작업 순서·체크포인트"],
+  [/주의사항/, "미리 확인할 점"],
+  [/기간/, "작업 소요 기간 안내"],
+  [/폐기물/, "폐자재 반출·처리"],
+  [/원상복구/, "인계 기준까지 정리"],
+  [/후기/, "실제 상담·작업 기록"],
+  [/(업체추천|잘하는곳|전문업체)/, "업체 선택 기준"],
+  [/(당일|긴급|빠른)/, "일정 조율 안내"],
+  [/저렴/, "비용을 줄이는 조건"],
+  [/소량/, "소규모 현장 안내"],
 ];
+
+// 품목 → 자재/시공 방식 구분. itemFacts.ts 의 BY_ITEM 오버라이드가 뒷받침하는
+// 품목만 넣는다(4차에서 확정한 실제 차이). 근거가 없는 품목은 여기 없고,
+// 그 경우 접미 없이 담백한 제목을 쓴다 — 억지 수식어를 만들지 않는다.
+const ITEM_TITLE_HOOK: Record<string, string> = {
+  강마루철거: "접착식·본드 제거까지",
+  강화마루철거: "조립(클릭) 구조 분리",
+  온돌마루철거: "난방 배관 손상 없이",
+  마루철거: "종류별 철거 방식 확인",
+  데코타일철거: "조각형·잔여 본드 정리",
+  디럭스타일철거: "두꺼운 조각형 철거",
+  데코륨철거: "시트형·밑면 잔여 정리",
+  륨장판철거: "롤형·밑면 종이까지",
+  폴리싱타일철거: "대형 광택 타일 철거",
+  에폭시철거: "두꺼운 코팅 연마 철거",
+  우레탄철거: "얇은 코팅 연마 철거",
+  바닥샌딩: "뜯지 않고 표면 재생",
+  면갈이: "철거 후 바닥 평탄화",
+  바닥타일철거: "압착 타일 깨내기",
+};
 
 export function uniqueTitle(k: KeywordEntry): string {
   if (k.tail) return applyReplacements(`${k.keyword} · ${k.tail}`);
   const m = k.modifier || "";
-  // 기본(모디파이어 없음)은 시드 회전 훅으로 페이지마다 다른 접미를 준다.
-  let suffix = REGION_ITEM_HOOKS[seedOf(k.slug) % REGION_ITEM_HOOKS.length];
-  if (/(비용|가격|평당)/.test(m)) suffix = "평당 참고가·실측 정산";
-  else if (m === "견적") suffix = "사진 한 장 가견적";
-  else if (/(추천|잘하는곳|전문업체)/.test(m)) suffix = "10년 전문 비교 안내";
-  else if (/(방법|순서|주의사항)/.test(m)) suffix = "작업 순서·체크포인트";
-  else if (/(샌딩|면갈이)/.test(k.item || "")) suffix = "면갈이·정밀 샌딩 전문";
+  // ① 꼬리말이 있으면 그 질문에 맞는 접미가 최우선이다.
+  const byModifier = m ? MODIFIER_SUFFIX.find(([re]) => re.test(m))?.[1] : undefined;
+  // ② 꼬리말이 없으면(지역×품목 등) 그 자재가 왜 다른지를 접미로 쓴다.
+  //    4차에서 본문 핵심 질문을 자재별로 나눴는데, 검색결과에서는 그 차이가 보이지
+  //    않아 형제 페이지가 SERP 에서 구분되지 않았다.
+  const byItem = k.item ? ITEM_TITLE_HOOK[k.item] : undefined;
+  const suffix = byModifier || byItem;
   // 레이아웃 title 템플릿(%s | 프로다)이 끝에 ' | 프로다'를 붙이므로 여기선 생략.
-  return applyReplacements(`${k.keyword} | ${suffix}`);
+  // 근거가 없으면 접미 없이 — 빈 수식어를 채우지 않는다.
+  return applyReplacements(suffix ? `${k.keyword} | ${suffix}` : k.keyword);
 }
+

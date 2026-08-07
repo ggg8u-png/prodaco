@@ -89,9 +89,20 @@ export async function generateMetadata({ params }: { params: Promise<{ region: s
   const region = decodeURIComponent(raw);
   if (!regionsWithPages().includes(region)) return {};
   const cluster = clusterLabelOf(region);
-  const desc = `${region} 바닥재 철거 전문 업체. 강마루·데코타일·장판·타일 철거와 바닥 샌딩. ${cluster} 방문, 평당 참고가 1만~8만원(실측 정산), ${company.experience} 경력. 당일 상담 ☎ ${company.phone}`;
+  // 허브 24개가 지역명만 바뀐 동일 title·description 을 쓰고 있었다(길이 편차 1자).
+  // 검색결과에서 서로 구분되지 않으므로, 그 지역 허브가 실제로 링크하는 품목을
+  // 앞세운다 — 억지 수식어가 아니라 그 페이지에 실제로 있는 내용이다.
+  const hubItems = itemsForRegion(region).map((k) => k.item as string).filter(Boolean);
+  // 한글 SERP 는 30자 전후에서 잘린다. 핵심(지역+바닥재 철거)을 앞에 두고
+  // 품목은 2개까지만 — 잘려도 무엇을 다루는 페이지인지 전달된다.
+  const itemLead = hubItems.slice(0, 2).join("·");
+  const desc = `${region} 바닥재 철거·바닥 샌딩 현장 방문 작업. ${
+    itemLead ? `${itemLead} 등 ${hubItems.length}개 품목 안내와 ` : ""
+  }평당 참고가(실측 정산), 자주 묻는 질문을 정리했습니다. ${cluster} 방문 ☎ ${company.phone}`;
   return {
-    title: `${region} 바닥재 철거 · 마루/타일/장판 전문`,
+    title: itemLead
+      ? `${region} 바닥재 철거 | ${itemLead} 등 ${hubItems.length}개`
+      : `${region} 바닥재 철거·바닥 샌딩`,
     description: desc,
     alternates: { canonical: `${siteUrl}/services/${encodeURIComponent(region)}` },
     // SUPPORT 허브는 noindex,follow — 색인 경쟁에서만 빠지고 링크는 그대로 전달한다.
