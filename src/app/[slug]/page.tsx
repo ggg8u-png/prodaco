@@ -167,6 +167,24 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
   // 같은 품목의 정보형 페이지(비용·평당비용·방법…) 중 색인 대상만 역방향 링크 —
   // 사일로를 양방향으로 닫는다(선택 규칙·근거는 src/lib/itemGuides.ts).
   const itemGuideLinks = rotatePick(itemGuidesFor(keyword.item, keyword.slug), seed, 5);
+
+  // 같은 지역의 다른 품목 — 지역 사일로를 닫는 마지막 한 변.
+  //
+  // 지금까지 지역×품목 페이지는 "같은 품목 · 다른 지역"(neighborLinks)으로만 옆으로
+  // 이어졌고, "같은 지역 · 다른 품목"으로는 이어지지 않았다. 허브가 18개 중 8개만
+  // 링크하므로 나머지 10개는 형제 페이지의 회전 선택에 걸리기만 기다리는 처지였고,
+  // 실제로 9개(도봉 5 · 송도 4)가 인바운드 0인 고아로 남아 있었다(빌드 산출물 실측).
+  // 사용자 입장에서도 "이 지역에서 다른 바닥재도 하나?"는 자연스러운 다음 질문이다.
+  // Tier A 를 앞에 두되 noindex 형제도 뒤에 채운다 — 크롤 경로가 목적이기 때문.
+  const siblingItemLinks = (() => {
+    if (!keyword.region || !keyword.item) return [];
+    const pool = allKeywords.filter(
+      (k) => k.type === "region-item" && k.region === keyword.region && k.item && k.slug !== keyword.slug
+    );
+    const a = pool.filter((k) => indexabilityFor(k).inSitemap);
+    const b = pool.filter((k) => !indexabilityFor(k).inSitemap);
+    return [...rotatePick(a, seed, 6), ...rotatePick(b, seed, 6)].slice(0, 6);
+  })();
   // 1) 실제 비포/애프터 시공 사례 — 같은 지역 사례가 있으면 우선 노출(로컬 실증),
   //    없으면 같은 품목 → 전체 풀 순서로 폴백. 타지역 사례는 아래 렌더에서
   //    '수도권 유사 품목 사례'로 명시해 해당 지역 실적처럼 보이지 않게 한다.
@@ -629,6 +647,28 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
                   className="text-xs font-medium text-[#16181D] px-3 py-1.5 border border-gray-300 bg-white hover:border-[#9A8A2E] hover:text-[#9A8A2E] transition-colors"
                 >
                   {applyReplacements(k.keyword)}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {siblingItemLinks.length > 0 && (
+        <section className="py-10 px-5 bg-[#F7F6F3]">
+          <div className="max-w-3xl mx-auto">
+            <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">{applyReplacements(`${keyword.region} 다른 바닥재 철거`)}</h2>
+            <p className="text-xs text-gray-500 mb-4 leading-relaxed">
+              {applyReplacements(`${keyword.region}에서는 ${keyword.item} 외 다른 바닥재도 같은 팀이 작업합니다. 바닥재 종류가 섞여 있거나 확실하지 않으면 사진을 보내주시면 확인해 드립니다.`)}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {siblingItemLinks.map((k) => (
+                <Link
+                  key={k.slug}
+                  href={`/${k.slug}`}
+                  className="text-xs font-medium text-[#16181D] px-3 py-1.5 border border-gray-300 bg-white hover:border-[#9A8A2E] hover:text-[#9A8A2E] transition-colors"
+                >
+                  {applyReplacements(k.item as string)}
                 </Link>
               ))}
             </div>

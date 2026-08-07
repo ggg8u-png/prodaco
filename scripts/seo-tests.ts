@@ -263,6 +263,86 @@ ok((index.match(/<sitemap>/g) || []).length >= 4, "sitemap index 그룹 4+");
   ok(faqSets.size >= Math.ceil(hubRegions.length * 0.3), "허브 FAQ 조합이 지역별로 분화", `서로 다른 조합 ${faqSets.size}/${hubRegions.length}`);
 }
 
+// ── ⑧-6 지역×품목 색인 품질 게이트 ───────────────────────────────────────────
+// 새 지역·품목이 추가돼도 품질 근거 없는 페이지가 자동으로 사이트맵에 들어가지 않게 한다.
+// 3차 감사에서 확인된 사실: 현재 Tier A 와 noindex 그룹은 본문 분량(1,239 vs 1,241자)·
+// FAQ 수(4.5 vs 4.5)·고유블록(8.0 vs 8.0)·유사도(52% vs 53%)가 전부 같다. 즉 콘텐츠
+// 지표로는 둘을 구분할 수 없고, 실제 구분선은 allowlist 뿐이다. 그래서 아래 게이트는
+// "분량이 많으면 색인"이 아니라 "구조적으로 성립하는가"만 본다.
+{
+  const smLocs = new Set<string>();
+  for (const g of SITEMAP_GROUPS) for (const e of entriesForGroup(g)) smLocs.add(decodeURIComponent(e.loc));
+  const regionItems = keywords.filter((k) => k.type === "region-item");
+  const indexed = regionItems.filter((k) => indexabilityFor(k).inSitemap);
+  ok(indexed.length > 0, "색인 대상 지역×품목 존재", `${indexed.length}개`);
+
+  // ① 사이트맵 URL 은 index,follow + self-canonical (전 URL 공통 불변식)
+  const badSitemap = indexed.filter((k) => {
+    const ix = indexabilityFor(k);
+    return !ix.indexable || ix.canonicalUrl !== keywordUrl(k.slug);
+  });
+  ok(badSitemap.length === 0, "사이트맵 지역×품목: index + self-canonical", badSitemap.slice(0, 3).map((k) => k.slug).join(", "));
+
+  // ② 색인 페이지는 부모(지역 허브 또는 같은 품목 형제)에서 도달 가능해야 한다.
+  //    허브는 8개만 링크하므로, 허브 밖 품목은 형제 링크로라도 이어져야 고아가 아니다.
+  const unreachable = indexed.filter((k) => {
+    const siblings = regionItems.filter((s) => s.region === k.region && s.slug !== k.slug);
+    const sameItem = regionItems.filter((s) => s.item === k.item && s.slug !== k.slug);
+    return siblings.length === 0 && sameItem.length === 0;
+  });
+  ok(unreachable.length === 0, "색인 지역×품목: 부모 허브 또는 형제에서 도달 가능", unreachable.slice(0, 3).map((k) => k.slug).join(", "));
+
+  // ③ 색인 corpus 안에서 title·H1 고유(H1 은 uniqueTitle 과 같은 소스라 title 로 검증)
+  const titles = new Map<string, string[]>();
+  for (const k of indexed) {
+    const t = uniqueTitle(k);
+    if (!titles.has(t)) titles.set(t, []);
+    titles.get(t)!.push(k.slug);
+  }
+  const dupT = [...titles.entries()].filter(([, v]) => v.length > 1);
+  ok(dupT.length === 0, "색인 지역×품목 title 고유", dupT.slice(0, 3).map(([t, v]) => `"${t}" ×${v.length}`).join(", "));
+
+  // ④ 총칭 품목(바닥재철거·바닥철거)이 독립 색인되면 지역 허브와 의도가 정면 충돌한다.
+  //    canonical 이 허브로 수렴하므로 사이트맵에는 절대 들어오면 안 된다.
+  const GENERIC = new Set(["바닥재철거", "바닥철거"]);
+  const genericIndexed = indexed.filter((k) => k.item && GENERIC.has(k.item));
+  ok(genericIndexed.length === 0, "총칭 품목 지역 페이지는 사이트맵 제외(허브로 수렴)", genericIndexed.slice(0, 3).map((k) => k.slug).join(", "));
+
+  // ⑤ canonical 대상이 noindex 면 FAIL — 그 페이지까지 색인에서 빠진다.
+  const badTarget = regionItems.filter((k) => {
+    const ix = indexabilityFor(k);
+    if (!ix.indexable) return false;
+    if (ix.canonicalUrl === keywordUrl(k.slug)) return false;
+    if (/\/services\//.test(ix.canonicalUrl)) return false; // 허브는 ⑧-5 에서 별도 검증
+    const target = getKeywordBySlug(ix.canonicalSlug);
+    return !target || !indexabilityFor(target).indexable;
+  });
+  ok(badTarget.length === 0, "canonical 대상이 noindex 아님(지역×품목)", badTarget.slice(0, 3).map((k) => k.slug).join(", "));
+
+  // ⑥ WARNING 성격 — 같은 지역·같은 품목군에서 여러 페이지가 동시에 색인이면
+  //    지역 내 카니발라이제이션이다. 현재 15쌍이 있어 FAIL 로 두면 배포가 막히므로
+  //    상한선만 고정한다(늘어나면 실패 → 4차에서 통합 결정 후 상한을 내린다).
+  const FAMILY: Record<string, string> = {
+    마루철거: "마루", 강마루철거: "마루", 강화마루철거: "마루", 온돌마루철거: "마루",
+    데코타일철거: "비닐", 디럭스타일철거: "비닐", 데코륨철거: "비닐", 장판철거: "비닐", 륨장판철거: "비닐",
+    타일철거: "타일", 바닥타일철거: "타일", 폴리싱타일철거: "타일",
+    바닥샌딩: "샌딩", 면갈이: "샌딩", 에폭시철거: "코팅", 우레탄철거: "코팅",
+  };
+  const byRegion = new Map<string, typeof indexed>();
+  for (const k of indexed) {
+    if (!k.region) continue;
+    if (!byRegion.has(k.region)) byRegion.set(k.region, []);
+    byRegion.get(k.region)!.push(k);
+  }
+  let cannibalPairs = 0;
+  for (const list of byRegion.values())
+    for (let i = 0; i < list.length; i++)
+      for (let j = i + 1; j < list.length; j++)
+        if (FAMILY[list[i].item as string] && FAMILY[list[i].item as string] === FAMILY[list[j].item as string]) cannibalPairs++;
+  const CANNIBAL_MAX = 15; // 2026-08-07 실측치. 통합 결정 후 내린다.
+  ok(cannibalPairs <= CANNIBAL_MAX, "같은 지역·같은 품목군 동시 색인 쌍이 기준치 이하", `${cannibalPairs}쌍 (상한 ${CANNIBAL_MAX})`);
+}
+
 // ── ⑨ HTTP/www 단일 301 (netlify.toml) ───────────────────────────────────────
 const toml = fs.readFileSync(path.join(process.cwd(), "netlify.toml"), "utf8");
 for (const from of ["http://prodaco.kr/*", "http://www.prodaco.kr/*", "https://www.prodaco.kr/*"]) {
