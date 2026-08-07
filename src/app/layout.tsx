@@ -115,7 +115,9 @@ const localBusinessJsonLd = {
   ...napJsonLd,
   ...(businessSameAs.length ? { sameAs: businessSameAs } : {}),
   description: "10년 바닥재 철거·바닥 샌딩 전문. 마루·데코타일·장판·타일·우레탄·에폭시 철거, 상가·사무실 원상복구 바닥 철거, 실측 면적 정산. 서울·경기·인천 수도권 전 지역.",
-  priceRange: "$$",
+  // priceRange 는 운영자가 content/settings.json 에 실제 값을 넣을 때만 내보낸다.
+  // 기존 "$$" 는 근거가 없는 추정치였다 — 구조화데이터에 확인되지 않은 값을 넣지 않는다.
+  ...(company.priceRange ? { priceRange: company.priceRange } : {}),
   areaServed: areaServedJsonLd,
   serviceType: ["바닥재 철거", "바닥 샌딩", "원상복구 철거", "인테리어 철거"],
   knowsAbout: [
@@ -137,14 +139,19 @@ const localBusinessJsonLd = {
   },
   // NOTE: AggregateRating은 자사 페이지 내 리뷰(self-serving)라 구글 정책상 리치결과 대상이
   //       아니며 수동 조치 위험이 있어 제외함. 네이버 플레이스 등 외부 검증 리뷰 확보 시 재검토.
-  // TODO(운영): 실제 영업시간 확인 후 조정 (현재 값은 일반적 작업 시간대 가정).
-  openingHoursSpecification: {
-    "@type": "OpeningHoursSpecification",
-    dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
-    opens: "08:00",
-    closes: "20:00",
-  },
-  // TODO(운영): 실제 사업장 주소(PostalAddress) 확보 시 address 필드 추가 → 네이버/구글 지역 노출 강화.
+  // 영업시간 — 예전에는 "08:00~20:00 월~토"를 그대로 내보냈는데, 코드 주석 스스로
+  // "일반적 작업 시간대 가정"이라고 적어 둔 추정치였다. 확인되지 않은 값을 구조화
+  // 데이터로 단언하면 검색결과에 잘못된 영업시간이 노출된다.
+  // → 운영자가 content/settings.json 의 business.openingHours 를 채울 때만 내보낸다.
+  //   예: { "dayOfWeek": ["Monday", ...], "opens": "08:00", "closes": "20:00" }
+  ...(company.openingHours
+    ? {
+        openingHoursSpecification: {
+          "@type": "OpeningHoursSpecification",
+          ...company.openingHours,
+        },
+      }
+    : {}),
 };
 
 const organizationJsonLd = {

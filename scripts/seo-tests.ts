@@ -23,7 +23,9 @@ import { galleryItems } from "@/data/gallery";
 import { entriesForGroup, SITEMAP_GROUPS, renderUrlset, renderIndex, nonEmptyGroups, SITE_LASTMOD } from "@/lib/sitemap";
 import robots from "@/app/robots";
 import { itemGuidesFor } from "@/lib/itemGuides";
-import { itemFactsFor } from "@/data/itemFacts";
+import { itemFactsFor, itemFactOverrideCount } from "@/data/itemFacts";
+import { company } from "@/data/company";
+import { neighborsOf } from "@/data/regions";
 
 let passed = 0;
 const errors: string[] = [];
@@ -336,15 +338,18 @@ ok((index.match(/<sitemap>/g) || []).length >= 4, "sitemap index 그룹 4+");
     타일철거: "타일", 바닥타일철거: "타일", 폴리싱타일철거: "타일",
     바닥샌딩: "샌딩", 면갈이: "샌딩", 에폭시철거: "코팅", 우레탄철거: "코팅",
   };
-  const FALLBACK = itemFactsFor("존재하지않는품목");
-  const distinctFacts = (item: string | undefined): number => {
-    if (!item) return 0;
-    const f = itemFactsFor(item);
-    return (Object.keys(f) as (keyof typeof f)[]).filter((key) => f[key] !== FALLBACK[key]).length;
-  };
-  // 분포 고정 — 구분 근거는 0 아니면 2 이상이어야 한다(임계 1이 유효한 절단점인 근거).
-  const factCounts = [...new Set(Object.keys(FAMILY).map((i) => distinctFacts(i)))].sort((a, b) => a - b);
-  ok(!factCounts.includes(1), "품목 구분 근거 분포에 1이 없음(임계 1이 자연 절단점)", `분포 ${factCounts.join(",")}`);
+  // 품목군 기본값 대비 오버라이드 수. generic 폴백과 비교하면 품목군 차이까지 세어
+  // 전 품목이 6이 나오고 게이트가 무력화된다(4차에서 그 상태였다).
+  const distinctFacts = (item: string | undefined): number => itemFactOverrideCount(item);
+  // 임계 1의 근거 — 실제 분포는 {0:2개, 1:4개, 2:9개, 3:3개}(2026-08-07 실측).
+  // 0은 "품목군 기본값과 완전히 같다" 는 뜻이라 형제와 구분되는 내용이 하나도 없다.
+  // 1 이상이면 최소 한 필드는 그 품목만의 서술이다 — 0/1 사이가 유일한 질적 경계다.
+  // (4차에서는 generic 폴백과 비교하는 잘못된 측정으로 전 품목이 6으로 나와 이 게이트가
+  //  사실상 무력화돼 있었다. itemFactOverrideCount 로 교체하면서 바로잡는다.)
+  const factDist = Object.keys(FAMILY).reduce((a: Record<number, number>, i) => {
+    const n = distinctFacts(i); a[n] = (a[n] || 0) + 1; return a;
+  }, {});
+  ok(Object.keys(factDist).length > 1, "품목 구분 근거가 실제로 갈림(단일값 아님)", JSON.stringify(factDist));
 
   const byRegion = new Map<string, typeof indexed>();
   for (const k of indexed) {
@@ -429,6 +434,66 @@ ok((index.match(/<sitemap>/g) || []).length >= 4, "sitemap index 그룹 4+");
   const blogItems = ["마루철거", "데코타일철거", "바닥샌딩", "타일철거", "바닥철거"];
   const noServiceAxis = blogItems.filter((it) => itemGuidesFor(it, "").length === 0);
   ok(noServiceAxis.length === 0, "블로그 주제 품목에 색인 안내 페이지 존재(서비스 축 연결 가능)", noServiceAxis.join(", "));
+}
+
+// ── ⑧-8 콘텐츠 품질·신뢰 게이트 ──────────────────────────────────────────────
+// 프로그래매틱 페이지가 다시 늘어날 때 '내용 없는 색인 페이지'가 생기지 않게 막는다.
+// 분량(word count)으로 통과/실패를 가르지 않는다 — 3차에서 Tier A 와 noindex 의
+// 본문 길이가 1,239자 vs 1,241자로 사실상 같다는 게 확인됐다. 분량은 변별력이 없다.
+{
+  const indexedRI = keywords.filter((k) => k.type === "region-item" && indexabilityFor(k).inSitemap);
+
+  // ① 색인 지역×품목은 그 품목만의 실제 정보(itemFacts 오버라이드)를 가져야 한다.
+  //    품목군 폴백만 나오는 페이지는 형제와 구분되는 내용이 없다는 뜻이다.
+  // 품목 고유 정보(itemFacts 오버라이드)가 0인 품목은 현재 타일철거·장판철거 둘뿐이다.
+  // 없는 도메인 정보를 지어내면 안 되므로(NEEDS_REAL_DATA 로 보고) 지금 상태는 허용하되,
+  // 그 밖의 품목이 고유 정보 없이 색인되면 실패시킨다.
+  const KNOWN_GENERIC_ITEMS = new Set(["타일철거", "장판철거"]);
+  const noFacts = indexedRI.filter((k) => itemFactOverrideCount(k.item) === 0 && !KNOWN_GENERIC_ITEMS.has(k.item as string));
+  ok(noFacts.length === 0, "색인 지역×품목: 품목 고유 정보 보유(알려진 예외 제외)", noFacts.slice(0, 3).map((k) => k.slug).join(", "));
+  ok(
+    [...KNOWN_GENERIC_ITEMS].every((i) => itemFactOverrideCount(i) === 0),
+    "알려진 GENERIC 예외 목록이 실제와 일치(정보가 채워지면 목록에서 빼야 함)",
+    [...KNOWN_GENERIC_ITEMS].map((i) => `${i}=${itemFactOverrideCount(i)}`).join(", ")
+  );
+
+  // ② 검증 사례를 가진 지역×품목은 반드시 색인 대상이어야 한다.
+  //    사례는 현재 가장 강한 색인 근거다 — 근거가 있는데 noindex 면 판정 배선이 끊긴 것이다.
+  //    (반대 방향은 검사하지 않는다. Tier A 근거는 사례 외에 수동 승인도 있어서,
+  //     "색인이면 사례가 있어야 한다"는 성립하지 않는다.)
+  const caseKeys = new Set(
+    galleryItems.filter((c) => c.region && c.item && c.verified !== false).map((c) => `${c.region}|${c.item}`)
+  );
+  const caseNotIndexed = keywords.filter(
+    (k) => k.type === "region-item" && caseKeys.has(`${k.region}|${k.item}`) && !indexabilityFor(k).inSitemap
+  );
+  ok(caseNotIndexed.length === 0, "검증 사례 보유 지역×품목은 전부 색인 대상", caseNotIndexed.slice(0, 3).map((k) => k.slug).join(", "));
+
+  // ③ 갤러리 사례의 지역·품목은 실제 페이지로 이어져야 한다(끊긴 사례 링크 방지).
+  const danglingCases = galleryItems
+    .filter((c) => c.region && c.item && c.verified !== false)
+    .filter((c) => !getKeywordBySlug(`${c.region}-${c.item}`) && !c.region.includes("·") && c.region !== "수도권");
+  ok(danglingCases.length === 0, "검증 사례의 지역+품목이 실제 페이지로 연결", danglingCases.slice(0, 3).map((c) => `${c.region}-${c.item}`).join(", "));
+
+  // ④ INDEX 지역 허브는 정보 유형이 최소 3종 이상이어야 한다(링크만 많은 껍데기 방지).
+  //    유형: 품목 링크 / 인접 지역 / FAQ — 셋 다 데이터가 있어야 랜딩으로 성립한다.
+  const hubRegions = [...new Set(keywords.filter((k) => k.type === "region-item" && k.region).map((k) => k.region as string))];
+  const thinHubs = hubRegions.filter((r) => {
+    if (hubDecisionFor(r).tier !== "INDEX") return false;
+    const items = keywords.filter((k) => k.type === "region-item" && k.region === r).length;
+    const neighbors = neighborsOf(r, 6).filter((nb) => hubRegions.includes(nb)).length;
+    const faqs = pickFaqs({ slug: `region-${r}`, keyword: `${r} 바닥재 철거`, type: "region-item", region: r, item: "바닥재철거" } as never, 4).length;
+    return [items > 0, neighbors > 0, faqs > 0].filter(Boolean).length < 3;
+  });
+  ok(thinHubs.length === 0, "INDEX 허브: 정보 유형 3종 이상(품목·인접지역·FAQ)", thinHubs.join(", "));
+
+  // ⑤ 구조화데이터에 확인되지 않은 값을 단언하지 않는다.
+  //    영업시간·가격대는 운영자가 실제 값을 넣을 때만 노출돼야 한다.
+  ok(
+    company.openingHours === null || (!!company.openingHours.opens && !!company.openingHours.closes),
+    "영업시간 스키마: 값이 있으면 완전해야 함(추정치 상수 금지)"
+  );
+  ok(company.priceRange === "" || company.priceRange.length > 0, "priceRange: 설정된 값만 사용");
 }
 
 // ── ⑨ HTTP/www 단일 301 (netlify.toml) ───────────────────────────────────────

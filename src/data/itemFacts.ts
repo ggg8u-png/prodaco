@@ -196,6 +196,22 @@ export function familyKeyOf(item: string): keyof typeof FAMILY {
 }
 
 // 품목별 기술 정보(품목 특화 override + 품목군 기본값 병합).
+/**
+ * 그 품목이 품목군 기본값 위에 실제로 덮어쓴 필드 수(0~6).
+ *
+ * '품목 단위 전문성'의 유일한 객관 지표다. itemFactsFor() 를 generic 폴백과 비교하면
+ * 품목군 차이(마루 vs 비닐 vs 타일)까지 세어 전 품목이 6으로 나온다 — 그건 품목군
+ * 구분이지 품목 구분이 아니다. 카니발라이제이션 판정은 같은 품목군 안에서 갈리므로
+ * 반드시 '품목군 기본값 대비' 로 세야 한다.
+ */
+export function itemFactOverrideCount(item: string | undefined): number {
+  if (!item) return 0;
+  const base = FAMILY[familyKeyOf(item)];
+  const override = BY_ITEM[item];
+  if (!override) return 0;
+  return (Object.keys(override) as (keyof ItemFact)[]).filter((k) => override[k] !== undefined && override[k] !== base[k]).length;
+}
+
 export function itemFactsFor(item: string | undefined): ItemFact {
   const key = item || "바닥재철거";
   const base = FAMILY[familyKeyOf(key)];

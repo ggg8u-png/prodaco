@@ -72,7 +72,22 @@ const business = {
   sameAs,
 };
 
+// ─── 확인된 값이 있을 때만 구조화데이터로 내보내는 슬롯 ─────────────────────────
+// 예전에는 영업시간(월~토 08:00~20:00)과 priceRange("$$")를 코드에 상수로 박아
+// LocalBusiness 스키마로 내보냈다. 코드 주석 스스로 "일반적 작업 시간대 가정"이라고
+// 적어 둔 추정치였다 — 확인되지 않은 값을 구조화데이터로 단언하면 검색결과에 잘못된
+// 영업시간·가격대가 노출된다. 운영자가 채우기 전까지는 필드 자체를 내보내지 않는다.
+const openingHoursRaw = (businessRaw as Record<string, unknown>).openingHours;
+const openingHours =
+  openingHoursRaw && typeof openingHoursRaw === "object" && !Array.isArray(openingHoursRaw)
+    ? (openingHoursRaw as { dayOfWeek?: string[]; opens?: string; closes?: string })
+    : null;
+const priceRange = str((businessRaw as Record<string, unknown>).priceRange);
+
 export const company = {
+  // 확인된 값이 있을 때만 구조화데이터에 실린다(없으면 필드 자체를 생략).
+  openingHours,
+  priceRange,
   name: companyContent.name,
   nameEn: companyContent.nameEn,
   // 브랜드명(고객이 부르는 이름) — 로고·구조화데이터 name 에 사용. businessConfig 단일 출처.
