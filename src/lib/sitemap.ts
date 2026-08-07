@@ -10,7 +10,7 @@
 //     파일이 없으면(git 없는 환경) SITE_LASTMOD 로 폴백한다.
 import fs from "node:fs";
 import path from "node:path";
-import { getKeywords } from "@/data/keywords";
+import { getKeywords, hubDecisionFor } from "@/data/keywords";
 import { indexabilityFor } from "@/lib/seo/indexability";
 import { posts } from "@/data/posts";
 import { blogUrl } from "@/lib/blogUrl";
@@ -137,6 +137,11 @@ function hubRegions(): string[] {
   return [...new Set(getKeywords().filter((k) => k.type === "region-item" && k.region).map((k) => k.region as string))];
 }
 
+/** 사이트맵에 실을 허브 — INDEX 티어만(SUPPORT 는 noindex,follow 라 제외). */
+function indexHubRegions(): string[] {
+  return hubRegions().filter((r) => hubDecisionFor(r).inSitemap);
+}
+
 export function entriesForGroup(group: SitemapGroup): SitemapEntry[] {
   const kws = indexableKeywords();
   switch (group) {
@@ -154,7 +159,7 @@ export function entriesForGroup(group: SitemapGroup): SitemapEntry[] {
       ];
     }
     case "regions":
-      return hubRegions().map((region) => ({
+      return indexHubRegions().map((region) => ({
         loc: `${siteUrl}/services/${encodeURIComponent(region)}`,
         lastmod: hubLastmod(region),
         changefreq: "weekly",

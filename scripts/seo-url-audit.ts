@@ -9,7 +9,7 @@
 // =============================================================================
 import fs from "node:fs";
 import path from "node:path";
-import { getKeywords } from "@/data/keywords";
+import { getKeywords , hubDecisionFor } from "@/data/keywords";
 import { indexabilityFor, siteUrl, keywordUrl, regionHubUrl } from "@/lib/seo/indexability";
 import { uniqueTitle, uniqueDescription, pickFaqs } from "@/lib/seo";
 import { getContentForKeyword } from "@/lib/content";
@@ -98,6 +98,8 @@ function main(): void {
   // ── 지역 허브 ────────────────────────────────────────────────────────────────
   const hubRegions = [...new Set(keywords.filter((k) => k.type === "region-item" && k.region).map((k) => k.region as string))];
   for (const region of hubRegions) {
+    // 허브도 색인 티어를 가진다(INDEX/SUPPORT) — 하드코딩하면 리포트가 실제 배포와 어긋난다.
+    const hub = hubDecisionFor(region);
     rows.push({
       url: regionHubUrl(region),
       routeType: "region-hub",
@@ -106,11 +108,11 @@ function main(): void {
       title: `${region} 바닥재 철거 · 마루/타일/장판 전문`,
       description: `${region} 바닥재 철거 허브(품목 링크·비용표·FAQ)`,
       canonical: regionHubUrl(region),
-      robots: "index,follow",
-      inSitemap: true,
+      robots: hub.index ? "index,follow" : "noindex,follow",
+      inSitemap: hub.inSitemap,
       expectedStatus: 200,
-      tier: "A",
-      reasons: "지역 허브(region-item 존재 지역만 생성)",
+      tier: hub.tier === "INDEX" ? "A" : "B",
+      reasons: `지역 허브 ${hub.tier} — ${hub.reasons.join(" / ")}`,
       hasRealCase: false,
       regionPhotoCount: regionPhotoCount.get(region) || 0,
       uniqueFaqCount: 4,

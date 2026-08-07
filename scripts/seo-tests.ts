@@ -14,7 +14,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { josa, josaEnd } from "@/lib/josa";
 import { fillTemplate } from "@/lib/template";
-import { getKeywords, getKeywordBySlug } from "@/data/keywords";
+import { getKeywords, getKeywordBySlug, hubDecisionFor } from "@/data/keywords";
 import { indexabilityFor, keywordUrl, siteUrl } from "@/lib/seo/indexability";
 import { uniqueTitle, pickFaqs, faqMatchesItem } from "@/lib/seo";
 import { getContentForKeyword, familyOf } from "@/lib/content";
@@ -203,6 +203,64 @@ ok((index.match(/<sitemap>/g) || []).length >= 4, "sitemap index 그룹 4+");
     return !k || !indexabilityFor(k).inSitemap;
   });
   ok(notLive.length === 0, "수동 승인 슬러그가 전부 Tier A(사이트맵 포함)", `미반영 ${notLive.join(", ")}`);
+}
+
+// ── ⑧-5 지역 허브 품질 게이트 ────────────────────────────────────────────────
+// 65개 허브를 전부 색인하던 구조에서 INDEX/SUPPORT 로 나눈 뒤, 그 구조가 깨지지
+// 않도록 고정한다. "색인 URL 을 많이 만드는 것"이 아니라 "각 색인 URL 이 독립적으로
+// 존재할 이유가 있는 상태"를 지키는 게 목적이다.
+{
+  const hubRegions = [...new Set(keywords.filter((k) => k.type === "region-item" && k.region).map((k) => k.region as string))];
+  ok(hubRegions.length > 0, "지역 허브 존재", `${hubRegions.length}개`);
+  const smLocs = new Set<string>();
+  for (const g of SITEMAP_GROUPS) for (const e of entriesForGroup(g)) smLocs.add(decodeURIComponent(e.loc));
+  const hubUrl = (r: string) => `${siteUrl}/services/${r}`;
+
+  const idx = hubRegions.filter((r) => hubDecisionFor(r).tier === "INDEX");
+  const sup = hubRegions.filter((r) => hubDecisionFor(r).tier === "SUPPORT");
+
+  // ① INDEX 허브인데 색인 가능한 하위 페이지가 0 → 모을 게 없는 허브(광역 루트·canonical
+  //    수렴 대상은 구조적 이유로 예외이므로 사유가 남아 있는지로 구분한다).
+  const emptyIndexHubs = idx.filter((r) => {
+    const d = hubDecisionFor(r);
+    return d.indexableChildren === 0 && !d.reasons.some((x) => x.includes("광역 루트") || x.includes("canonical 수렴"));
+  });
+  ok(emptyIndexHubs.length === 0, "INDEX 허브: 하위 색인 페이지 0개 없음(구조적 예외 제외)", emptyIndexHubs.join(", "));
+
+  // ② 허브는 티어와 무관하게 하위 품목 링크를 내보내야 한다(SUPPORT 도 크롤 허브 역할).
+  const noOutbound = hubRegions.filter((r) => keywords.filter((k) => k.type === "region-item" && k.region === r).length === 0);
+  ok(noOutbound.length === 0, "모든 허브: 링크할 하위 지역×품목 존재", noOutbound.join(", "));
+
+  // ③ 사이트맵에 noindex 허브가 들어가지 않는다.
+  const noindexInSitemap = sup.filter((r) => smLocs.has(hubUrl(r)));
+  ok(noindexInSitemap.length === 0, "사이트맵에 SUPPORT(noindex) 허브 없음", noindexInSitemap.join(", "));
+
+  // ④ INDEX 허브는 전부 사이트맵에 있다.
+  const missing = idx.filter((r) => !smLocs.has(hubUrl(r)));
+  ok(missing.length === 0, "INDEX 허브는 전부 사이트맵 포함", missing.join(", "));
+
+  // ⑤ canonical 수렴 대상 허브가 SUPPORT 로 내려가면 안 된다(불변식 ①).
+  //    색인 페이지가 canonical 로 지목하는 허브가 noindex 면 그 페이지까지 오염된다.
+  const brokenCanonical: string[] = [];
+  for (const k of keywords) {
+    const ix = indexabilityFor(k);
+    if (!ix.indexable) continue;
+    const m = ix.canonicalUrl.match(/\/services\/(.+)$/);
+    if (!m) continue;
+    const target = decodeURIComponent(m[1]);
+    if (hubDecisionFor(target).tier !== "INDEX") brokenCanonical.push(`${k.slug} → ${target}`);
+  }
+  ok(brokenCanonical.length === 0, "canonical 수렴 대상 허브는 전부 INDEX", brokenCanonical.slice(0, 5).join(", "));
+
+  // ⑥ FAQPage 스키마와 화면 FAQ 는 같은 소스에서 나와야 한다 — 허브 FAQ 선택이
+  //    실제 링크 품목을 따라가는지(전 허브 동일 세트가 아닌지) 확인.
+  const faqSets = new Set<string>();
+  for (const r of hubRegions) {
+    const items = keywords.filter((k) => k.type === "region-item" && k.region === r && k.item).slice(0, 8);
+    const item = items[0]?.item || "바닥재 철거";
+    faqSets.add(pickFaqs({ slug: `region-${r}-${item}`, keyword: `${r} ${item}`, type: "region-item", region: r, item } as never, 4).map((f) => f.id).join(","));
+  }
+  ok(faqSets.size >= Math.ceil(hubRegions.length * 0.3), "허브 FAQ 조합이 지역별로 분화", `서로 다른 조합 ${faqSets.size}/${hubRegions.length}`);
 }
 
 // ── ⑨ HTTP/www 단일 301 (netlify.toml) ───────────────────────────────────────

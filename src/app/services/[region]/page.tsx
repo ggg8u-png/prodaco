@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Phone, MessageCircle } from "lucide-react";
-import { getKeywords } from "@/data/keywords";
+import { getKeywords, hubDecisionFor } from "@/data/keywords";
 import { neighborsOf, clusterLabelOf } from "@/data/regions";
 import { FLOOR_COSTS, perPyeongText } from "@/data/costs";
 import { pickFaqs } from "@/lib/seo";
@@ -93,6 +93,12 @@ export async function generateMetadata({ params }: { params: Promise<{ region: s
     title: `${region} 바닥재 철거 · 마루/타일/장판 전문`,
     description: desc,
     alternates: { canonical: `${siteUrl}/services/${encodeURIComponent(region)}` },
+    // SUPPORT 허브는 noindex,follow — 색인 경쟁에서만 빠지고 링크는 그대로 전달한다.
+    // self-canonical 은 유지한다(noindex + 타 URL canonical 조합은 canonical 대상까지
+    // noindex 가 번질 수 있어 금지 — indexDecisionFor 불변식 ②와 같은 규칙).
+    robots: hubDecisionFor(region).index
+      ? { index: true, follow: true }
+      : { index: false, follow: true },
     openGraph: {
       title: `${region} 바닥재 철거 | 프로다`,
       description: desc,
@@ -126,7 +132,36 @@ export default async function RegionHub({ params }: { params: Promise<{ region: 
   const cases = rotatePick(casesAreLocal ? regionCases : casesAreGroup ? groupCases : galleryItems, seed, 3);
   const pageReviews = rotatePick(reviews, seed, 2);
   const reviewsAreLocal = pageReviews.every((r) => r.region === region);
-  const faqSubset = pickFaqs({ slug: `region-${region}`, keyword: `${region} 바닥재 철거`, type: "region-item", region, item: "바닥재 철거" }, 4);
+  // FAQ — 이 허브가 실제로 링크하는 품목에서 뽑는다.
+  //
+  // 이전에는 전 허브가 item:"바닥재 철거" 하나로 pickFaqs 를 호출했다. 시드는 지역별로
+  // 달랐지만 preferred 절반이 항상 같은 질문(f15·f20)으로 고정돼, 65개 허브에 동일한
+  // 긴 FAQ 답변 블록이 깔렸다(전 허브 공통 문장 35% 분량의 최대 기여분).
+  // 지금은 화면 상단 품목 링크(itemsForRegion)에서 품목을 회전 선택해 그 품목의 FAQ 를
+  // 가져온다 — 문구를 새로 만들지 않고 기존 FAQ 풀에서 '그 페이지에 실제로 맞는' 것만 고른다.
+  // SUPPORT 허브는 색인 대상이 아니므로 FAQ 를 줄여 공통 블록 자체를 더 뺀다.
+  const hub = hubDecisionFor(region);
+  // 그 지역의 B2B(인테리어 협력·하도급) 페이지 — 색인 대상만.
+  // 1차 감사에서 Tier A 인데 /services 한 곳에서만 링크를 받던 11개 중 6개가 이 유형이었다
+  // (성남·인천·부천·동탄 마루철거 하도급, 고양·성남 인테리어 철거 외주).
+  // 문맥상 부모가 바로 그 지역 허브다 — 새 페이지를 만들지 않고 여기서 연결한다.
+  const b2bLinks = getKeywords().filter(
+    (k) => k.type === "b2b" && k.region === region && indexabilityFor(k).inSitemap
+  );
+  const faqItems = items.length > 0 ? rotatePick(items.map((k) => k.item as string), seed, 2) : ["바닥재 철거"];
+  const faqCount = hub.tier === "INDEX" ? 4 : 2;
+  const faqSubset = (() => {
+    const picked: ReturnType<typeof pickFaqs> = [];
+    const perItem = Math.max(1, Math.ceil(faqCount / faqItems.length));
+    for (const item of faqItems) {
+      for (const f of pickFaqs({ slug: `region-${region}-${item}`, keyword: `${region} ${item}`, type: "region-item", region, item }, perItem + 2)) {
+        if (picked.length >= faqCount) break;
+        if (!picked.some((p) => p.id === f.id)) picked.push(f);
+      }
+      if (picked.length >= faqCount) break;
+    }
+    return picked;
+  })();
   // GEO/AEO 핵심 답변(지역 단위) — H1 아래 노출 + FAQ 스키마 맨 앞 대표 질문으로 병합.
   const keyAnswer = keyAnswerForRegion(region);
 
@@ -342,10 +377,32 @@ export default async function RegionHub({ params }: { params: Promise<{ region: 
         </div>
       </section>
 
+      {b2bLinks.length > 0 && (
+        <section className="py-10 px-5">
+          <div className="max-w-3xl mx-auto">
+            <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">{region} 인테리어·시공팀 협력</h2>
+            <p className="text-xs text-gray-500 mb-4 leading-relaxed">
+              {region} 인테리어 업체·시공팀의 바닥 철거 외주와 하도급을 진행합니다. 세금계산서 발행, 다수 현장, 촉박한 공정 일정에 맞춰 협력합니다.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {b2bLinks.map((k) => (
+                <Link
+                  key={k.slug}
+                  href={`/${k.slug}`}
+                  className="text-xs font-medium text-[#16181D] px-3 py-1.5 border border-gray-300 bg-white hover:border-[#9A8A2E] hover:text-[#9A8A2E] transition-colors"
+                >
+                  {applyReplacements(k.keyword)}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {neighbors.length > 0 && (
         <section className="py-10 px-5 bg-[#F7F6F3]">
           <div className="max-w-3xl mx-auto">
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">{ui.regionPage.neighborhoodLabel.replace("{cluster}", cluster)}</p>
+            <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">{ui.regionPage.neighborhoodLabel.replace("{cluster}", cluster)}</h2>
             <div className="flex flex-wrap gap-2">
               {neighbors.map((nb) => (
                 <Link

@@ -3,6 +3,7 @@ import liveData from "./keywords.json";
 // 라이브 수를 초과할 때만 buildKeywords() 안에서 지연 로드한다(콜드스타트 절감).
 import { galleryItems } from "./gallery";
 import type { KeywordEntry } from "./taxonomy";
+import { caseGroupLabelFor } from "@/lib/caseGroups";
 import seoSettings from "../../content/seo.json";
 
 // CMS(/admin → ⑪ 색인·SEO 설정, content/seo.json)에서 색인 정책을 편집한다.
@@ -173,6 +174,118 @@ export function isIndexable(k: KeywordEntry | string): boolean {
   if (REQUIRE_EVIDENCE) return false;
   // ④ 그 외 큐레이션 라이브(region-item 등 핵심 페이지)는 색인
   if (liveSlugSet.has(slug)) return true; // 큐레이션 라이브(검수·고가치)
+  return false;
+}
+
+// ─── 지역 허브 색인 티어 ────────────────────────────────────────────────────────
+// 65개 허브를 전부 색인하던 구조를 버리고 실측 지표로 나눈다.
+//
+// 왜: 빌드 산출물 실측에서 허브끼리 본문 유사도가 54~72%(중앙값 61%)였다. 그런데
+//     허브를 가르는 지표를 전부 뽑아 보니 사실상 하나뿐이었다 —
+//       본문 단어수 576~632 · outbound 품목링크 전부 8 · inbound 19~32 · 하위 총개수 18~22
+//       → 전부 평평하다(구조가 같으니 당연하다).
+//       색인 가능한 하위 페이지 수(childIndexable)만 0~6 으로 갈린다.
+//     분포: 0개 20곳 · 1개 26곳 · 2개 12곳 · 3개 2곳 · 4개 1곳 · 5개 3곳 · 6개 1곳
+//
+// 임계값을 2로 둔 이유:
+//   · 하위 색인 페이지가 0~1개면 "허브"가 아니다. 모을 게 없고, 그 1개는 혼자서도
+//     같은 질의로 순위를 잡는다 — 허브는 동일 질의의 근접중복 경쟁자만 하나 더 만든다.
+//   · 2개 이상부터 실제로 여러 목적지를 모으는 집약 페이지가 된다.
+//   · 유사도(54~72%)는 연속 분포라 자연스러운 절단점이 없어 기준으로 못 쓴다.
+//     childIndexable 만 이산적인 군집을 가진다.
+//
+// 예외 두 가지는 숫자보다 우선한다(둘 다 구조 파손 방지):
+//   ① 광역 루트(서울·경기·인천·수도권) — 홈에서 직접 링크되는 진입점이자 하위 지역의
+//      상위 개념. 하위 색인 페이지 수와 무관하게 유지한다.
+//   ② canonical 수렴 대상 — 어떤 색인 페이지가 이 허브를 canonical 로 지목하고 있으면
+//      허브를 noindex 로 내릴 수 없다(indexDecisionFor 불변식 ①: canonical 대상은
+//      반드시 색인 가능해야 한다). 실제로 /services/영등포 가 여기 해당한다.
+export type HubTier = "INDEX" | "SUPPORT";
+
+/** 홈에서 직접 링크되는 광역 루트 — 하위 개념을 담는 구조적 진입점. */
+const BROAD_HUB_REGIONS = new Set(["서울", "경기", "인천", "수도권"]);
+
+/** 허브 판정 임계값 — 위 분포 근거. 바꾸면 seo-tests 의 허브 게이트가 같이 움직인다. */
+export const HUB_INDEX_MIN_CHILDREN = 2;
+
+/**
+ * 그 지역에서 '독립적으로' 색인되는 지역×품목 페이지 수.
+ * 사이트맵 포함 기준과 같게 센다 — index + self-canonical.
+ * 총칭 품목(바닥재철거·바닥철거)은 canonical 이 이 허브로 수렴하므로 하위가 아니라
+ * 허브 자신의 일부다. 세면 자기 자신을 근거로 자기를 승격시키는 셈이라 제외한다.
+ */
+function indexableChildCount(region: string): number {
+  let n = 0;
+  for (const k of getKeywords()) {
+    if (k.type !== "region-item" || k.region !== region || !k.item) continue;
+    if (GENERIC_HUB_ITEMS.has(k.item)) continue;
+    const d = indexDecisionFor(k);
+    if (d.index && d.canonicalSlug === k.slug) n++;
+  }
+  return n;
+}
+
+export interface HubDecision {
+  tier: HubTier;
+  index: boolean;
+  inSitemap: boolean;
+  reasons: string[];
+  indexableChildren: number;
+}
+
+const hubDecisionCache = new Map<string, HubDecision>();
+
+export function hubDecisionFor(region: string): HubDecision {
+  const hit = hubDecisionCache.get(region);
+  if (hit) return hit;
+  const indexableChildren = indexableChildCount(region);
+  const reasons: string[] = [];
+  let tier: HubTier = "SUPPORT";
+
+  if (BROAD_HUB_REGIONS.has(region)) {
+    tier = "INDEX";
+    reasons.push("광역 루트 — 홈에서 직접 링크되는 구조적 진입점");
+  } else if (rendersLocalCases(region)) {
+    tier = "INDEX";
+    reasons.push("검증 시공사례가 그 지역(또는 권역) 사례로 실제 렌더 — 다른 허브에 없는 고유 콘텐츠");
+  } else if (isHubCanonicalTarget(region)) {
+    tier = "INDEX";
+    reasons.push("canonical 수렴 대상 — 색인 페이지가 이 허브를 canonical 로 지목(불변식 ①)");
+  } else if (indexableChildren >= HUB_INDEX_MIN_CHILDREN) {
+    tier = "INDEX";
+    reasons.push(`색인 가능한 하위 지역×품목 ${indexableChildren}개(임계 ${HUB_INDEX_MIN_CHILDREN})`);
+  } else {
+    reasons.push(
+      `색인 가능한 하위 페이지 ${indexableChildren}개 — 모을 대상이 없어 독립 색인 가치 부족. noindex,follow 로 탐색·크롤 허브 역할만 유지`
+    );
+  }
+  const out: HubDecision = { tier, index: tier === "INDEX", inSitemap: tier === "INDEX", reasons, indexableChildren };
+  hubDecisionCache.set(region, out);
+  return out;
+}
+
+/**
+ * 그 허브가 화면에 '지역(권역) 시공사례'로 실제 렌더하는가.
+ *
+ * 허브 페이지의 판정과 정확히 같은 기준을 쓴다 — 지역 사례 2건 이상이면 지역 사례로,
+ * 아니면 권역 그룹 사례가 있을 때 권역 사례로 표기하고, 둘 다 없으면 "수도권 유사 사례"다.
+ * 사례 1건짜리 지역을 승격시키지 않는 이유가 여기 있다: 화면에는 지역 사례로 안 나오므로
+ * 그 허브만의 고유 콘텐츠가 아니다. 실제로 렌더되는 것만 색인 근거로 인정한다.
+ */
+function rendersLocalCases(region: string): boolean {
+  const verified = galleryItems.filter((c) => c.region && c.verified !== false);
+  if (verified.filter((c) => c.region === region).length >= 2) return true;
+  const group = caseGroupLabelFor(region);
+  return !!group && verified.some((c) => c.region === group);
+}
+
+/** 이 허브를 canonical 로 지목하는 색인 페이지가 있는가(순환 없이 직접 판정). */
+function isHubCanonicalTarget(region: string): boolean {
+  for (const k of getKeywords()) {
+    if (k.type !== "region-item" || k.region !== region || !k.item) continue;
+    if (!GENERIC_HUB_ITEMS.has(k.item)) continue;
+    if (isIndexable(k)) return true;
+  }
   return false;
 }
 
