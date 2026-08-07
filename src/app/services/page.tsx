@@ -15,7 +15,12 @@ export const metadata: Metadata = {
     "서울·경기·인천 지역별·품목별 바닥 철거·샌딩 안내. 강마루·데코타일·장판·타일 철거와 비용·견적 페이지를 한눈에.",
   alternates: { canonical: `${process.env.NEXT_PUBLIC_SITE_URL || "https://prodaco.kr"}/services` },
   // og:url 을 명시하지 않으면 루트 레이아웃의 사이트 URL 이 상속돼 canonical 과 어긋난다.
-  openGraph: { url: `${process.env.NEXT_PUBLIC_SITE_URL || "https://prodaco.kr"}/services` },
+  openGraph: {
+    url: `${process.env.NEXT_PUBLIC_SITE_URL || "https://prodaco.kr"}/services`,
+    // page 에서 openGraph 를 선언하면 루트 레이아웃의 openGraph 가 상속되지 않는다
+    // (부분 병합이 아니라 통째 교체) — images 를 다시 명시하지 않으면 og:image 가 사라진다.
+    images: ["/opengraph-image"],
+  },
 };
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://prodaco.kr";
@@ -143,7 +148,7 @@ export default function ServicesDirectory() {
 
       <section className="py-12 px-5">
         <div className="max-w-4xl mx-auto">
-          <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-6">{ui.servicesPage.regionSectionLabel}</p>
+          <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-6">{ui.servicesPage.regionSectionLabel}</h2>
           {clusterSections.map((s) => (
             <div key={s.label} className="mb-10">
               <p className="mb-4 text-base font-black text-[#9A8A2E] border-b border-gray-100 pb-2">{s.label}</p>
@@ -162,7 +167,7 @@ export default function ServicesDirectory() {
       {byItem.size > 0 && (
         <section className="py-12 px-5 bg-[#F7F6F3]">
           <div className="max-w-4xl mx-auto">
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-6">{ui.servicesPage.itemSectionLabel}</p>
+            <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-6">{ui.servicesPage.itemSectionLabel}</h2>
             <div className="space-y-6">
               {[...byItem.keys()].map((item) => (
                 <div key={item} id={`item-${item}`}>
@@ -188,7 +193,7 @@ export default function ServicesDirectory() {
       {(b2bByRegion.size > 0 || b2bGeneral.length > 0) && (
         <section className="py-12 px-5">
           <div className="max-w-4xl mx-auto">
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">인테리어·시공팀 협력 · 하도급(B2B)</p>
+            <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">인테리어·시공팀 협력 · 하도급(B2B)</h2>
             <p className="text-xs text-gray-500 mb-6 leading-relaxed max-w-2xl">
               인테리어 업체·시공팀의 바닥 철거 외주와 하도급을 진행합니다. 세금계산서 발행, 다수 현장, 촉박한 공정 일정에 맞춰 협력합니다. 지역별 협력 페이지와 일반 협력 안내를 확인하세요.
             </p>
@@ -229,7 +234,7 @@ export default function ServicesDirectory() {
       {targetKeywords.length > 0 && (
         <section className="py-12 px-5 bg-[#F7F6F3]">
           <div className="max-w-4xl mx-auto">
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">공간·상황별 안내</p>
+            <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">공간·상황별 안내</h2>
             <p className="text-xs text-gray-500 mb-5 leading-relaxed max-w-2xl">
               아파트·상가·사무실·빌라 등 공간 유형과 이사·리모델링·원상복구 같은 상황에 맞춰 바닥 철거를 안내합니다. 상황에 해당하는 페이지에서 준비 사항과 진행 방식을 확인하세요.
             </p>
@@ -247,7 +252,7 @@ export default function ServicesDirectory() {
       {termKeywords.length > 0 && (
         <section className="py-12 px-5">
           <div className="max-w-4xl mx-auto">
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">바닥재 용어·직접 시공 안내</p>
+            <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">바닥재 용어·직접 시공 안내</h2>
             <p className="text-xs text-gray-500 mb-5 leading-relaxed max-w-2xl">
               마루 뜯기, 장판 제거, 본드 제거처럼 바닥재를 직접 걷어내려는 분을 위한 용어·방법 안내입니다. 직접 하기 어려운 부분은 전문 시공으로도 도와드립니다.
             </p>

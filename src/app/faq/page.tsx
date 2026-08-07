@@ -61,7 +61,7 @@ export default function FaqPage() {
         <div className="max-w-3xl mx-auto space-y-12">
           {categories.map((cat) => (
             <div key={cat}>
-              <p className="font-mono-pd text-xs font-bold text-[#9A8A2E] uppercase tracking-[0.15em] mb-4">{cat}</p>
+              <h2 className="font-mono-pd text-xs font-bold text-[#9A8A2E] uppercase tracking-[0.15em] mb-4">{cat}</h2>
               <div className="divide-y divide-gray-100">
                 {faqs
                   .filter((f) => f.category === cat)

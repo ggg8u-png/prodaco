@@ -99,9 +99,9 @@ export default function ReviewsClient() {
           {/* 실제 고객 후기 — 검증된 후기만, 별점 표시 */}
           {actual.length > 0 && (
             <div className="mb-14">
-              <p className="mb-4 font-mono-pd text-xs font-bold uppercase tracking-[0.16em] text-[#9A8A2E]">
+              <h2 className="mb-4 font-mono-pd text-xs font-bold uppercase tracking-[0.16em] text-[#9A8A2E]">
                 {ui.reviewsPage.actualSectionLabel}
-              </p>
+              </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-gray-100">
                 {actual.map((review) => (
                   <ActualCard key={review.id} review={review} />
@@ -113,9 +113,9 @@ export default function ReviewsClient() {
           {/* 상황 예시(상담 사례) — 별점 없음, 실제 후기가 아님을 명시 */}
           {examples.length > 0 && (
             <div>
-              <p className="mb-1.5 font-mono-pd text-xs font-bold uppercase tracking-[0.16em] text-gray-500">
+              <h2 className="mb-1.5 font-mono-pd text-xs font-bold uppercase tracking-[0.16em] text-gray-500">
                 {ui.reviewsPage.exampleSectionLabel}
-              </p>
+              </h2>
               <p className="mb-4 text-xs text-gray-400 leading-relaxed">{ui.reviewsPage.exampleSectionNote}</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {examples.map((review) => (

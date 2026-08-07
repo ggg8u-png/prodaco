@@ -59,22 +59,28 @@ const CORE_HUB_ITEMS = [
   "타일철거", "바닥샌딩", "에폭시철거", "바닥재철거",
 ] as const;
 
-// 허브 링크 영역: 색인 대상(Tier A: index + self-canonical + 사이트맵)인 페이지만,
-// 핵심 품목 우선 정렬로 최대 8개. noindex 페이지는 주요 링크 영역에서 제외한다.
-// 핵심 품목 외라도 색인 페이지(실측 증거로 유지된 페이지)는 뒤에 채워 고아를 막는다.
+// 허브 링크 영역: 핵심 품목 우선 정렬로 최대 8개.
+//
+// ⚠ 이전 구현은 Tier A(색인 대상)만 남기는 필터를 걸었다. 7/1 색인 티어링으로 지역×품목
+// 대부분이 noindex 로 내려가면서, 허브 65개 중 21개가 품목 링크 0개 · 26개가 1개인
+// "아무것도 허브하지 않는 허브"가 됐다(빌드 산출물 실측). 그 결과:
+//   · 허브 → 하위 페이지 크롤 경로가 끊겼다.
+//   · 허브끼리 본문이 64% 유사해졌다(링크 블록이 지역별 차이의 거의 유일한 원천이었다).
+//   · 정작 허브는 강등된 바닥철거·바닥재철거 150여 개의 canonical 수렴 대상이다.
+// noindex,follow 페이지는 색인 경쟁에서만 빠질 뿐 실제로 존재하는 서비스 페이지이고
+// 링크는 그대로 전달한다. 그래서 Tier A 를 앞에 놓고, 남는 자리를 그 지역의 실제
+// 품목 페이지로 채운다(개수 상한 8은 유지 — 18개 전량 나열은 도어웨이 신호).
 function itemsForRegion(region: string) {
   const rank = (item: string) => {
     const i = (CORE_HUB_ITEMS as readonly string[]).indexOf(item);
     return i === -1 ? CORE_HUB_ITEMS.length : i;
   };
-  return getKeywords()
+  const pool = getKeywords()
     .filter((k) => k.type === "region-item" && k.region === region && k.item)
-    .filter((k) => {
-      const ix = indexabilityFor(k);
-      return ix.indexable && ix.inSitemap; // Tier A 만 — canonical 이 허브로 통합된 변형도 제외
-    })
-    .sort((a, b) => rank(a.item as string) - rank(b.item as string))
-    .slice(0, 8);
+    .sort((a, b) => rank(a.item as string) - rank(b.item as string));
+  const tierA = pool.filter((k) => indexabilityFor(k).inSitemap);
+  const rest = pool.filter((k) => !indexabilityFor(k).inSitemap);
+  return [...tierA, ...rest].slice(0, 8);
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ region: string }> }): Promise<Metadata> {
