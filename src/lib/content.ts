@@ -1,4 +1,5 @@
 import type { KeywordEntry } from "@/data/taxonomy";
+import { itemFactsFor, type ItemFact } from "@/data/itemFacts";
 import { josa, josaEnd } from "@/lib/josa";
 import { clusterLabelOf, neighborsOf } from "@/data/regions";
 import { applyReplacements } from "@/lib/replacements";
@@ -144,6 +145,74 @@ const ITEM_CORE: Record<Family, ((item: string) => string)[]> = {
 바닥재는 종류가 많아 이름만으로는 작업량을 가늠하기 어렵습니다. 하지만 현장 사진 2~3장이면 재질(마루·비닐·타일·코팅)과 접착 상태, 대략의 면적까지 파악됩니다. 저희는 사진으로 ${item} 범위를 먼저 판단해 1차 가견적을 드리고, 방문·실측을 거쳐 최종 정산합니다. 어림짐작 대신 근거로 안내하는 것이 신뢰의 시작이라고 봅니다.`,
   ],
 };
+
+// ─── 품목별 핵심 섹션(형제 품목 카니발라이제이션 해소) ──────────────────────────
+//
+// 문제: 위 ITEM_CORE 는 '품목군(Family)' 단위다. familyOf() 가 마루철거·강마루철거·
+//   강화마루철거·온돌마루철거를 전부 "maru" 로 묶기 때문에, 같은 지역에서 이 넷이
+//   동시에 색인되면 본문 핵심 섹션이 같은 4개 변형에서 회전 선택될 뿐이다. 비닐계
+//   4종(데코타일·디럭스타일·데코륨·륨장판)도 마찬가지다. 3차 감사에서 같은 지역·같은
+//   품목군 동시 색인 15쌍이 잡힌 실질적 원인이 여기다.
+//
+// 해결: 자재가 실제로 다른 품목은 '핵심 질문' 자체를 다르게 잡는다. 문장을 새로
+//   지어내지 않고 itemFacts.ts 의 BY_ITEM 오버라이드(이미 검증된 도메인 정보)를
+//   그대로 문장으로 편성한다 — 없는 사실을 만들지 않으므로 허위 서술 위험이 없고,
+//   품목별로 실제 다른 내용이 앞쪽에 온다.
+//   BY_ITEM 오버라이드가 없는 품목은 기존 Family 회전을 그대로 쓴다.
+type CoreQuestion = { heading: (item: string) => string; body: (f: ItemFact) => string };
+
+const ITEM_CORE_BY_ITEM: Record<string, CoreQuestion> = {
+  // ── 마루 계열 — 상위(마루철거) + 하위 3종의 역할을 분리한다 ──
+  마루철거: {
+    heading: (item) => `## ${item} — 어떤 마루인지에 따라 철거가 갈립니다`,
+    body: (f) => `${f.attach} ${f.removal}\n\n${f.scope}가 여기 포함됩니다. 종류별 차이는 아래 강마루·강화마루·온돌마루 안내에서 각각 확인하실 수 있습니다.`,
+  },
+  강마루철거: {
+    heading: (item) => `## 접착된 ${item}, 본드 제거가 작업의 절반입니다`,
+    body: (f) => `${f.attach} ${f.removal}\n\n${f.caution} ${f.aftercare}`,
+  },
+  강화마루철거: {
+    heading: (item) => `## 조립(클릭) 구조인 ${item}는 어떻게 분리되나`,
+    body: (f) => `${f.attach} ${f.removal}\n\n${f.caution} ${f.aftercare}`,
+  },
+  온돌마루철거: {
+    heading: (item) => `## 난방 바닥 위 ${item} — 배관 손상이 최대 리스크입니다`,
+    body: (f) => `${f.scope}. ${f.attach}\n\n${f.caution} ${f.removal} ${f.aftercare}`,
+  },
+  // ── 비닐계 — 자재 형태(조각/두꺼운 조각/시트/롤)가 실제로 다르다 ──
+  데코타일철거: {
+    heading: (item) => `## 조각으로 붙인 ${item} — 조각마다 본드가 남습니다`,
+    body: (f) => `${f.attach} ${f.removal}\n\n${f.debris} ${f.aftercare}`,
+  },
+  디럭스타일철거: {
+    heading: (item) => `## 두께가 있는 ${item}, 걷어내는 힘이 다릅니다`,
+    body: (f) => `${f.scope}. ${f.attach}\n\n${f.removal} ${f.aftercare}`,
+  },
+  데코륨철거: {
+    heading: (item) => `## 시트로 깔린 ${item} — 밑면 잔여 정리가 관건입니다`,
+    body: (f) => `${f.scope}. ${f.attach}\n\n${f.removal} ${f.aftercare}`,
+  },
+  륨장판철거: {
+    heading: (item) => `## 롤로 깔린 ${item}, 밑면 종이까지 걷어야 합니다`,
+    body: (f) => `${f.attach} ${f.debris}\n\n${f.removal} ${f.aftercare}`,
+  },
+  // ── 샌딩 계열 — 작업 대상이 다르다(마감면 재생 vs 철거 후 하지 평탄화) ──
+  바닥샌딩: {
+    heading: (item) => `## ${item} — 뜯지 않고 표면을 되살리는 작업입니다`,
+    body: (f) => `${f.scope}가 대상입니다. ${f.removal}\n\n${f.caution} ${f.aftercare}`,
+  },
+  면갈이: {
+    heading: (item) => `## ${item} — 철거가 끝난 바닥을 평탄하게 만듭니다`,
+    body: (f) => `${f.scope}. ${f.removal}\n\n${f.caution} ${f.aftercare}`,
+  },
+};
+
+/** 품목 전용 핵심 섹션(있으면). 없으면 null → 기존 Family 회전 사용. */
+function itemCoreFor(item: string): string | null {
+  const q = ITEM_CORE_BY_ITEM[item];
+  if (!q) return null;
+  return `${q.heading(item)}\n\n${q.body(itemFactsFor(item))}`;
+}
 
 // ─── 꼬리말(modifier)별 본문 — 비용/견적/평당/가격을 서로 다르게 ───────────────
 const COST = new Set(["비용", "가격"]);
@@ -693,7 +762,9 @@ export function getContentForKeyword(keyword: KeywordEntry): string {
   const reg = keyword.region || "수도권";
   const fam = familyOf(item);
 
-  const itemCore = pick(seed, 1, ITEM_CORE[fam])(item);
+  // 품목 전용 핵심 섹션이 있으면 그것을 쓴다(형제 품목과 '핵심 질문'이 달라진다).
+  const specificCore = itemCoreFor(item);
+  const itemCore = specificCore ?? pick(seed, 1, ITEM_CORE[fam])(item);
   const mod = modifierSection(keyword, seed);
 
   // 가운데 블록 풀에서 시드로 일부만 골라 순서까지 섞는다 → 페이지마다 다른 구성.
@@ -708,7 +779,9 @@ export function getContentForKeyword(keyword: KeywordEntry): string {
   // itemCore 는 보통 앞쪽에 두되, 나머지는 순서를 섞는다.
   const [first, ...others] = middle;
   const shuffledOthers = shuffle(seed, others);
-  const ordered = idx(seed, 81, 2) === 0 ? [first, ...shuffledOthers] : [...shuffledOthers, first];
+  // 품목 전용 코어는 반드시 앞에 둔다. 기존에는 50% 확률로 맨 뒤로 밀려, 온돌마루의
+  // '난방 배관 손상 주의' 같은 품목 고유 정보가 페이지 끝에 묻히곤 했다.
+  const ordered = specificCore || idx(seed, 81, 2) === 0 ? [first, ...shuffledOthers] : [...shuffledOthers, first];
 
   const parts = [
     intro(keyword, seed),

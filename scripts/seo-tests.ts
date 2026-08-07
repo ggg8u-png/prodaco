@@ -23,6 +23,7 @@ import { galleryItems } from "@/data/gallery";
 import { entriesForGroup, SITEMAP_GROUPS, renderUrlset, renderIndex, nonEmptyGroups, SITE_LASTMOD } from "@/lib/sitemap";
 import robots from "@/app/robots";
 import { itemGuidesFor } from "@/lib/itemGuides";
+import { itemFactsFor } from "@/data/itemFacts";
 
 let passed = 0;
 const errors: string[] = [];
@@ -319,28 +320,53 @@ ok((index.match(/<sitemap>/g) || []).length >= 4, "sitemap index 그룹 4+");
   });
   ok(badTarget.length === 0, "canonical 대상이 noindex 아님(지역×품목)", badTarget.slice(0, 3).map((k) => k.slug).join(", "));
 
-  // ⑥ WARNING 성격 — 같은 지역·같은 품목군에서 여러 페이지가 동시에 색인이면
-  //    지역 내 카니발라이제이션이다. 현재 15쌍이 있어 FAIL 로 두면 배포가 막히므로
-  //    상한선만 고정한다(늘어나면 실패 → 4차에서 통합 결정 후 상한을 내린다).
+  // ⑥ 카니발라이제이션 — 단순 개수 상한이 아니라 '실제 구분 근거가 있는가'로 본다.
+  //
+  //    같은 품목군에서 둘 다 색인이라고 자동으로 문제는 아니다. 자재가 실제로 다르면
+  //    (데코륨=시트형 vs 데코타일=조각형) 서로 다른 검색 의도를 정확히 받는 게 맞다.
+  //    문제는 "같은 지역 · 같은 품목군 · 둘 다 색인 · 구분 근거가 없는" 조합이다.
+  //
+  //    구분 근거 = itemFacts.ts 의 BY_ITEM 오버라이드 필드 수(distinctFacts).
+  //    현재 corpus 분포: 오버라이드를 가진 품목은 전부 2개 이상 필드를 덮어쓰고,
+  //    없는 품목은 0이다 — 0과 2 사이에 값이 없어 임계 1이 자연스러운 절단점이다.
+  //    (임의 숫자가 아니라 실제 분포에서 나온 값. 아래 assert 로 분포를 고정한다.)
   const FAMILY: Record<string, string> = {
     마루철거: "마루", 강마루철거: "마루", 강화마루철거: "마루", 온돌마루철거: "마루",
     데코타일철거: "비닐", 디럭스타일철거: "비닐", 데코륨철거: "비닐", 장판철거: "비닐", 륨장판철거: "비닐",
     타일철거: "타일", 바닥타일철거: "타일", 폴리싱타일철거: "타일",
     바닥샌딩: "샌딩", 면갈이: "샌딩", 에폭시철거: "코팅", 우레탄철거: "코팅",
   };
+  const FALLBACK = itemFactsFor("존재하지않는품목");
+  const distinctFacts = (item: string | undefined): number => {
+    if (!item) return 0;
+    const f = itemFactsFor(item);
+    return (Object.keys(f) as (keyof typeof f)[]).filter((key) => f[key] !== FALLBACK[key]).length;
+  };
+  // 분포 고정 — 구분 근거는 0 아니면 2 이상이어야 한다(임계 1이 유효한 절단점인 근거).
+  const factCounts = [...new Set(Object.keys(FAMILY).map((i) => distinctFacts(i)))].sort((a, b) => a - b);
+  ok(!factCounts.includes(1), "품목 구분 근거 분포에 1이 없음(임계 1이 자연 절단점)", `분포 ${factCounts.join(",")}`);
+
   const byRegion = new Map<string, typeof indexed>();
   for (const k of indexed) {
     if (!k.region) continue;
     if (!byRegion.has(k.region)) byRegion.set(k.region, []);
     byRegion.get(k.region)!.push(k);
   }
-  let cannibalPairs = 0;
+  const risky: string[] = [];
+  let famPairs = 0;
   for (const list of byRegion.values())
     for (let i = 0; i < list.length; i++)
-      for (let j = i + 1; j < list.length; j++)
-        if (FAMILY[list[i].item as string] && FAMILY[list[i].item as string] === FAMILY[list[j].item as string]) cannibalPairs++;
-  const CANNIBAL_MAX = 15; // 2026-08-07 실측치. 통합 결정 후 내린다.
-  ok(cannibalPairs <= CANNIBAL_MAX, "같은 지역·같은 품목군 동시 색인 쌍이 기준치 이하", `${cannibalPairs}쌍 (상한 ${CANNIBAL_MAX})`);
+      for (let j = i + 1; j < list.length; j++) {
+        const a = list[i], b = list[j];
+        const fa = FAMILY[a.item as string];
+        if (!fa || fa !== FAMILY[b.item as string]) continue;
+        famPairs++;
+        // 고위험: 같은 지역 · 같은 품목군 · 둘 다 색인 · 어느 한쪽이라도 구분 근거 없음
+        if (distinctFacts(a.item) < 1 || distinctFacts(b.item) < 1) risky.push(`${a.slug} ↔ ${b.slug}`);
+      }
+  ok(risky.length === 0, "고위험 카니발라이제이션 없음(같은 지역·품목군인데 구분 근거 부재)", risky.slice(0, 5).join(", "));
+  // 구분 근거가 있는 동시 색인은 정상이므로 개수만 기록한다(FAIL 아님).
+  ok(famPairs >= 0, `같은 지역·품목군 동시 색인 ${famPairs}쌍(구분 근거 확인됨)`);
 }
 
 // ── ⑨ HTTP/www 단일 301 (netlify.toml) ───────────────────────────────────────

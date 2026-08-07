@@ -10,6 +10,33 @@ import { getKeywords } from "@/data/keywords";
 import { indexabilityFor } from "@/lib/seo/indexability";
 import type { KeywordEntry } from "@/data/taxonomy";
 
+// 형제 품목 링크의 앵커 — 자재/작업 차이가 드러나는 수식을 붙인다.
+//
+// "관련 서비스"·"자세히 보기"·품목명 반복 대신, 그 품목이 실제로 왜 다른지를 앵커에
+// 담는다. 근거는 itemFacts.ts 의 BY_ITEM 오버라이드(부착 방식·자재 형태)이고,
+// 데이터가 뒷받침하지 않는 품목은 수식 없이 품목명만 쓴다(억지 수식 금지).
+const ITEM_ANCHOR_QUALIFIER: Record<string, string> = {
+  강마루철거: "접착식",
+  강화마루철거: "조립식",
+  온돌마루철거: "난방 바닥",
+  데코타일철거: "조각형",
+  디럭스타일철거: "두꺼운 조각형",
+  데코륨철거: "시트형",
+  륨장판철거: "롤형",
+  폴리싱타일철거: "대형 광택",
+  에폭시철거: "두꺼운 코팅",
+  우레탄철거: "얇은 코팅",
+  바닥샌딩: "표면 재생",
+  면갈이: "철거 후 평탄화",
+};
+
+/** 형제 품목 링크에 쓸 앵커 텍스트 — 수식이 있으면 "접착식 강마루철거" 형태. */
+export function itemAnchorFor(item: string | undefined): string {
+  if (!item) return "";
+  const q = ITEM_ANCHOR_QUALIFIER[item];
+  return q ? `${q} ${item}` : item;
+}
+
 // 품목 → 문맥상 이어지는 수요형·협력 페이지(명시 매핑).
 //
 // 이 페이지들은 keywords.json 에 item 필드가 없어(type 만 consumer/target/b2b) 자동

@@ -16,6 +16,7 @@ import KeyAnswer from "@/components/KeyAnswer";
 import WorkPhotos from "@/components/WorkPhotos";
 import { notFound } from "next/navigation";
 import { indexabilityFor } from "@/lib/seo/indexability";
+import { itemAnchorFor } from "@/lib/itemGuides";
 import { caseGroupLabelFor } from "@/lib/caseGroups";
 import ui from "../../../../content/ui.json";
 
@@ -244,7 +245,7 @@ export default async function RegionHub({ params }: { params: Promise<{ region: 
 
       <section className="py-12 px-5">
         <div className="max-w-3xl mx-auto">
-          <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-5">{ui.regionPage.capabilitiesLabel.replace("{region}", region)}</p>
+          <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-5">{ui.regionPage.capabilitiesLabel.replace("{region}", region)}</h2>
           <div className="flex flex-wrap gap-2">
             {items.map((k) => (
               <Link
@@ -252,7 +253,7 @@ export default async function RegionHub({ params }: { params: Promise<{ region: 
                 href={`/${k.slug}`}
                 className="text-sm font-medium text-[#16181D] px-3.5 py-2 border border-gray-300 bg-white hover:border-[#9A8A2E] hover:text-[#9A8A2E] transition-colors"
               >
-                {applyReplacements(k.keyword)}
+                {applyReplacements(itemAnchorFor(k.item))}
               </Link>
             ))}
             {/* 나머지 품목은 서비스 디렉터리로 — 키워드 나열 대신 허브→허브 링크로 정리 */}

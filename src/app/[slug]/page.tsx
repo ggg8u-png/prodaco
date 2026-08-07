@@ -13,7 +13,7 @@ import { itemFactsFor, FLOOR_COMPARE, compareKeyOf, itemMistakesFor } from "@/da
 import { neighborsOf, clusterLabelOf } from "@/data/regions";
 import { pickFaqs, uniqueDescription, uniqueTitle } from "@/lib/seo";
 import { relatedGuidesFor } from "@/lib/relatedGuides";
-import { itemGuidesFor } from "@/lib/itemGuides";
+import { itemGuidesFor, itemAnchorFor } from "@/lib/itemGuides";
 import { keyAnswerFor, normalizeKeyAnswer } from "@/data/keyAnswer";
 import { comboProfileFor } from "@/data/comboProfiles";
 import { applyReplacements } from "@/lib/replacements";
@@ -668,7 +668,7 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
                   href={`/${k.slug}`}
                   className="text-xs font-medium text-[#16181D] px-3 py-1.5 border border-gray-300 bg-white hover:border-[#9A8A2E] hover:text-[#9A8A2E] transition-colors"
                 >
-                  {applyReplacements(k.item as string)}
+                  {applyReplacements(itemAnchorFor(k.item))}
                 </Link>
               ))}
             </div>
