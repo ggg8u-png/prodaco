@@ -636,6 +636,70 @@ for (const from of ["http://prodaco.kr/*", "http://www.prodaco.kr/*", "https://w
 }
 ok(!toml.includes("status = 302"), "netlify.toml 에 302 없음");
 
+// ── ⑨-2 Decap CMS 가 실제로 저장 가능한 설정인가(public/admin/config.yml) ─────
+// Decap 은 새 글을 저장할 때 '식별자 필드'의 **값**을 읽고, 비어 있으면
+//   "Collection must have a field name that is a valid entry identifier, or must
+//    have `identifier_field` set"
+// 를 던져 게시를 통째로 막는다(decap-cms-core 의 generateUniqueSlug).
+// 식별자 선택 순서는 identifier_field → title → path 이며 '선언 여부'가 아니라 '값'을 보므로,
+// 식별자로 잡히는 필드는 반드시 required 여야 한다.
+//   2026-08 실제 장애: 시공사례의 "제목(선택)"(required:false)이 식별자로 잡혀 게시 전부 실패.
+// 이 게이트는 빌드 시점에 그 조건을 다시 확인한다 — CMS 는 런타임에만 깨지므로
+// 사람이 게시를 눌러보기 전에는 아무 신호도 없다.
+{
+  const IDENTIFIER_FALLBACKS = ["title", "path"]; // decap-cms-core IDENTIFIER_FIELDS
+  const raw = fs.readFileSync(path.join(process.cwd(), "public", "admin", "config.yml"), "utf8").split(/\r?\n/);
+
+  // 최상위 컬렉션은 들여쓰기 2칸의 "- name:" 로 시작한다(files: 하위 항목은 6칸이라 안 걸린다).
+  const blocks: Array<{ name: string; lines: string[] }> = [];
+  for (const line of raw) {
+    const m = line.match(/^ {2}- name:\s*"?([^"\s#]+)"?/);
+    if (m) blocks.push({ name: m[1], lines: [] });
+    else if (blocks.length) blocks[blocks.length - 1].lines.push(line);
+  }
+
+  // 컬렉션의 최상위 fields 항목만 뽑는다(중첩 list/object 의 fields 는 8칸 이상이라 제외).
+  function topLevelFields(lines: string[]): Array<{ name: string; required: boolean }> {
+    const start = lines.findIndex((l) => /^ {4}fields:\s*$/.test(l));
+    if (start < 0) return [];
+    const items: string[] = [];
+    for (const l of lines.slice(start + 1)) {
+      if (l.trim() && !/^ {5}/.test(l)) break; // 들여쓰기가 풀리면 fields 블록 종료
+      if (/^ {6}- /.test(l)) items.push(l);
+      else if (items.length && /^ {8}/.test(l)) items[items.length - 1] += "\n" + l;
+      // 그 외(6칸 주석·빈 줄)는 어느 항목에도 속하지 않으므로 버린다.
+    }
+    return items
+      .map((t) => ({ name: (t.match(/\bname:\s*"?([^",\s}]+)"?/) || [])[1] || "", required: !/\brequired:\s*false\b/.test(t) }))
+      .filter((f) => f.name);
+  }
+
+  const folderCollections = blocks.filter((b) => b.lines.some((l) => /^ {4}folder:/.test(l)));
+  // 파서가 파일 구조를 못 따라가면 조용히 통과해선 안 된다 — 아래 두 줄이 그 방지턱이다.
+  ok(folderCollections.length >= 2, "Decap: 폴더형 컬렉션 파싱됨(블로그·시공사례)", `${folderCollections.length}개`);
+  for (const want of ["blog", "gallery"])
+    ok(folderCollections.some((b) => b.name === want), `Decap: ${want} 컬렉션 인식`);
+
+  for (const col of folderCollections) {
+    const fields = topLevelFields(col.lines);
+    ok(fields.length >= 3, `Decap[${col.name}]: 필드 파싱됨`, `${fields.length}개`);
+    if (fields.length < 3) continue;
+
+    const declared = (col.lines.find((l) => /^ {4}identifier_field:/.test(l)) || "").match(/identifier_field:\s*"?([^"\s#]+)"?/);
+    const candidates = declared ? [declared[1], ...IDENTIFIER_FALLBACKS] : [...IDENTIFIER_FALLBACKS];
+    const id = candidates.find((c) => fields.some((f) => f.name.toLowerCase().trim() === c.toLowerCase().trim()));
+
+    ok(!!id, `Decap[${col.name}]: 식별자 필드 존재`, `후보 ${candidates.join("/")} · 필드 ${fields.map((f) => f.name).join(",")}`);
+    if (!id) continue;
+    const f = fields.find((x) => x.name.toLowerCase().trim() === id.toLowerCase().trim())!;
+    ok(
+      f.required,
+      `Decap[${col.name}]: 식별자 "${id}" 가 필수 필드 — 비면 게시가 실패한다`,
+      `required:false → identifier_field 를 필수 필드로 지정할 것`
+    );
+  }
+}
+
 // ── ⑩ 본문 최소 분량(전 페이지) ──────────────────────────────────────────────
 let thin = 0;
 for (const k of keywords) if (getContentForKeyword(k).length < 500) thin++;

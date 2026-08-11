@@ -600,6 +600,14 @@ collections:
     create: true
     # ID 는 등록 시각으로 자동 생성 — 운영자가 고유값을 고민할 필요가 없다.
     slug: "case-{{year}}{{month}}{{day}}-{{hour}}{{minute}}"
+    # ⚠ 이 줄을 지우지 말 것 — 지우면 "게시" 가 통째로 실패한다.
+    #   Decap 은 저장 직전에 '식별자 필드'의 값을 읽고, 값이 비어 있으면
+    #   "Collection must have a field name that is a valid entry identifier" 로 저장을 막는다.
+    #   식별자 필드는 identifier_field → title → path 순서로 정해지는데,
+    #   아래 "제목(선택)" 이 required: false 라서 비워 두면 title 값이 "" 가 되고,
+    #   identifier_field 가 없으면 그 빈 title 이 식별자로 잡혀 항상 저장이 실패했다.
+    #   → 항상 값이 있는 필수 필드(region)를 식별자로 못박는다.
+    identifier_field: "region"
     summary: "{{region}} · {{item}}"
     sortable_fields: ["workDate", "region", "item"]
     extension: "json"
