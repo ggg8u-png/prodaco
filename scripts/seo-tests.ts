@@ -636,6 +636,33 @@ for (const from of ["http://prodaco.kr/*", "http://www.prodaco.kr/*", "https://w
 }
 ok(!toml.includes("status = 302"), "netlify.toml 에 302 없음");
 
+// ── ⑨-1 클라이언트 예외 폴백(error.tsx / global-error.tsx) ───────────────────
+// 이 두 파일이 없으면 Next.js 는 내장 기본 화면으로 떨어지고, 화면에 남는 텍스트는
+//   "Application error: a client-side exception has occurred while loading prodaco.kr"
+// 한 줄뿐이다. 구글은 페이지를 렌더링해서 색인하므로, 크롤러가 렌더하는 순간 예외가 나면
+// 그 문장이 제목·본문으로 색인된다(2026-08 site:prodaco.kr 첫 결과가 실제로 그 상태였다).
+// 예외의 원인은 배포 중 청크 불일치처럼 일시적일 수 있어 전부 막을 수 없다.
+// 그래서 '터져도 색인 가능한 실제 내용이 남는지'를 여기서 강제한다.
+{
+  const boundaries = [
+    ["error.tsx", "페이지 세그먼트 예외"],
+    ["global-error.tsx", "루트 레이아웃 예외"],
+  ] as const;
+  for (const [file, what] of boundaries) {
+    const p = path.join(process.cwd(), "src", "app", file);
+    const exists = fs.existsSync(p);
+    ok(exists, `클라이언트 예외 폴백 존재: src/app/${file} (${what})`);
+    if (!exists) continue;
+    const src = fs.readFileSync(p, "utf8");
+    ok(/^"use client"/m.test(src), `${file}: "use client" 선언`);
+    // 사과문 한 줄짜리 폴백은 색인 관점에서 기본 화면과 다를 게 없다 —
+    // 연락 수단과 주요 경로가 실제로 들어 있는지 확인한다.
+    ok(src.includes("company.phone"), `${file}: 전화 연락 수단 노출`);
+    for (const href of ["/services", "/gallery", "/faq"])
+      ok(src.includes(`"${href}"`), `${file}: ${href} 링크 유지(크롤러 탈출 경로)`);
+  }
+}
+
 // ── ⑨-2 Decap CMS 가 실제로 저장 가능한 설정인가(public/admin/config.yml) ─────
 // Decap 은 새 글을 저장할 때 '식별자 필드'의 **값**을 읽고, 비어 있으면
 //   "Collection must have a field name that is a valid entry identifier, or must
