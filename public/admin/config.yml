@@ -80,6 +80,18 @@ collections:
                   - { label: "시작 시각", name: "opens", widget: "string", required: false, default: "", hint: "24시간 표기. 예: 08:00" }
                   - { label: "종료 시각", name: "closes", widget: "string", required: false, default: "", hint: "24시간 표기. 예: 20:00" }
               - { label: "가격대", name: "priceRange", widget: "select", required: false, options: ["", "₩", "₩₩", "₩₩₩", "₩₩₩₩"], default: "", hint: "동종업계 대비 대략적인 가격대. 확실하지 않으면 비워 두세요." }
+          # 보증 조건 — 값이 있을 때만 화면에 표시됩니다. 비워 두면 아무것도 나오지 않습니다.
+          # ⚠ 실제로 제공하는 보증만 적으세요. "1년 무상보증" 같은 문구를 임의로 넣지 마세요.
+          - label: "보증 조건 (선택 — 실제 제공하는 것만)"
+            name: "warranty"
+            widget: "object"
+            required: false
+            collapsed: true
+            fields:
+              - { label: "보증 제목", name: "title", widget: "string", required: false, default: "", hint: "예: 작업 범위 내 재작업" }
+              - { label: "보증 설명", name: "description", widget: "text", required: false, default: "" }
+              - { label: "보증 조건", name: "conditions", widget: "list", required: false, default: [], field: { label: "조건", name: "c", widget: "string" } }
+              - { label: "보증 제외 사항", name: "exclusions", widget: "list", required: false, default: [], field: { label: "제외", name: "e", widget: "string" } }
           - { label: "네이버 소유확인 코드", name: "naverVerify", widget: "string", hint: "네이버 서치어드바이저에서 발급받은 인증 코드" }
           - { label: "구글 소유확인 코드(HTML 태그)", name: "googleVerify", widget: "string", required: false, default: "", hint: "비워두면 됩니다. 구글은 DNS TXT(도메인 속성)로 소유확인합니다. 서치콘솔에서 'HTML 태그' 방법을 쓸 때만 그 방법으로 발급된 코드를 넣으세요(DNS TXT 값은 여기 넣어도 인증되지 않습니다)." }
 
@@ -498,6 +510,13 @@ collections:
               - { label: "최소 단가(만원/평)", name: "minPrice", widget: "number", value_type: "float", step: 0.1, min: 0, required: false, hint: "소수점 한 자리까지 입력 가능. 예: 2.5 = 2만 5천원. 별도 산정이면 비워두세요" }
               - { label: "최대 단가(만원/평)", name: "maxPrice", widget: "number", value_type: "float", step: 0.1, min: 0, required: false, hint: "소수점 한 자리까지 입력 가능. 예: 2.5 = 2만 5천원. 별도 산정이면 비워두세요" }
               - { label: "비고", name: "note", widget: "text" }
+          # 아래는 전부 선택 — 값이 있을 때만 화면에 나옵니다. 비우면 그 줄 자체가 표시되지 않습니다.
+          # ⚠ 확실하지 않으면 비워 두세요. 임의의 숫자를 넣으면 실제 견적과 어긋납니다.
+          - { label: "최소 시공비(선택)", name: "minimumPrice", widget: "string", required: false, default: "", hint: "예: 30만원. 최소 출동·시공 기준 금액이 있을 때만 적으세요." }
+          - { label: "폐기물 처리비(선택)", name: "wasteFee", widget: "string", required: false, default: "", hint: "예: 마대당 2만원 / 별도 산정. 금액이 정해져 있을 때만." }
+          - { label: "폐기물 처리 안내(선택)", name: "wasteFeeDescription", widget: "text", required: false, default: "", hint: "금액이 없어도 처리 방식 안내는 적을 수 있습니다. 예: 마대에 담아 현장 지정 위치에 배출합니다." }
+          - { label: "추가 비용이 붙는 조건(선택)", name: "additionalCostConditions", widget: "list", required: false, default: [], field: { label: "조건", name: "c", widget: "string" }, hint: "예: 엘리베이터 없는 3층 이상 / 야간·주말 작업" }
+          - { label: "별도 견적 안내(선택)", name: "quoteRequiredNote", widget: "text", required: false, default: "" }
 
   # ─────────────────────────────────────────────────────────────
   # 6-2. 색인·SEO 설정 — 페이지 생성 수 / 색인 정책
@@ -685,5 +704,11 @@ collections:
       - { label: "비용(선택)", name: "cost", widget: "string", required: false, default: "", hint: "실제 진행된 금액이나 범위를 적을 때만 채우세요. 확실하지 않으면 비워 두세요 — 비우면 표시되지 않습니다." }
       # ⚠ verified 는 색인 판정에 쓰인다(false 면 자동 색인 승급 제외). 폼에 두지 않으면
       #   기존 사례를 수정 저장할 때 값이 사라지므로 반드시 노출한다.
+      # 시공 영상(선택) — 주소를 넣으면 상세페이지에 영상과 구조화데이터가 함께 붙습니다.
+      # 비워 두면 아무것도 표시되지 않습니다.
+      - { label: "영상 주소(선택)", name: "videoUrl", widget: "string", required: false, default: "", hint: "유튜브·비메오 주소 또는 직접 업로드한 mp4 주소" }
+      - { label: "영상 플랫폼(선택)", name: "videoPlatform", widget: "select", required: false, options: ["", "youtube", "vimeo", "file"], default: "", hint: "비워두면 주소를 보고 자동 판단합니다." }
+      - { label: "영상 썸네일(선택)", name: "videoThumbnail", widget: "image", required: false, hint: "비워두면 '샌딩 후 사진'을 씁니다." }
+      - { label: "영상 제목(선택)", name: "videoTitle", widget: "string", required: false, default: "" }
       - { label: "운영자가 직접 확인한 실제 사례", name: "verified", widget: "boolean", default: true, hint: "이 지역·품목이 실제 그 현장이 맞을 때만 켜세요. 끄면 검색 색인 승급에서 제외됩니다(사이트에는 계속 보입니다)." }
       - { label: "제목(선택)", name: "title", widget: "string", required: false, default: "", hint: "비워두면 '지역 + 작업종류 + 시공사례'로 자동 생성됩니다." }

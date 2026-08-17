@@ -56,5 +56,10 @@
       "maxPrice": 2,
       "note": "바닥 상태·코팅 목적에 따라 별도 산정"
     }
-  ]
+  ],
+  "minimumPrice": "",
+  "wasteFee": "",
+  "wasteFeeDescription": "",
+  "additionalCostConditions": [],
+  "quoteRequiredNote": ""
 }

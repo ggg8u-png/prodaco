@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { company } from "@/data/company";
 import { PhoneIcon, KakaoIcon, MessageIcon } from "@/components/icons";
+import { onCtaClick } from "@/lib/analytics";
 
 export default function FloatingCTA() {
   // 데스크톱 떠다니는 CTA가 푸터/본문 하단을 가리지 않도록, 푸터가 보이면 숨긴다.
@@ -23,6 +24,7 @@ export default function FloatingCTA() {
       <div className="fixed bottom-0 left-0 right-0 z-[70] flex gap-2 border-t-2 border-[#FFD400] bg-[#0F1115]/95 p-2.5 backdrop-blur-sm lg:hidden">
         <a
           href={company.phoneLink}
+          onClick={onCtaClick("click_phone", { cta_position: "mobile-bar" })}
           aria-label={`전화 상담 ${company.phone}`}
           className="flex flex-1 items-center justify-center gap-[6px] rounded-sm bg-[#FFD400] py-3.5 text-[14px] font-extrabold text-[#16181D]"
         >
@@ -33,6 +35,7 @@ export default function FloatingCTA() {
           href={company.kakaoUrl}
           target="_blank"
           rel="noopener"
+          onClick={onCtaClick("click_kakao", { cta_position: "mobile-bar" })}
           aria-label="카카오톡으로 사진 보내고 상담"
           className="flex flex-1 items-center justify-center gap-[6px] rounded-sm bg-white py-3.5 text-[14px] font-extrabold text-[#16181D]"
         >
@@ -41,6 +44,7 @@ export default function FloatingCTA() {
         </a>
         <a
           href={company.smsLink}
+          onClick={onCtaClick("click_sms", { cta_position: "mobile-bar" })}
           aria-label="문자로 사진 보내기"
           className="flex flex-1 items-center justify-center gap-[6px] rounded-sm border border-white/30 py-3.5 text-[14px] font-extrabold text-white"
         >
@@ -59,6 +63,7 @@ export default function FloatingCTA() {
           href={company.kakaoUrl}
           target="_blank"
           rel="noopener"
+          onClick={onCtaClick("click_kakao", { cta_position: "floating" })}
           aria-label="카카오톡으로 사진 보내고 빠른 견적 받기"
           className="inline-flex items-center justify-center gap-2 rounded-sm bg-[#FFD400] px-5 py-3.5 text-[15px] font-extrabold text-[#16181D] shadow-[0_8px_24px_rgba(0,0,0,0.28)] transition-colors hover:bg-[#FFE34D]"
         >
@@ -67,6 +72,7 @@ export default function FloatingCTA() {
         </a>
         <a
           href={company.phoneLink}
+          onClick={onCtaClick("click_phone", { cta_position: "floating" })}
           aria-label={`전화 상담 ${company.phone}`}
           className="inline-flex items-center justify-center gap-2 rounded-sm bg-[#16181D] px-5 py-3 text-[14px] font-extrabold text-white shadow-[0_8px_24px_rgba(0,0,0,0.28)] transition-colors hover:bg-[#22262E]"
         >
@@ -75,6 +81,7 @@ export default function FloatingCTA() {
         </a>
         <a
           href={company.smsLink}
+          onClick={onCtaClick("click_sms", { cta_position: "floating" })}
           aria-label="문자로 사진 보내기"
           className="inline-flex items-center justify-center gap-2 rounded-sm border-2 border-[#16181D]/15 bg-white px-5 py-2.5 text-[13px] font-bold text-[#16181D] shadow-[0_8px_24px_rgba(0,0,0,0.18)] transition-colors hover:border-[#16181D]/35"
         >

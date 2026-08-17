@@ -5,6 +5,7 @@ import { galleryItems } from "./gallery";
 import type { KeywordEntry } from "./taxonomy";
 import { caseGroupLabelFor } from "@/lib/caseGroups";
 import seoSettings from "../../content/seo.json";
+import { isContentEligible } from "@/lib/seo/eligibility";
 
 // CMS(/admin → ⑪ 색인·SEO 설정, content/seo.json)에서 색인 정책을 편집한다.
 //  · generateCount        : 생성할 키워드 페이지 수(아래 GENERATE_COUNT 기본값).
@@ -170,12 +171,19 @@ export function isIndexable(k: KeywordEntry | string): boolean {
   if (AUTO_INDEX_BY_CASE && entry && hasRealCase(entry)) return true; // 실제 사례 보유 → 자동 승급
   // ② 약한 롱테일 유형(b2b·synonym·tail 등)은 라이브라도 색인 제외 → noindex,follow
   if (entry && NOINDEX_TYPES.has(String(entry.type))) return false;
-  // ③ 증거 게이트가 켜져 있으면 여기서 닫는다 — ①을 통과하지 못한 페이지는 색인하지 않는다.
-  if (REQUIRE_EVIDENCE) return false;
-  // ④ 그 외 큐레이션 라이브(region-item 등 핵심 페이지)는 색인
-  if (liveSlugSet.has(slug)) return true; // 큐레이션 라이브(검수·고가치)
-  return false;
+  // ③ 콘텐츠 품질 게이트 — 여기가 판정의 본체다.
+  //   예전에는 "검증된 시공사례가 있어야 색인"(REQUIRE_EVIDENCE)이었고, 실제 시공자료가
+  //   없는 지역×품목은 내용이 아무리 충실해도 전부 noindex 였다. 정보형 검색 의도를
+  //   충족하는 페이지까지 함께 묶이는 게 문제라, 기준을 '사례 보유'에서 '콘텐츠 품질'로
+  //   옮겼다. 사례가 있으면 ①에서 이미 통과하므로 그 페이지는 더 강해질 뿐 손해가 없다.
+  //   판정 항목은 lib/seo/eligibility.ts 참고(title·description·본문·구조·FAQ·서비스설명·링크).
+  if (!entry) return false;
+  return isContentEligible(entry);
 }
+
+// content/seo.json 의 requireEvidenceForIndex 는 이제 '엄격 모드' 스위치다.
+// true 로 두면 예전처럼 사례·수동승인만 색인한다(위 ①에서만 통과). 기본은 품질 게이트.
+export const INDEX_GATE_MODE: "quality" | "evidence" = REQUIRE_EVIDENCE ? "evidence" : "quality";
 
 // ─── 지역 허브 색인 티어 ────────────────────────────────────────────────────────
 // 65개 허브를 전부 색인하던 구조를 버리고 실측 지표로 나눈다.

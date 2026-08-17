@@ -32,5 +32,11 @@
       "kakaoMap": "",
       "googleBusinessProfile": "https://share.google/3eui8SbU77QKgrTTS"
     }
+  },
+  "warranty": {
+    "title": "",
+    "description": "",
+    "conditions": [],
+    "exclusions": []
   }
 }

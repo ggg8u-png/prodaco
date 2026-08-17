@@ -94,6 +94,22 @@ export const company = {
   brandName,
   // 웹사이트 노출 전화 = 인입 추적용 전용 번호. content/settings.json 에서 수정.
   phone,
+  // 숫자만(하이픈 없음) — OG 이미지·구조화데이터처럼 서식 없는 표기가 필요한 곳의 단일 출처.
+  phoneDigits,
+  // 보증 조건 — 값이 있을 때만 화면·구조화데이터에 나온다(임의 생성 금지).
+  warranty: (() => {
+    const w = (settings as { warranty?: Record<string, unknown> }).warranty || {};
+    const s2 = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : "");
+    const a2 = (v: unknown) =>
+      Array.isArray(v) ? v.filter((x): x is string => typeof x === "string" && x.trim() !== "") : [];
+    const out = {
+      title: s2(w.title),
+      description: s2(w.description),
+      conditions: a2(w.conditions),
+      exclusions: a2(w.exclusions),
+    };
+    return out.title || out.description || out.conditions.length || out.exclusions.length ? out : null;
+  })(),
   phoneLink: `tel:${phoneDigits}`,
   // 카톡이 익숙치 않은 현장 고객용 — 문자(SMS)로 사진·내용 전송
   smsLink: `sms:${phoneDigits}`,

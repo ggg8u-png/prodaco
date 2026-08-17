@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { trackEvent } from "@/lib/analytics";
 import { materialOptions } from "@/data/landing";
 
 // 카카오톡·전화가 부담스러운 사용자를 위한 '번호 남기기' 콜백 신청 폼.
@@ -11,6 +12,7 @@ export default function CallbackForm() {
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = e.currentTarget;
+    trackEvent("submit_quote", { page_type: "callback-form" });
     setStatus("sending");
     try {
       const data = new FormData(form);
@@ -48,6 +50,7 @@ export default function CallbackForm() {
       data-netlify="true"
       encType="multipart/form-data"
       onSubmit={onSubmit}
+      onFocusCapture={() => trackEvent("start_quote", { page_type: "callback-form" })}
       className="rounded-[3px] border-2 border-[#16181D] bg-white"
     >
       <input type="hidden" name="form-name" value="callback" />

@@ -7,6 +7,8 @@ import { indexabilityFor } from "@/lib/seo/indexability";
 import { getContentForKeyword, getRelatedKeywords } from "@/lib/content";
 import { company } from "@/data/company";
 import { galleryItems } from "@/data/gallery";
+import { casePath } from "@/lib/caseDoc";
+import TrustExtras from "@/components/TrustExtras";
 import { reviews } from "@/data/reviews";
 import { FLOOR_COSTS, costKeyOf, perPyeongText } from "@/data/costs";
 import { itemFactsFor, FLOOR_COMPARE, compareKeyOf, itemMistakesFor } from "@/data/itemFacts";
@@ -54,6 +56,11 @@ export async function generateStaticParams() {
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://prodaco.kr";
 
+// 이 페이지 전용 OG 이미지 절대 URL(정확히 한 번만 인코딩).
+function ogImageUrlFor(slug: string): string {
+  return `${siteUrl}/${encodeURIComponent(slug)}/opengraph-image`;
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug: rawSlug } = await params;
   // 한글 슬러그는 런타임에 퍼센트 인코딩(%EA%B0%95…)되어 들어오므로 디코딩 후 조회한다.
@@ -63,6 +70,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   // 페이지마다 다른 고유 description(품목·지역·실제 비용·권역 반영) — 중복 description 방지.
   const desc = uniqueDescription(keyword, company.phone);
   const title = uniqueTitle(keyword);
+  const ogImageUrl = ogImageUrlFor(slug);
   // 색인 게이트(단일 출처: src/lib/seo/indexability.ts) —
   //   Tier A: index,follow + self-canonical(사이트맵 포함)
   //   Tier B: noindex,follow 또는 canonical 을 대표 URL(동의어 대표·지역 허브)로 통합
@@ -79,7 +87,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       description: desc,
       type: "website",
       url: canonicalUrl,
-      images: ["/opengraph-image"],
+      // 이 라우트의 opengraph-image.tsx(지역·품목·대표번호)를 가리킨다.
+      // 파일 규약에 맡기면 한글 슬러그가 이중 인코딩(%25EC%25…)돼 미리보기가 깨진다 —
+      // 동적 세그먼트가 이미 퍼센트 인코딩된 상태로 들어오는데 Next 가 한 번 더 인코딩하기 때문이다.
+      // 그래서 여기서 정확히 한 번만 인코딩한 절대 URL 을 직접 지정한다.
+      images: [{ url: ogImageUrl, width: 1200, height: 630, alt: `${keyword.keyword} — 프로다` }],
     },
     other: keyword.region
       ? { "geo.region": "KR", "geo.placename": keyword.region }
@@ -455,7 +467,11 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
                     <GalleryImage src={c.afterImage} alt={`${c.title} 작업 후`} label="AFTER" className="aspect-square" />
                   </div>
                   <div className="px-3 py-3">
-                    <p className="text-sm font-bold text-[#16181D]">{c.title}</p>
+                    {/* 사례 상세 문서로 가는 <a href> — 지역 랜딩 ↔ 시공사례 양방향 연결.
+                        (사례 상세는 반대로 이 지역·품목 페이지로 링크한다 — lib/caseDoc.ts) */}
+                    <Link href={casePath(c.id)} className="group block">
+                      <p className="text-sm font-bold text-[#16181D] transition-colors group-hover:text-[#9A8A2E]">{c.title}</p>
+                    </Link>
                     <p className="text-xs text-gray-500 mt-0.5">{c.region} · {c.item}</p>
                     {c.description && <p className="text-xs text-gray-500 mt-1 leading-relaxed">{c.description}</p>}
                   </div>
@@ -476,6 +492,9 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
           </div>
         </section>
       )}
+
+      {/* 확장 가격 정보·보증 조건 — 운영자가 입력한 값이 있을 때만 렌더된다. */}
+      <TrustExtras />
 
       {/* 작업 현장 사진 — 중립 제목(특정 지역·공정 시공사례로 표기하지 않음),
           URL별 고정 조합 + 오인 방지 고지 문구는 컴포넌트가 담당 */}

@@ -138,5 +138,5 @@
     "enabled": false,
     "minVerified": 8
   },
-  "requireEvidenceForIndex": true
+  "requireEvidenceForIndex": false
 }

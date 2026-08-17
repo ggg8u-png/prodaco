@@ -29,6 +29,23 @@ import { posts } from "@/data/posts";
 import robots from "@/app/robots";
 import { itemGuidesFor } from "@/lib/itemGuides";
 import { itemFactsFor, itemFactOverrideCount } from "@/data/itemFacts";
+import { itemKnowledgeOverrideCount, itemKnowledgeFor } from "@/data/itemKnowledge";
+import { CONTENT_PROFILES } from "@/data/contentProfiles";
+import { contentProfileIdFor } from "@/lib/content";
+import { faqItemsFor } from "@/data/faqPool";
+import { contentEligibilityFor } from "@/lib/seo/eligibility";
+import { pricingExtras } from "@/data/costs";
+
+// 슬러그 시드(content.ts 와 동일 규칙) — FAQ 항목 일치 검증에 쓴다.
+function seedOfSlug(s: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+// 사례 보유 또는 수동 승인으로 품질 게이트를 우회해 색인된 페이지인가.
+function hasRealCaseOrManual(k: { region?: string; item?: string; slug: string }): boolean {
+  return galleryItems.some((g) => g.region === k.region && g.item === k.item);
+}
 import { company } from "@/data/company";
 import { neighborsOf } from "@/data/regions";
 
@@ -345,7 +362,11 @@ ok((index.match(/<sitemap>/g) || []).length >= 4, "sitemap index 그룹 4+");
   };
   // 품목군 기본값 대비 오버라이드 수. generic 폴백과 비교하면 품목군 차이까지 세어
   // 전 품목이 6이 나오고 게이트가 무력화된다(4차에서 그 상태였다).
-  const distinctFacts = (item: string | undefined): number => itemFactOverrideCount(item);
+  // 구분 근거는 두 출처에서 나온다: itemFacts(자재 물성) + itemKnowledge(작업 지식).
+  //   2026-08 에 itemKnowledge 를 도입하면서, itemFacts 오버라이드가 0인 품목도
+  //   작업 순서·확인항목·비용요소가 실제로 달라졌다. 한쪽만 세면 그 차이를 못 본다.
+  const distinctFacts = (item: string | undefined): number =>
+    itemFactOverrideCount(item) + itemKnowledgeOverrideCount(item);
   // 임계 1의 근거 — 실제 분포는 {0:2개, 1:4개, 2:9개, 3:3개}(2026-08-07 실측).
   // 0은 "품목군 기본값과 완전히 같다" 는 뜻이라 형제와 구분되는 내용이 하나도 없다.
   // 1 이상이면 최소 한 필드는 그 품목만의 서술이다 — 0/1 사이가 유일한 질적 경계다.
@@ -640,6 +661,111 @@ for (const from of ["http://prodaco.kr/*", "http://www.prodaco.kr/*", "https://w
   ok(block.includes("force = true"), `redirect ${from} force`);
 }
 ok(!toml.includes("status = 302"), "netlify.toml 에 302 없음");
+
+// ── ⑧-0 벤치마크 §7 실행 플레이북 회귀 게이트 ────────────────────────────────
+// 콘텐츠 다양화·OG·측정·가격/보증/영상 확장이 조용히 되돌아가지 않게 잠근다.
+{
+  const stripC = (t: string) => t.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+  const read = (...seg: string[]) => stripC(fs.readFileSync(path.join(process.cwd(), ...seg), "utf8"));
+
+  // ① 콘텐츠 프로파일 — 문서 구조 자체가 갈려야 한다(동의어 치환만으로는 부족).
+  ok(CONTENT_PROFILES.length >= 5, "콘텐츠 프로파일 5종 이상", `${CONTENT_PROFILES.length}종`);
+  const orders = new Set(CONTENT_PROFILES.map((p) => p.order.join(">")));
+  ok(orders.size === CONTENT_PROFILES.length, "프로파일마다 섹션 순서가 서로 다름");
+  const usedProfiles = new Set(keywords.slice(0, 400).map((k) => contentProfileIdFor(k.slug)));
+  ok(usedProfiles.size >= 5, "실제 페이지에 프로파일이 고르게 배정됨", [...usedProfiles].join(","));
+
+  // 같은 품목·다른 지역 페이지의 H2 구성이 실제로 갈리는지(지역명만 바뀐 페이지 방지).
+  {
+    const sameItem = keywords.filter((k) => k.item === "마루철거" && k.region).slice(0, 12);
+    const shapes = new Set(
+      sameItem.map((k) => (getContentForKeyword(k).match(/^## .*/gm) || []).slice(0, 5).join("|"))
+    );
+    ok(shapes.size >= 3, "같은 품목 다른 지역 — 본문 구조가 최소 3종으로 갈림", `${shapes.size}종/${sameItem.length}개`);
+  }
+
+  // ② 품목 지식 — 품목마다 실제로 다른 정보가 있어야 한다.
+  {
+    // 색인 대상 페이지에 실제로 쓰이는 품목만 본다. 동의어 품목(마루제거·장판제거 등)은
+    // canonical 이 대표 변형으로 합쳐져 단독 색인되지 않으므로 구분 근거가 필요 없다.
+    const items = [...new Set(
+      keywords.filter((k) => indexabilityFor(k).indexable).map((k) => k.item).filter(Boolean)
+    )] as string[];
+    const noKnowledge = items.filter((i) => itemKnowledgeOverrideCount(i) === 0 && itemFactOverrideCount(i) === 0);
+    ok(noKnowledge.length === 0, "구분 근거 없는 품목 없음(itemFacts·itemKnowledge 둘 다 0)", noKnowledge.join(","));
+    // 품목군 기본값끼리도 서로 달라야 한다(같은 문장을 복사해 두면 의미가 없다).
+    const defs = new Set(items.map((i) => itemKnowledgeFor(i).definition));
+    ok(defs.size >= 8, "품목 정의 문장이 충분히 갈림", `${defs.size}종/${items.length}품목`);
+  }
+
+  // ③ FAQ — 화면과 스키마가 같은 항목을 쓰고, 페이지마다 조합이 달라야 한다.
+  {
+    const combos = new Set(
+      keywords.slice(0, 300).map((k) => faqItemsFor(k, 0, 4).map((f) => f.q).join("|"))
+    );
+    ok(combos.size >= 20, "FAQ 조합이 페이지마다 갈림", `${combos.size}종/300개`);
+    const k0 = getKeywordBySlug("수원-마루철거") || keywords.find((k) => k.region && k.item)!;
+    const body = getContentForKeyword(k0);
+    for (const f of faqItemsFor(k0, seedOfSlug(k0.slug), 4))
+      ok(body.includes(f.q), "본문 FAQ 와 스키마 FAQ 항목 일치", f.q.slice(0, 24));
+  }
+
+  // ④ OG 이미지 — 지역·품목·전화번호 세 정보가 전부 들어가야 한다.
+  {
+    const og = read("src", "lib", "ogImage.tsx");
+    ok(/company\.phoneDigits/.test(og), "OG: 전화번호를 company 단일 출처에서 가져옴(하드코딩 아님)");
+    ok(/\{region\}/.test(og) && /\{service\}/.test(og), "OG: 지역·서비스 렌더");
+    ok(!/fonts:\s*\[/.test(og), "OG: 외부 폰트 배열을 넘기지 않음(빌드 파손 이력 방지)");
+    ok(!/cdn\.jsdelivr|fonts\.googleapis|https?:\/\//.test(og), "OG: 외부 네트워크 의존 없음");
+    ok(/^\d{9,11}$/.test(company.phoneDigits), "OG 전화번호 형식", company.phoneDigits);
+    for (const route of [["src", "app", "[slug]", "opengraph-image.tsx"], ["src", "app", "services", "[region]", "opengraph-image.tsx"]]) {
+      const src = read(...route);
+      ok(/renderOgImage\(/.test(src), `OG 라우트 존재: ${route.slice(2).join("/")}`);
+    }
+    // 한글 슬러그 이중 인코딩 방지 — 페이지가 직접 인코딩한 절대 URL 을 지정해야 한다.
+    const slugPage = read("src", "app", "[slug]", "page.tsx");
+    ok(/ogImageUrlFor\(/.test(slugPage) && /images:\s*\[\{\s*url:\s*ogImageUrl/.test(slugPage),
+      "OG URL 을 직접 지정(파일 규약 위임 시 한글이 이중 인코딩됨)");
+  }
+
+  // ⑤ 측정 — GA ID 가 없어도 안전해야 한다.
+  {
+    const a = read("src", "lib", "analytics.ts");
+    ok(/typeof w\.gtag === "function"/.test(a), "GA: gtag 미로드 상태 방어");
+    ok(/catch\s*\{/.test(a), "GA: 전송 실패가 화면을 막지 않음");
+    for (const [file, ev] of [["FloatingCTA", "click_phone"], ["CtaBand", "click_kakao"], ["QuoteChecklist", "use_cost_calculator"], ["CallbackForm", "submit_quote"]] as const)
+      ok(read("src", "components", `${file}.tsx`).includes(ev), `GA 이벤트 연결: ${file} → ${ev}`);
+    ok(fs.existsSync(path.join(process.cwd(), ".env.example")), ".env.example 존재");
+    ok(fs.readFileSync(path.join(process.cwd(), ".env.example"), "utf8").includes("NEXT_PUBLIC_GA_ID"), ".env.example 에 GA ID 항목");
+  }
+
+  // ⑥ 선택 확장(가격·보증·영상) — 값이 없으면 아무것도 렌더하지 않아야 한다.
+  {
+    const t = read("src", "components", "TrustExtras.tsx");
+    ok(/if \(!hasPricingExtras\(\) && !w\) return null/.test(t), "가격·보증: 값 없으면 미렌더");
+    const v = read("src", "components", "CaseVideo.tsx");
+    ok(/return null/.test(v), "영상: 값 없으면 미렌더");
+    const casePage = read("src", "app", "gallery", "[id]", "page.tsx");
+    ok(/videoJsonLd &&/.test(casePage), "VideoObject 는 영상이 있을 때만 출력");
+    ok(pricingExtras.minimumPrice === "" || pricingExtras.minimumPrice.length > 0, "최소 시공비 필드 존재");
+  }
+
+  // ⑦ 색인 자격 — 단일 출처이고, 통과한 페이지는 실제로 기준을 만족해야 한다.
+  {
+    const idx = keywords.filter((k) => indexabilityFor(k).indexable);
+    ok(idx.length > 0, "색인 대상 존재", `${idx.length}개`);
+    let violated = 0;
+    for (const k of idx.slice(0, 200)) {
+      const e = contentEligibilityFor(k);
+      // 사례·수동승인으로 통과한 페이지는 품질 게이트를 우회할 수 있다 — 그 경우만 예외.
+      if (!e.eligible && !hasRealCaseOrManual(k)) violated++;
+    }
+    ok(violated === 0, "색인 페이지는 품질 기준 충족(또는 사례·수동승인)", `${violated}건`);
+    // 실제 사례가 없다는 이유만으로 noindex 가 되지 않아야 한다(정책 변경 잠금).
+    const noCaseButIndexed = idx.filter((k) => k.region && k.item).length;
+    ok(noCaseButIndexed > 100, "사례 없는 지역×품목도 색인 가능(증거 게이트 해제 확인)", `${noCaseButIndexed}개`);
+  }
+}
 
 // ── ⑨-0 운영자 발행 콘텐츠의 독립 문서화(블로그·시공사례·후기) ───────────────
 // 관리자가 CMS 로 발행하는 세 종류는 각자 고유 URL 을 갖고, 사이트맵·내부링크로

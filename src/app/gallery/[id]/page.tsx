@@ -23,6 +23,7 @@ import {
   decodeCaseId,
 } from "@/lib/caseDoc";
 import { uploadedImage } from "@/lib/cdnImage";
+import CaseVideo, { videoEmbedUrl } from "@/components/CaseVideo";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://prodaco.kr";
 
@@ -121,10 +122,27 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
     ],
   };
 
+  // 영상 구조화데이터 — 실제 영상 주소가 있을 때만 내보낸다(없는 영상을 선언하지 않는다).
+  const videoJsonLd = videoEmbedUrl(g)
+    ? {
+        "@context": "https://schema.org",
+        "@type": "VideoObject",
+        name: g.videoTitle || `${g.region} ${g.item} 시공 영상`,
+        description: g.description || `${g.region} ${g.item} 시공 과정 영상`,
+        thumbnailUrl: [absoluteImage(g.videoThumbnail || g.afterImage)],
+        contentUrl: g.videoUrl,
+        embedUrl: videoEmbedUrl(g),
+        ...(published ? { uploadDate: published } : {}),
+      }
+    : null;
+
   return (
     <div className="pb-20 md:pb-0">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
+      {videoJsonLd && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(videoJsonLd) }} />
+      )}
 
       <section className="bg-[#16181D] px-5 pt-14 pb-12 text-white">
         <div className="mx-auto max-w-3xl">
@@ -178,6 +196,9 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
           {g.description && (
             <p className="mt-8 text-[15px] leading-[1.85] text-[#3A4048]">{g.description}</p>
           )}
+
+          {/* 시공 영상 — 값이 없으면 아무것도 그리지 않는다. */}
+          <CaseVideo item={g} />
 
           {/* 현장 정보 — 운영자가 입력한 값만 나온다(없는 항목은 행 자체가 없다). */}
           <dl className="mt-8 grid grid-cols-2 gap-px border border-gray-200 bg-gray-200 sm:grid-cols-3">

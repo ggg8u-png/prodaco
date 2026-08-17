@@ -55,3 +55,35 @@ export function perPyeongText(row: CostRow): string {
   const [min, max] = row.perPyeong;
   return `평당 ${min}만~${max}만원`;
 }
+
+// ─── 확장 가격 정보(전부 선택) ─────────────────────────────────────────────────
+// 값이 있을 때만 화면에 나온다. 없으면 그 행 자체를 그리지 않는다 — "0원"으로 표시하거나
+// 임의의 숫자를 채우지 않는다. 운영자가 CMS(⑥ 비용 참고표)에서 입력한다.
+const raw = costsData as unknown as Record<string, unknown>;
+const str = (v: unknown): string => (typeof v === "string" && v.trim() ? v.trim() : "");
+const strArr = (v: unknown): string[] =>
+  Array.isArray(v) ? v.filter((x): x is string => typeof x === "string" && x.trim() !== "") : [];
+
+export const pricingExtras = {
+  /** 최소 시공비(운영자 표기 그대로). 없으면 빈 문자열. */
+  minimumPrice: str(raw.minimumPrice),
+  /** 폐기물 처리비(운영자 표기 그대로). */
+  wasteFee: str(raw.wasteFee),
+  /** 폐기물 처리 방식 설명 — 금액이 없어도 안내는 가능하다. */
+  wasteFeeDescription: str(raw.wasteFeeDescription),
+  /** 추가 비용이 붙는 조건 목록. */
+  additionalCostConditions: strArr(raw.additionalCostConditions),
+  /** 별도 견적이 필요한 경우 안내. */
+  quoteRequiredNote: str(raw.quoteRequiredNote),
+};
+
+/** 표시할 확장 가격 정보가 하나라도 있는가. */
+export function hasPricingExtras(): boolean {
+  return (
+    !!pricingExtras.minimumPrice ||
+    !!pricingExtras.wasteFee ||
+    !!pricingExtras.wasteFeeDescription ||
+    pricingExtras.additionalCostConditions.length > 0 ||
+    !!pricingExtras.quoteRequiredNote
+  );
+}

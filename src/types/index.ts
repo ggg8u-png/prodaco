@@ -76,6 +76,16 @@ export interface GalleryItem {
   workScope?: string;
   /** 비용 또는 비용 범위(운영자가 적은 그대로 표기) — 선택. 없으면 표시하지 않는다. */
   cost?: string;
+  // ── 영상(전부 선택) ─────────────────────────────────────────────────────────
+  // 값이 없으면 UI 도, VideoObject 구조화데이터도 출력하지 않는다.
+  /** 영상 주소(YouTube·Vimeo·직접 mp4 URL). */
+  videoUrl?: string;
+  /** 플랫폼 — 미지정 시 videoUrl 에서 추정한다. */
+  videoPlatform?: "youtube" | "vimeo" | "file";
+  /** 썸네일 이미지 주소(선택). 없으면 afterImage 를 쓴다. */
+  videoThumbnail?: string;
+  /** 영상 제목(선택). 없으면 사례 제목을 쓴다. */
+  videoTitle?: string;
 }
 
 export interface GalleryPhoto {

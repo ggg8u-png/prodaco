@@ -81,7 +81,10 @@ function itemsForRegion(region: string) {
     .sort((a, b) => rank(a.item as string) - rank(b.item as string));
   const tierA = pool.filter((k) => indexabilityFor(k).inSitemap);
   const rest = pool.filter((k) => !indexabilityFor(k).inSitemap);
-  return [...tierA, ...rest].slice(0, 8);
+  // 색인 대상 하위 페이지는 전부 링크한다 — 허브의 존재 이유가 하위 페이지를 모으는 것이고,
+  // 여기서 잘리면 그 페이지들이 내부링크로 도달 불가능한 고아가 된다(실제로 48개가 그랬다).
+  // 색인 대상이 아닌 나머지는 4개까지만 붙여 목록이 무한정 길어지지 않게 한다.
+  return [...tierA, ...rest.slice(0, 4)];
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ region: string }> }): Promise<Metadata> {
@@ -116,7 +119,9 @@ export async function generateMetadata({ params }: { params: Promise<{ region: s
       description: desc,
       type: "website",
       url: `${siteUrl}/services/${encodeURIComponent(region)}`,
-      images: ["/opengraph-image"],
+      // 이 허브 전용 OG 이미지. 한글 세그먼트가 이중 인코딩되지 않도록 직접 지정한다
+      // (파일 규약에 맡기면 %25EC%25… 로 깨진 URL 이 나간다).
+      images: [{ url: `${siteUrl}/services/${encodeURIComponent(region)}/opengraph-image`, width: 1200, height: 630, alt: `${region} 바닥재 철거 — 프로다` }],
     },
     other: { "geo.region": "KR", "geo.placename": region },
   };

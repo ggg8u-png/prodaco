@@ -46,18 +46,15 @@ function shuffle<T>(seed: number, arr: T[]): T[] {
 
 // ─── 품목군 분류 ───────────────────────────────────────────────────────────────
 // (export: 감사 스크립트가 품목 분류기들의 일관성을 검증할 때 사용)
-export type Family = "maru" | "vinyl" | "tile" | "coating" | "sanding" | "bond" | "generic";
-export function familyOf(item: string): Family {
-  const s = item || "";
-  if (/(샌딩|면갈이|마루재생|마루코팅)/.test(s)) return "sanding";
-  if (/(에폭시|우레탄)/.test(s)) return "coating";
-  if (/본드/.test(s)) return "bond";
-  if (/(폴리싱|도기|바닥타일)/.test(s)) return "tile";
-  if (/타일/.test(s) && !/(데코|디럭스)/.test(s)) return "tile";
-  if (/(데코|디럭스|륨|장판)/.test(s)) return "vinyl";
-  if (/마루/.test(s)) return "maru";
-  return "generic";
-}
+// 품목군 분류는 lib/contentFamily.ts 로 옮겼다(itemKnowledge 와의 순환 참조 방지).
+// 기존 호출부가 "@/lib/content" 에서 계속 가져다 쓸 수 있게 여기서 다시 내보낸다.
+export type { Family } from "@/lib/contentFamily";
+export { familyOf } from "@/lib/contentFamily";
+import { familyOf as familyOfImpl, type Family } from "@/lib/contentFamily";
+import { itemKnowledgeFor } from "@/data/itemKnowledge";
+import { profileForSlug, type SectionKey } from "@/data/contentProfiles";
+import { altRegionLabel, altItemLabel } from "@/data/regionVariants";
+import { pickFaqPool } from "@/data/faqPool";
 
 // ─── 품목군별 핵심 본문(실제로 다른 내용) — 군마다 2~3개 변형 ───────────────────
 const ITEM_CORE: Record<Family, ((item: string) => string)[]> = {
@@ -755,43 +752,119 @@ function extraSections(seed: number, item: string, reg: string, n: number): stri
   return order.slice(0, n).map((i) => EXTRA_SECTIONS[i](item, reg));
 }
 
+// ─── 품목 지식 기반 섹션 ────────────────────────────────────────────────────
+// itemKnowledge(품목별 실제 정보)를 본문 블록으로 바꾼다. 지역 시공자료가 없어도
+// 이 섹션들만으로 페이지가 성립한다 — 대신 여기 문장은 전부 '일반적인 작업 지식'이라
+// 특정 현장 실적·통계·가격을 사실처럼 단정하지 않는다.
+
+/** 이 작업이 무엇인지 + 어떻게 붙어 있는지. */
+function definitionSection(item: string, altItem: string | null): string {
+  const kn = itemKnowledgeFor(item);
+  const label = altItem ? `${item}(${altItem})` : item;
+  return `## ${label}란 어떤 작업인가
+
+${kn.definition}
+
+${kn.attachment}`;
+}
+
+/** 작업 순서 — 품목마다 단계가 다르다. */
+function processSection(item: string): string {
+  const kn = itemKnowledgeFor(item);
+  const steps = kn.process.map((st, i) => `${i + 1}. ${st}`).join("\n");
+  return `## ${item} 작업 순서
+
+${steps}
+
+현장 상황에 따라 단계가 줄거나 늘 수 있습니다. 순서를 미리 알고 계시면 어느 시점에 무엇을 확인해야 하는지 판단하기 쉽습니다.`;
+}
+
+/** 견적·작업 전 확인 항목. */
+function checklistSection(item: string, reg: string): string {
+  const kn = itemKnowledgeFor(item);
+  const items = kn.checklist.map((c) => `- ${c}`).join("\n");
+  return `## 견적 전 확인하면 좋은 것
+
+${items}
+
+${josa(reg, "은는")} 물론 어느 현장이든 위 항목을 먼저 확인하면 1차 안내의 정확도가 올라갑니다. 사진과 함께 알려주시면 더 빠릅니다.`;
+}
+
+/** 비용이 갈리는 요소 — 숫자는 넣지 않는다(실제 단가는 costs.json 에서만 온다). */
+function costFactorSection(item: string): string {
+  const kn = itemKnowledgeFor(item);
+  const items = kn.costFactors.map((c) => `- ${c}`).join("\n");
+  return `## ${item} 비용이 달라지는 이유
+
+${items}
+
+정확한 금액은 위 조건을 확인해야 정해집니다. 같은 면적이라도 부착 방식과 반출 조건에 따라 작업량이 달라지기 때문입니다.`;
+}
+
+/** 작업 후 정리. */
+function aftercareSection(item: string): string {
+  const kn = itemKnowledgeFor(item);
+  return `## 작업 후 정리
+
+${kn.aftercare}`;
+}
+
+/** 관련 작업 안내(텍스트) — 실제 링크는 페이지 컴포넌트가 별도로 렌더한다. */
+function relatedSection(item: string): string {
+  const kn = itemKnowledgeFor(item);
+  if (!kn.relatedItems.length) return "";
+  return `## 함께 검토되는 작업
+
+${kn.relatedItems.map((r) => `- ${r}`).join("\n")}
+
+한 현장에서 이어서 진행하면 장비 반입과 폐자재 반출을 한 번에 정리할 수 있습니다.`;
+}
+
 // ─── 조합 ──────────────────────────────────────────────────────────────────────
 export function getContentForKeyword(keyword: KeywordEntry): string {
   const seed = seedOf(keyword.slug);
   const item = keyword.item || "바닥재 철거";
   const reg = keyword.region || "수도권";
-  const fam = familyOf(item);
+  const fam = familyOfImpl(item);
+  const profile = profileForSlug(keyword.slug);
+
+  // 표기 변형 — 대표 표기와 다른 표현을 도입·정의부에서만 자연스럽게 한 번씩 쓴다.
+  // 같은 말을 반복해 넣지 않는다(keyword stuffing 방지).
+  const altItem = altItemLabel(keyword.item, keyword.slug);
+  const altRegion = altRegionLabel(keyword.region, keyword.slug);
 
   // 품목 전용 핵심 섹션이 있으면 그것을 쓴다(형제 품목과 '핵심 질문'이 달라진다).
   const specificCore = itemCoreFor(item);
   const itemCore = specificCore ?? pick(seed, 1, ITEM_CORE[fam])(item);
-  const mod = modifierSection(keyword, seed);
 
-  // 가운데 블록 풀에서 시드로 일부만 골라 순서까지 섞는다 → 페이지마다 다른 구성.
-  const middle: string[] = [itemCore];
-  if (mod) middle.push(mod);
-  middle.push(valueBlock(keyword, seed));
-  // 시드에 따라 FAQ 블록을 넣을지 결정(절반 정도) → 구성 다양화
-  if (idx(seed, 71, 2) === 0 || !mod) middle.push(faqBlock(seed));
-  // 추가 안내 섹션 4개(페이지마다 서로 다름) → 조합 공간 대폭 확대(형제 페이지 중복↓)
-  middle.push(...extraSections(seed, item, reg, 4));
+  // 섹션 키 → 실제 문자열. 빈 문자열이면 그 섹션은 빠진다.
+  const extras = extraSections(seed, item, reg, profile.extraCount);
+  const built: Record<SectionKey, string> = {
+    itemCore,
+    definition: definitionSection(item, altItem),
+    process: processSection(item),
+    checklist: checklistSection(item, altRegion || reg),
+    costFactors: costFactorSection(item),
+    modifier: modifierSection(keyword, seed),
+    value: valueBlock(keyword, seed),
+    regionOps: regionBlock(keyword, seed),
+    aftercare: aftercareSection(item),
+    faq: pickFaqPool(keyword, seed),
+    related: relatedSection(item),
+    extra: extras.join("\n\n"),
+  };
 
-  // itemCore 는 보통 앞쪽에 두되, 나머지는 순서를 섞는다.
-  const [first, ...others] = middle;
-  const shuffledOthers = shuffle(seed, others);
-  // 품목 전용 코어는 반드시 앞에 둔다. 기존에는 50% 확률로 맨 뒤로 밀려, 온돌마루의
-  // '난방 배관 손상 주의' 같은 품목 고유 정보가 페이지 끝에 묻히곤 했다.
-  const ordered = specificCore || idx(seed, 81, 2) === 0 ? [first, ...shuffledOthers] : [...shuffledOthers, first];
+  const body = profile.order.map((k) => built[k]).filter(Boolean);
 
-  const parts = [
-    intro(keyword, seed),
-    ...ordered,
-    regionBlock(keyword, seed),
-    closing(keyword, seed),
-  ].filter(Boolean);
+  const parts = [intro(keyword, seed), ...body, closing(keyword, seed)].filter(Boolean);
 
   // 전역 문구 치환/삭제(어드민 ⑫) 적용 — 모든 생성 페이지 본문에 반영.
   return applyReplacements(parts.join("\n\n"));
+}
+
+/** 이 페이지에 배정된 콘텐츠 프로파일 id(감사·테스트용). */
+export function contentProfileIdFor(slug: string): string {
+  return profileForSlug(slug).id;
 }
 
 // ─── 관련 키워드 (같은 지역 또는 같은 품목, 꼬리말 없는 대표 페이지) ────────────

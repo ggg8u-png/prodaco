@@ -1,6 +1,7 @@
 import { company } from "@/data/company";
 import { ctaConfig } from "@/data/landing";
 import { PhoneIcon, KakaoIcon, MessageIcon } from "@/components/icons";
+import TrackedLink from "@/components/TrackedLink";
 
 // 본문 중간에 반복 배치하는 미드롤 CTA 밴드. 카톡 + 전화 + 문자 구성 + 신뢰 카피.
 export default function CtaBand({ heading = ctaConfig.midroll }: { heading?: string }) {
@@ -10,7 +11,9 @@ export default function CtaBand({ heading = ctaConfig.midroll }: { heading?: str
         <h2 className="text-xl font-black tracking-[-0.02em] sm:text-2xl">{heading}</h2>
         <p className="-mt-2 text-sm text-[#A8AEB8]">{ctaConfig.kakaoMicro}</p>
         <div className="flex w-full max-w-xl flex-col gap-2.5 sm:flex-row">
-          <a
+          <TrackedLink
+            event="click_kakao"
+            params={{ cta_position: "ctaband" }}
             href={company.kakaoUrl}
             target="_blank"
             rel="noopener"
@@ -19,23 +22,27 @@ export default function CtaBand({ heading = ctaConfig.midroll }: { heading?: str
           >
             <KakaoIcon className="h-[17px] w-[17px]" />
             {ctaConfig.kakaoPrimary}
-          </a>
-          <a
+          </TrackedLink>
+          <TrackedLink
+            event="click_phone"
+            params={{ cta_position: "ctaband" }}
             href={company.phoneLink}
             aria-label={`전화로 바로 상담 ${company.phone}`}
             className="inline-flex flex-1 items-center justify-center gap-2 rounded-sm border-2 border-white/30 px-5 py-3.5 text-[15px] font-extrabold text-white transition-colors hover:border-[#FFD400] hover:text-[#FFD400]"
           >
             <PhoneIcon className="h-[17px] w-[17px]" />
             {ctaConfig.phonePrimary}
-          </a>
-          <a
+          </TrackedLink>
+          <TrackedLink
+            event="click_sms"
+            params={{ cta_position: "ctaband" }}
             href={company.smsLink}
             aria-label="문자로 사진 보내기"
             className="inline-flex flex-1 items-center justify-center gap-2 rounded-sm border-2 border-white/30 px-5 py-3.5 text-[15px] font-extrabold text-white transition-colors hover:border-[#FFD400] hover:text-[#FFD400]"
           >
             <MessageIcon className="h-[17px] w-[17px]" />
             {ctaConfig.smsPrimary}
-          </a>
+          </TrackedLink>
         </div>
         <p className="font-mono-pd text-[12px] font-bold uppercase tracking-[0.08em] text-[#FFD400]">{ctaConfig.trust}</p>
         {company.naverPlaceUrl && (

@@ -4,6 +4,8 @@ import { company } from "@/data/company";
 import { materialOptions, regionOptions, consultPrep, ctaConfig } from "@/data/landing";
 import { FLOOR_COSTS, costKeyOf } from "@/data/costs";
 import { PhoneIcon, KakaoIcon } from "@/components/icons";
+import { trackEvent, onCtaClick } from "@/lib/analytics";
+import { useEffect, useRef } from "react";
 import ui from "../../content/ui.json";
 
 // 견적 상담 체크리스트 + 참고 비용 범위 계산.
@@ -46,6 +48,16 @@ export default function QuoteChecklist() {
       : null;
   // 단가가 없는 품목을 골랐을 때는 계산 대신 그 사실을 알린다(빈 화면·0원 표시 금지).
   const noRate = !!material && !perPyeong && material !== "잘 모르겠어요";
+
+  // 계산 결과가 실제로 나온 순간에만 1회 보낸다(입력할 때마다 보내면 이벤트가 의미를 잃는다).
+  const sentRef = useRef("");
+  useEffect(() => {
+    if (!estimate) return;
+    const key = `${material}|${pyeong}`;
+    if (sentRef.current === key) return;
+    sentRef.current = key;
+    trackEvent("use_cost_calculator", { service: material, area: region || undefined, page_type: "quote-checklist" });
+  }, [estimate, material, pyeong, region]);
 
   return (
     <div className="rounded-[3px] border-2 border-[#16181D] bg-white">
@@ -157,6 +169,7 @@ export default function QuoteChecklist() {
             href={company.kakaoUrl}
             target="_blank"
             rel="noopener"
+            onClick={onCtaClick("click_kakao", { cta_position: "quote-checklist", service: material || undefined, area: region || undefined })}
             aria-label="카카오톡으로 사진 보내고 견적 문의하기"
             className="inline-flex flex-1 items-center justify-center gap-2 rounded-sm bg-[#FFD400] px-5 py-3.5 text-[15px] font-extrabold text-[#16181D] transition-colors hover:bg-[#FFE34D]"
           >
@@ -165,6 +178,7 @@ export default function QuoteChecklist() {
           </a>
           <a
             href={company.phoneLink}
+            onClick={onCtaClick("click_phone", { cta_position: "quote-checklist", service: material || undefined, area: region || undefined })}
             aria-label={`전화로 상담하기 ${company.phone}`}
             className="inline-flex flex-1 items-center justify-center gap-2 rounded-sm border-2 border-[#16181D] px-5 py-3.5 text-[15px] font-extrabold text-[#16181D] transition-colors hover:bg-[#16181D] hover:text-white"
           >

@@ -5,6 +5,7 @@ import { clusterLabelOf } from "@/data/regions";
 import { FLOOR_COSTS, costKeyOf, perPyeongText } from "@/data/costs";
 import { familyKeyOf, itemFactsFor } from "@/data/itemFacts";
 import { applyReplacements } from "@/lib/replacements";
+import { familyOf, type Family } from "@/lib/contentFamily";
 
 // ─── 시드 유틸 (페이지별 결정적 변형) ──────────────────────────────────────────
 function seedOf(s: string): number {
@@ -171,9 +172,39 @@ export function uniqueTitle(k: KeywordEntry): string {
   //    4차에서 본문 핵심 질문을 자재별로 나눴는데, 검색결과에서는 그 차이가 보이지
   //    않아 형제 페이지가 SERP 에서 구분되지 않았다.
   const byItem = k.item ? ITEM_TITLE_HOOK[k.item] : undefined;
-  const suffix = byModifier || byItem;
+  // ③ 위 둘 다 없으면(바닥재철거·바닥철거·장판철거 같은 범용 품목) 접미가 비어
+  //    "서울 바닥재철거" 처럼 8자짜리 제목이 나왔다. 검색결과에서 클릭할 이유가 보이지
+  //    않고 형제 페이지와도 구분되지 않는다. 품목군과 슬러그로 결정적 접미를 만든다.
+  //    (임의 난수가 아니라 슬러그 시드 → 같은 페이지는 언제 빌드해도 같은 제목이다.)
+  const byFamily = !byModifier && !byItem ? familyTitleHook(k) : undefined;
+  const suffix = byModifier || byItem || byFamily;
   // 레이아웃 title 템플릿(%s | 프로다)이 끝에 ' | 프로다'를 붙이므로 여기선 생략.
-  // 근거가 없으면 접미 없이 — 빈 수식어를 채우지 않는다.
   return applyReplacements(suffix ? `${k.keyword} | ${suffix}` : k.keyword);
+}
+
+// 품목군별 접미 후보 — 전부 '작업 내용'을 말하는 문구다(과장·보장 표현 없음).
+// 같은 품목군 안에서도 슬러그로 갈라져 형제 페이지의 제목이 서로 달라진다.
+const FAMILY_TITLE_HOOKS: Record<Family, string[]> = {
+  maru: ["종류별 철거와 본드 정리", "하지 손상 없이 철거", "철거 후 바닥 정리까지"],
+  vinyl: ["걷어내고 접착제까지 정리", "덧시공 확인 후 철거", "본드 자국 정리 포함"],
+  tile: ["몰탈층까지 정리", "타일·하부 몰탈 철거", "철거 후 바닥 높이 확인"],
+  coating: ["도막 연삭 제거", "코팅 갈아내고 표면 정리", "재도장 가능 상태까지"],
+  sanding: ["표면 평탄화 작업", "잔여 접착제 정리", "다음 마감 전 면 정리"],
+  bond: ["남은 접착제 정리", "본드 제거와 표면 정리"],
+  generic: ["작업 범위와 비용 기준", "현장 확인부터 정리까지", "철거 후 상태까지 확인"],
+};
+
+function titleSeed(s: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+function familyTitleHook(k: KeywordEntry): string {
+  const pool = FAMILY_TITLE_HOOKS[familyOf(k.item || "")] ?? FAMILY_TITLE_HOOKS.generic;
+  return pool[titleSeed(k.slug) % pool.length];
 }
 

@@ -278,6 +278,28 @@ export default function Home() {
                   {home.labels.allServicesLink}
                 </Link>
               </div>
+
+              {/* 사이트 허브 — 홈에서 주요 영역으로 한 번에 도달하게 한다.
+                  홈 → 지역 허브 → 지역×서비스 / 홈 → 서비스 허브 → 지역×서비스
+                  두 경로가 모두 열려 있어야 검색로봇도 사용자도 막히지 않는다. */}
+              <nav aria-label="사이트 주요 영역" className="mt-6 border-t border-[#16181D]/10 pt-5">
+                <ul className="flex flex-wrap gap-x-5 gap-y-2 text-[13.5px] font-bold text-[#16181D]">
+                  {[
+                    ["/services", "지역·품목별 서비스"],
+                    ["/gallery", "시공 사례"],
+                    ["/reviews", "고객 후기"],
+                    ["/faq", "자주 묻는 질문"],
+                    ["/blog", "바닥철거 정보"],
+                    ["#quote", "비용 계산·견적 문의"],
+                  ].map(([href, label]) => (
+                    <li key={href}>
+                      <Link href={href} className="underline decoration-[#FFD400] decoration-2 underline-offset-4 hover:text-[#9A8A2E]">
+                        {label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
             </div>
           )}
         </div>

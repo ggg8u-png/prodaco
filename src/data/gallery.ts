@@ -64,6 +64,11 @@ function loadCmsGallery(): GalleryItem[] {
           // 상세페이지(/gallery/<id>)에 표기할 선택 항목 — 값이 있을 때만 실린다.
           ...(g.workScope ? { workScope: g.workScope } : {}),
           ...(g.cost ? { cost: g.cost } : {}),
+          // 영상(선택) — 값이 있을 때만 싣는다.
+          ...(g.videoUrl ? { videoUrl: g.videoUrl } : {}),
+          ...(g.videoPlatform ? { videoPlatform: g.videoPlatform } : {}),
+          ...(g.videoThumbnail ? { videoThumbnail: g.videoThumbnail } : {}),
+          ...(g.videoTitle ? { videoTitle: g.videoTitle } : {}),
         });
       }
     } catch {
