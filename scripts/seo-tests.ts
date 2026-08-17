@@ -694,8 +694,20 @@ ok(!toml.includes("status = 302"), "netlify.toml 에 302 없음");
 
   // ⑤ 목록 → 상세 내부링크가 소스에 실제 <a href> 로 존재하는지.
   //    JS 클릭 핸들러만 있으면 검색로봇이 개별 문서를 영영 못 찾는다.
-  const gallerySrc = stripComments(fs.readFileSync(path.join(process.cwd(), "src", "app", "gallery", "page.tsx"), "utf8"));
-  ok(/casePath\(/.test(gallerySrc) && /<Link/.test(gallerySrc), "/gallery 목록 → 사례 상세 <a href> 링크");
+  // 목록 마크업은 1페이지와 N페이지가 공유하는 컴포넌트에 있다.
+  const gridSrc = stripComments(fs.readFileSync(path.join(process.cwd(), "src", "components", "CaseGrid.tsx"), "utf8"));
+  ok(/\/gallery\/\$\{encodeURIComponent\(item\.id\)\}/.test(gridSrc) && /<Link/.test(gridSrc), "/gallery 목록 → 사례 상세 <a href> 링크");
+  const blogListSrc = stripComments(fs.readFileSync(path.join(process.cwd(), "src", "components", "BlogList.tsx"), "utf8"));
+  ok(/blogPath\(/.test(blogListSrc) && /<Link/.test(blogListSrc), "/blog 목록 → 글 상세 <a href> 링크");
+  // 목록 페이지가 그 컴포넌트를 실제로 쓰는지(마크업만 있고 연결이 빠지면 링크가 0개다).
+  for (const [file, comp] of [["gallery", "CaseGrid"], ["blog", "BlogList"]] as const) {
+    const listSrc = stripComments(fs.readFileSync(path.join(process.cwd(), "src", "app", file, "page.tsx"), "utf8"));
+    ok(new RegExp(`<${comp}\\b`).test(listSrc), `/${file} 1페이지가 ${comp} 렌더`);
+    const pagedSrc = stripComments(fs.readFileSync(path.join(process.cwd(), "src", "app", file, "page", "[n]", "page.tsx"), "utf8"));
+    ok(new RegExp(`<${comp}\\b`).test(pagedSrc), `/${file}/page/N 이 ${comp} 렌더`);
+    ok(/alternates: \{ canonical: url \}/.test(pagedSrc), `/${file}/page/N: canonical 자기참조(1페이지로 합치지 않음)`);
+    ok(/rel="prev"/.test(pagedSrc) && /rel="next"/.test(pagedSrc), `/${file}/page/N: rel prev·next`);
+  }
   const reviewsSrc = stripComments(fs.readFileSync(path.join(process.cwd(), "src", "app", "reviews", "ReviewsClient.tsx"), "utf8"));
   ok(/reviewPath\(/.test(reviewsSrc) && /<Link/.test(reviewsSrc), "/reviews 목록 → 후기 상세 <a href> 링크");
 
@@ -787,6 +799,43 @@ ok(!toml.includes("status = 302"), "netlify.toml 에 302 없음");
   ok(folderCollections.length >= 2, "Decap: 폴더형 컬렉션 파싱됨(블로그·시공사례)", `${folderCollections.length}개`);
   for (const want of ["blog", "gallery"])
     ok(folderCollections.some((b) => b.name === want), `Decap: ${want} 컬렉션 인식`);
+
+  // 파일형 컬렉션: 선언되지 않은 키는 저장하는 순간 사라진다.
+  //   Decap 은 폼에 있는 필드만 직렬화해 파일에 쓴다. 그래서 JSON 에 있는데 config.yml 에
+  //   없는 키는 운영자가 그 화면을 한 번 저장하는 것만으로 소실된다.
+  //   2026-08 실제 상태: settings.json 의 business(대표자·사업자등록번호·주소·외부 프로필)가
+  //   선언돼 있지 않아, ① 사이트 설정을 저장할 때마다 NAP 신뢰신호가 통째로 지워지고 있었다.
+  //   여기서는 소실 시 되돌리기 어려운 파일만 검사한다.
+  {
+    const GUARDED: Array<[string, string]> = [
+      ["content/settings.json", "content/settings.json"],
+      ["content/company.json", "content/company.json"],
+    ];
+    for (const [file, marker] of GUARDED) {
+      const start = raw.findIndex((l) => l.includes(`file: "${marker}"`));
+      ok(start >= 0, `Decap: ${file} 컬렉션 선언됨`);
+      if (start < 0) continue;
+      // 이 파일 블록이 끝나는 지점 = 다음 최상위 컬렉션("  - name:") 직전.
+      let end = raw.length;
+      for (let i = start + 1; i < raw.length; i++) {
+        if (/^ {2}- name:/.test(raw[i])) { end = i; break; }
+      }
+      const declared = new Set(
+        raw.slice(start, end).flatMap((l) => [...l.matchAll(/\bname:\s*"([^"]+)"/g)].map((m) => m[1]))
+      );
+      const json = JSON.parse(fs.readFileSync(path.join(process.cwd(), file), "utf8")) as Record<string, unknown>;
+      // 중첩 객체까지 전부 확인한다 — 하위 키 하나만 빠져도 그 키가 사라진다.
+      const missing: string[] = [];
+      const walk = (obj: Record<string, unknown>, prefix: string) => {
+        for (const [k, v] of Object.entries(obj)) {
+          if (!declared.has(k)) { missing.push(`${prefix}${k}`); continue; }
+          if (v && typeof v === "object" && !Array.isArray(v)) walk(v as Record<string, unknown>, `${prefix}${k}.`);
+        }
+      };
+      walk(json, "");
+      ok(missing.length === 0, `Decap: ${file} 의 모든 키가 CMS 에 선언됨(저장 시 소실 방지)`, `누락 ${missing.join(", ")}`);
+    }
+  }
 
   for (const col of folderCollections) {
     const fields = topLevelFields(col.lines);

@@ -41,6 +41,45 @@ collections:
           - { label: "SEO 제목(메타 타이틀)", name: "seoTitle", widget: "string", hint: "구글·네이버 검색결과에 표시되는 제목. 예: 바닥재 철거·마루 철거 견적 상담 | 프로다" }
           - { label: "SEO 설명(메타 디스크립션)", name: "seoDescription", widget: "text", hint: "검색결과 제목 아래 표시되는 설명. 100~160자 권장." }
           - { label: "SEO 키워드(쉼표로 구분)", name: "seoKeywords", widget: "string", hint: "예: 바닥재철거,마루철거,데코타일철거" }
+          # ⚠ 이 블록 전체를 지우거나 하위 항목을 빼지 말 것.
+          #   Decap 은 저장할 때 '여기 선언된 필드만' 파일에 쓴다. 선언하지 않은 키는
+          #   저장하는 순간 사라진다. 실제로 이 business 블록이 선언돼 있지 않아서,
+          #   운영자가 ① 사이트 설정을 저장할 때마다 대표자·사업자등록번호·주소·
+          #   네이버플레이스/구글 프로필 URL 이 통째로 지워지는 상태였다.
+          #   (그 값들은 푸터 NAP 표기와 JSON-LD 신뢰신호의 유일한 출처다.)
+          - label: "사업자 정보 (NAP·영업시간)"
+            name: "business"
+            widget: "object"
+            required: false
+            collapsed: true
+            fields:
+              - { label: "브랜드명(고객이 부르는 이름)", name: "brandName", widget: "string", required: false, default: "" }
+              - { label: "상호(사업자등록상)", name: "legalName", widget: "string", required: false, default: "" }
+              - { label: "대표자명", name: "representativeName", widget: "string", required: false, default: "" }
+              - { label: "사업자등록번호", name: "businessRegistrationNumber", widget: "string", required: false, default: "", hint: "예: 000-00-00000" }
+              - { label: "사업장 주소", name: "address", widget: "string", required: false, default: "", hint: "구글 비즈니스 프로필·네이버 플레이스와 반드시 같게 쓰세요(다르면 로컬 검색 신뢰도가 떨어집니다)." }
+              - { label: "작업 지역", name: "serviceArea", widget: "list", required: false, default: [], field: { label: "지역", name: "region", widget: "string" } }
+              - label: "외부 프로필 링크"
+                name: "sameAs"
+                widget: "object"
+                required: false
+                fields:
+                  - { label: "네이버 플레이스", name: "naverPlace", widget: "string", required: false, default: "" }
+                  - { label: "구글 비즈니스 프로필", name: "googleBusinessProfile", widget: "string", required: false, default: "" }
+                  - { label: "카카오맵", name: "kakaoMap", widget: "string", required: false, default: "" }
+                  - { label: "페이스북", name: "facebook", widget: "string", required: false, default: "" }
+                  - { label: "트위터·X", name: "twitter", widget: "string", required: false, default: "" }
+              # 영업시간·가격대는 값이 있을 때만 구조화데이터(JSON-LD)에 실린다.
+              # 비워 두면 아예 내보내지 않는다 — 확인 안 된 값을 지어내지 않기 위해서다.
+              - label: "영업시간(실제 값만 — 모르면 비워 두세요)"
+                name: "openingHours"
+                widget: "object"
+                required: false
+                fields:
+                  - { label: "영업 요일", name: "dayOfWeek", widget: "select", required: false, multiple: true, options: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"], hint: "실제 일하시는 요일만 고르세요. 하나도 안 고르면 영업시간을 내보내지 않습니다." }
+                  - { label: "시작 시각", name: "opens", widget: "string", required: false, default: "", hint: "24시간 표기. 예: 08:00" }
+                  - { label: "종료 시각", name: "closes", widget: "string", required: false, default: "", hint: "24시간 표기. 예: 20:00" }
+              - { label: "가격대", name: "priceRange", widget: "select", required: false, options: ["", "₩", "₩₩", "₩₩₩", "₩₩₩₩"], default: "", hint: "동종업계 대비 대략적인 가격대. 확실하지 않으면 비워 두세요." }
           - { label: "네이버 소유확인 코드", name: "naverVerify", widget: "string", hint: "네이버 서치어드바이저에서 발급받은 인증 코드" }
           - { label: "구글 소유확인 코드(HTML 태그)", name: "googleVerify", widget: "string", required: false, default: "", hint: "비워두면 됩니다. 구글은 DNS TXT(도메인 속성)로 소유확인합니다. 서치콘솔에서 'HTML 태그' 방법을 쓸 때만 그 방법으로 발급된 코드를 넣으세요(DNS TXT 값은 여기 넣어도 인증되지 않습니다)." }
 
