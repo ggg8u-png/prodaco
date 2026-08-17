@@ -21,6 +21,11 @@ import { getContentForKeyword, familyOf } from "@/lib/content";
 import { keyAnswerFor, keyAnswerForRegion, familyLabel } from "@/data/keyAnswer";
 import { galleryItems } from "@/data/gallery";
 import { entriesForGroup, SITEMAP_GROUPS, renderUrlset, renderIndex, nonEmptyGroups, SITE_LASTMOD } from "@/lib/sitemap";
+import { casePath, caseUrl, casePageItems, indexableCases, isCaseIndexable } from "@/lib/caseDoc";
+import { reviewPath, reviewPageItems, indexableReviews, REVIEW_MIN_LENGTH } from "@/lib/reviewDoc";
+import { isExampleReview } from "@/data/reviews";
+import { blogPath } from "@/lib/blogUrl";
+import { posts } from "@/data/posts";
 import robots from "@/app/robots";
 import { itemGuidesFor } from "@/lib/itemGuides";
 import { itemFactsFor, itemFactOverrideCount } from "@/data/itemFacts";
@@ -635,6 +640,82 @@ for (const from of ["http://prodaco.kr/*", "http://www.prodaco.kr/*", "https://w
   ok(block.includes("force = true"), `redirect ${from} force`);
 }
 ok(!toml.includes("status = 302"), "netlify.toml 에 302 없음");
+
+// ── ⑨-0 운영자 발행 콘텐츠의 독립 문서화(블로그·시공사례·후기) ───────────────
+// 관리자가 CMS 로 발행하는 세 종류는 각자 고유 URL 을 갖고, 사이트맵·내부링크로
+// 검색로봇이 발견할 수 있어야 한다. 여기서 그 구조가 실제로 성립하는지 확인한다.
+// (색인 정책 자체는 각 doc 모듈이 단일 출처 — 사이트맵과 페이지 robots 가 어긋날 수 없다.)
+{
+  // 소스 스캔은 주석을 제거하고 한다 — 설명 주석 안의 예시 코드가 통과 근거가 되면 안 된다.
+  const stripComments = (t: string) => t.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+  const caseItems = casePageItems();
+  const idxCases = indexableCases();
+  const reviewItems = reviewPageItems();
+
+  // ① URL 고유성 — 같은 주소를 두 문서가 쓰면 정적 경로가 충돌한다.
+  const caseUrls = new Set(caseItems.map((g) => casePath(g.id)));
+  ok(caseUrls.size === caseItems.length, "시공사례 개별 URL 고유", `${caseUrls.size}/${caseItems.length}`);
+  const reviewUrls = new Set(reviewItems.map((r) => reviewPath(r.id)));
+  ok(reviewUrls.size === reviewItems.length, "후기 개별 URL 고유", `${reviewUrls.size}/${reviewItems.length}`);
+  const postUrls = new Set(posts.map((p) => blogPath(p.id)));
+  ok(postUrls.size === posts.length, "블로그 개별 URL 고유", `${postUrls.size}/${posts.length}`);
+
+  // ② 예시(상담 사례) 후기는 개별 페이지를 갖지 않는다 — 지어낸 후기를 문서로 발행하지 않기 위해.
+  ok(
+    reviewItems.every((r) => !isExampleReview(r)),
+    "예시 후기에는 개별 URL 없음",
+    reviewItems.filter(isExampleReview).map((r) => r.id).join(",")
+  );
+  // 색인 대상 후기는 반드시 운영자가 켠 것 + 최소 길이. 자동 승격 경로가 생기면 여기서 걸린다.
+  for (const r of indexableReviews()) {
+    ok(r.searchIndexable === true, `후기 ${r.id}: 색인은 운영자 승인(searchIndexable) 필요`);
+    ok(r.content.trim().length >= REVIEW_MIN_LENGTH, `후기 ${r.id}: 본문 ${REVIEW_MIN_LENGTH}자 이상`);
+  }
+
+  // ③ 사이트맵 ↔ 색인 판정 일치. "사이트맵엔 있는데 noindex" 는 GSC 가 바로 잡아낸다.
+  const smCases = entriesForGroup("cases").map((e) => e.loc);
+  const smReviews = entriesForGroup("reviews").map((e) => e.loc);
+  ok(smCases.length === idxCases.length, "사이트맵 cases = 색인 대상 사례 수", `${smCases.length} vs ${idxCases.length}`);
+  ok(smReviews.length === indexableReviews().length, "사이트맵 reviews = 색인 대상 후기 수", `${smReviews.length} vs ${indexableReviews().length}`);
+  ok(
+    smCases.every((loc) => idxCases.some((g) => caseUrl(siteUrl, g.id) === loc)),
+    "사이트맵 cases 항목이 전부 색인 대상"
+  );
+  // 얇은 사례(noindex)는 사이트맵에 들어가면 안 된다.
+  const thinInSitemap = caseItems.filter((g) => !isCaseIndexable(g)).filter((g) => smCases.includes(caseUrl(siteUrl, g.id)));
+  ok(thinInSitemap.length === 0, "noindex 사례가 사이트맵에 없음", thinInSitemap.map((g) => g.id).join(","));
+
+  // ④ lastmod 형식 — 날짜가 깨지면 수집기가 통째로 무시한다.
+  for (const group of ["cases", "reviews", "blog"] as const)
+    ok(
+      entriesForGroup(group).every((e) => /^\d{4}-\d{2}-\d{2}$/.test(e.lastmod)),
+      `사이트맵 ${group}: lastmod 형식 정상`
+    );
+
+  // ⑤ 목록 → 상세 내부링크가 소스에 실제 <a href> 로 존재하는지.
+  //    JS 클릭 핸들러만 있으면 검색로봇이 개별 문서를 영영 못 찾는다.
+  const gallerySrc = stripComments(fs.readFileSync(path.join(process.cwd(), "src", "app", "gallery", "page.tsx"), "utf8"));
+  ok(/casePath\(/.test(gallerySrc) && /<Link/.test(gallerySrc), "/gallery 목록 → 사례 상세 <a href> 링크");
+  const reviewsSrc = stripComments(fs.readFileSync(path.join(process.cwd(), "src", "app", "reviews", "ReviewsClient.tsx"), "utf8"));
+  ok(/reviewPath\(/.test(reviewsSrc) && /<Link/.test(reviewsSrc), "/reviews 목록 → 후기 상세 <a href> 링크");
+
+  // ⑥ 상세 라우트가 정적 생성되는지(SSG) — CSR 전용이면 HTML 에 본문이 없다.
+  for (const [route, file] of [
+    ["시공사례", path.join("src", "app", "gallery", "[id]", "page.tsx")],
+    ["후기", path.join("src", "app", "reviews", "[id]", "page.tsx")],
+    ["블로그", path.join("src", "app", "blog", "[id]", "page.tsx")],
+  ] as const) {
+    const src = fs.readFileSync(path.join(process.cwd(), file), "utf8");
+    ok(/export async function generateStaticParams/.test(src), `${route} 상세: generateStaticParams(SSG)`);
+    ok(!/^"use client"/m.test(src), `${route} 상세: 서버 컴포넌트(HTML 에 본문 포함)`);
+    ok(/alternates: \{ canonical: url \}/.test(src), `${route} 상세: canonical 자기참조`);
+    ok(/BreadcrumbList/.test(src), `${route} 상세: BreadcrumbList 구조화데이터`);
+  }
+
+  // ⑦ RSS 에 색인 대상 사례가 실리는지 — 네이버가 새 글을 발견하는 주 경로.
+  const rssSrc = stripComments(fs.readFileSync(path.join(process.cwd(), "src", "app", "rss.xml", "route.ts"), "utf8"));
+  ok(/indexableCases\(\)/.test(rssSrc), "RSS 피드에 시공사례 포함");
+}
 
 // ── ⑨-1 클라이언트 예외 폴백(error.tsx / global-error.tsx) ───────────────────
 // 이 두 파일이 없으면 Next.js 는 내장 기본 화면으로 떨어지고, 화면에 남는 텍스트는

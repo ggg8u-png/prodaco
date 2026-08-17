@@ -9,6 +9,7 @@ import WorkPhotos from "@/components/WorkPhotos";
 import { relatedServicesForPost } from "@/lib/relatedGuides";
 import { renderMarkdown } from "@/lib/markdown";
 import { blogPath, blogUrl, decodeBlogId } from "@/lib/blogUrl";
+import { postDates, newestDate } from "@/lib/contentDates";
 import { PhoneIcon, KakaoIcon } from "@/components/icons";
 import ui from "../../../../content/ui.json";
 
@@ -36,6 +37,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       type: "article",
       url,
       publishedTime: post.date,
+      modifiedTime: newestDate(postDates(post.id).modified, post.updatedAt) || post.date,
       tags: post.tags,
       images: ["/opengraph-image"],
     },
@@ -49,6 +51,9 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
   if (!post) notFound();
 
   const postUrl = blogUrl(siteUrl, post.id);
+  // 수정일은 git 커밋 날짜에서 온다 — 운영자가 CMS 로 글을 고치면 별도 입력 없이 반영된다.
+  // 발행일(post.date)은 그대로 둔다: 고쳤다고 새 글로 보이게 하지 않는다(요구사항 7).
+  const modifiedAt = newestDate(postDates(post.id).modified, post.updatedAt) || post.date;
 
   // 관련 글 — 같은 카테고리 우선, 부족하면 다른 글로 채움 (내부 링크 → SEO)
   const rest = posts.filter((p) => p.id !== post.id);
@@ -68,7 +73,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
     headline: post.title,
     description: post.excerpt,
     datePublished: post.date,
-    dateModified: post.date,
+    dateModified: modifiedAt,
     inLanguage: "ko",
     url: postUrl,
     mainEntityOfPage: { "@type": "WebPage", "@id": postUrl },
@@ -127,7 +132,12 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
           </nav>
           <p className="font-mono-pd text-[#FFD400] text-xs font-bold uppercase tracking-widest mb-3">{post.category}</p>
           <h1 className="text-2xl md:text-3xl font-black leading-tight mb-4">{post.title}</h1>
-          <p className="text-gray-500 text-xs">{post.date}</p>
+          <p className="text-gray-500 text-xs">
+            발행 <time dateTime={post.date}>{post.date}</time>
+            {modifiedAt !== post.date && (
+              <> · 수정 <time dateTime={modifiedAt}>{modifiedAt}</time></>
+            )}
+          </p>
         </div>
       </section>
 

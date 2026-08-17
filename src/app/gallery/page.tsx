@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { galleryItems } from "@/data/gallery";
+import { casePath } from "@/lib/caseDoc";
 import { selectWorkPhotos, workPhotoAlt, workPhotoCount } from "@/lib/workPhotos";
 import { company } from "@/data/company";
 import GalleryImage from "@/components/GalleryImage";
@@ -67,8 +69,12 @@ export default function GalleryPage() {
                     <GalleryImage src={item.afterImage} alt={`${item.title} 샌딩 후`} className="h-36 w-full" />
                   </div>
                 </div>
-                <p className="font-bold text-sm">{item.title}</p>
-                <p className="text-gray-500 text-xs mt-0.5">{item.description}</p>
+                {/* 상세 문서로 가는 <a href> — 검색로봇이 목록에서 개별 사례를 발견하는 유일한 경로다.
+                    JS 클릭 핸들러가 아니라 실제 링크여야 한다. */}
+                <Link href={casePath(item.id)} className="group block">
+                  <p className="font-bold text-sm transition-colors group-hover:text-[#9A8A2E]">{item.title}</p>
+                  <p className="text-gray-500 text-xs mt-0.5 line-clamp-2">{item.description}</p>
+                </Link>
                 <div className="flex gap-2 mt-1.5">
                   <span className="text-xs text-[#9A8A2E] font-semibold">{item.region}</span>
                   <span className="text-xs text-gray-400">·</span>

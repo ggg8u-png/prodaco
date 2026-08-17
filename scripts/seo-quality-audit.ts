@@ -26,6 +26,8 @@ import { keyAnswerFor, keyAnswerForRegion, familyLabel } from "@/data/keyAnswer"
 import { comboProfileFor } from "@/data/comboProfiles";
 import { costKeyOf } from "@/data/costs";
 import { compareKeyOf, itemFactsFor } from "@/data/itemFacts";
+import { indexableCases } from "@/lib/caseDoc";
+import { indexableReviews } from "@/lib/reviewDoc";
 import { fillTemplate } from "@/lib/template";
 import { josaEnd } from "@/lib/josa";
 import { clusterLabelOf } from "@/data/regions";
@@ -245,6 +247,9 @@ function checkSitemap(): void {
     keywords.filter((k) => k.type === "region-item" && k.region).map((k) => `${siteUrl}/services/${encodeURIComponent(k.region as string)}`)
   );
   const postIds = new Set(posts.map((p) => p.id));
+  // 상세 페이지가 실제로 생성되는 id 집합(사이트맵에 없는 id 가 실리면 404 가 된다).
+  const caseIds = new Set(indexableCases().map((g) => g.id));
+  const reviewIds = new Set(indexableReviews().map((r) => r.id));
   const coreUrls = new Set([siteUrl, `${siteUrl}/services`, `${siteUrl}/gallery`, `${siteUrl}/reviews`, `${siteUrl}/faq`, `${siteUrl}/blog`]);
 
   const seen = new Set<string>();
@@ -259,6 +264,18 @@ function checkSitemap(): void {
       if (e.loc.startsWith(`${siteUrl}/blog/`)) {
         const id = blogIdFromUrl(siteUrl, e.loc) ?? "";
         if (!postIds.has(id)) fail("사이트맵 무효 블로그", group, e.loc);
+        continue;
+      }
+      // 시공사례·후기 상세 — 그 URL 로 정적 페이지가 실제 생성되는(=색인 대상인) 것만 통과.
+      // 존재하지 않는 id 가 사이트맵에 실리면 그대로 404 이므로 여기서 잡는다.
+      if (e.loc.startsWith(`${siteUrl}/gallery/`)) {
+        const id = decodeURIComponent(e.loc.slice(`${siteUrl}/gallery/`.length));
+        if (!caseIds.has(id)) fail("사이트맵 무효 시공사례", group, e.loc);
+        continue;
+      }
+      if (e.loc.startsWith(`${siteUrl}/reviews/`)) {
+        const id = decodeURIComponent(e.loc.slice(`${siteUrl}/reviews/`.length));
+        if (!reviewIds.has(id)) fail("사이트맵 무효 후기", group, e.loc);
         continue;
       }
       const slug = decodeURIComponent(e.loc.slice(siteUrl.length + 1));

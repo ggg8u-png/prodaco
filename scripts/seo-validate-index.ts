@@ -15,6 +15,8 @@ import { entriesForGroup, SITEMAP_GROUPS } from "@/lib/sitemap";
 import { uniqueTitle, uniqueDescription } from "@/lib/seo";
 import { posts } from "@/data/posts";
 import { blogUrl } from "@/lib/blogUrl";
+import { caseUrl, casePageItems, isCaseIndexable } from "@/lib/caseDoc";
+import { reviewUrl, reviewPageItems, isReviewIndexable, reviewDescription } from "@/lib/reviewDoc";
 import { company } from "@/data/company";
 
 const ROOT = process.cwd();
@@ -50,6 +52,24 @@ for (const region of hubRegions) {
 for (const p of posts) {
   nodes.push({ url: blogUrl(siteUrl, p.id), kind: "blog", index: true, inSitemap: true,
     canonical: blogUrl(siteUrl, p.id), title: p.title, description: p.excerpt || "", hasEvidence: true, bodyEvidence: "blog" });
+}
+
+// 시공사례·후기 상세 — 색인 대상이 아닌 것까지 전부 우주에 넣는다.
+// noindex 페이지도 self-canonical 이어야 하고(검사 4), 사이트맵에 새면 안 되므로(검사 1)
+// 존재 자체를 알려야 검사가 성립한다.
+for (const g of casePageItems()) {
+  const url = caseUrl(siteUrl, g.id);
+  const idx = isCaseIndexable(g);
+  nodes.push({ url, kind: "case", index: idx, inSitemap: idx, canonical: url,
+    title: g.title, description: g.description || "",
+    hasEvidence: idx, bodyEvidence: idx ? "시공사례 사진·설명 보유" : `설명 ${(g.description || "").trim().length}자 — 색인 최소치 미만` });
+}
+for (const r of reviewPageItems()) {
+  const url = reviewUrl(siteUrl, r.id);
+  const idx = isReviewIndexable(r);
+  nodes.push({ url, kind: "review", index: idx, inSitemap: idx, canonical: url,
+    title: `${r.region} ${r.item} 고객 후기`, description: reviewDescription(r),
+    hasEvidence: idx, bodyEvidence: idx ? "운영자 검색노출 승인 + 본문 길이 충족" : "검색 노출 미승인 또는 본문 짧음" });
 }
 
 for (const k of getKeywords()) {

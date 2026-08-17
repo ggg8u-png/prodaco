@@ -14,6 +14,9 @@ import { getKeywords, hubDecisionFor } from "@/data/keywords";
 import { indexabilityFor } from "@/lib/seo/indexability";
 import { posts } from "@/data/posts";
 import { blogUrl } from "@/lib/blogUrl";
+import { caseUrl, caseDateInfo, indexableCases } from "@/lib/caseDoc";
+import { reviewUrl, indexableReviews } from "@/lib/reviewDoc";
+import { postDates, newestDate } from "@/lib/contentDates";
 import type { KeywordEntry } from "@/data/taxonomy";
 
 export const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://prodaco.kr";
@@ -125,6 +128,9 @@ export const SITEMAP_GROUPS = [
   "programmatic-1",
   "programmatic-2",
   "blog",
+  // 운영자가 CMS 로 발행하는 개별 문서 — 새 글을 올리면 별도 조치 없이 여기 들어온다.
+  "cases",
+  "reviews",
 ] as const;
 export type SitemapGroup = (typeof SITEMAP_GROUPS)[number];
 
@@ -181,10 +187,31 @@ export function entriesForGroup(group: SitemapGroup): SitemapEntry[] {
         .filter((p) => typeof p.id === "string" && p.id.length > 0)
         .map((p) => ({
           loc: blogUrl(siteUrl, p.id),
-          lastmod: safeLastmod(p.updatedAt, p.date),
+          // 글을 고치면 git 커밋 날짜가 올라간다 — 운영자가 수정일을 직접 적지 않아도 반영된다.
+          lastmod: safeLastmod(newestDate(postDates(p.id).modified, p.updatedAt, p.date), p.date),
           changefreq: "monthly",
           priority: 0.8,
         }));
+    case "cases":
+      // 색인 대상 시공사례만. 얇은 사례는 상세 URL 은 있어도 noindex 라 사이트맵에서 뺀다
+      // ("사이트맵에 있는데 noindex" 어긋남을 구조적으로 막는다 — 판정은 caseDoc 단일 출처).
+      return indexableCases().map((g) => {
+        const { published, modified } = caseDateInfo(g);
+        return {
+          loc: caseUrl(siteUrl, g.id),
+          lastmod: safeLastmod(modified, published),
+          changefreq: "monthly",
+          priority: 0.7,
+        };
+      });
+    case "reviews":
+      // 운영자가 '검색 노출 허용' 을 켠 실제 후기만. 기본값은 꺼짐이라 보통 0건이다.
+      return indexableReviews().map((r) => ({
+        loc: reviewUrl(siteUrl, r.id),
+        lastmod: safeLastmod(r.date ? `${r.date.length === 7 ? `${r.date}-01` : r.date}` : undefined),
+        changefreq: "yearly",
+        priority: 0.5,
+      }));
   }
 }
 

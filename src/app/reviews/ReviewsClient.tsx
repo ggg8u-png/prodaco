@@ -1,8 +1,10 @@
 "use client";
 import { useState } from "react";
+import Link from "next/link";
 import { Star } from "lucide-react";
 import type { Review } from "@/types";
 import { reviews as actualReviews, sampleReviews } from "@/data/reviews";
+import { reviewPath } from "@/lib/reviewDoc";
 import ui from "../../../content/ui.json";
 
 type Filter = "all" | "consumer" | "business";
@@ -28,9 +30,18 @@ function ActualCard({ review }: { review: Review }) {
       </div>
       <p className="text-xl font-black text-gray-200 leading-none mb-2">&ldquo;</p>
       <p className="text-gray-700 text-sm leading-relaxed mb-5">{review.content}</p>
-      <p className="text-xs text-gray-400 border-t border-gray-100 pt-4">
-        {review.name} · {review.region} · {review.item}
-      </p>
+      <div className="flex items-center justify-between gap-3 border-t border-gray-100 pt-4">
+        <p className="text-xs text-gray-400">
+          {review.name} · {review.region} · {review.item}
+        </p>
+        {/* 상세 문서로 가는 실제 <a href> — 검색로봇이 목록에서 개별 후기를 발견하는 경로. */}
+        <Link
+          href={reviewPath(review.id)}
+          className="shrink-0 text-xs font-bold text-[#16181D] underline decoration-[#FFD400] decoration-2 underline-offset-4 hover:text-[#9A8A2E]"
+        >
+          자세히 보기
+        </Link>
+      </div>
     </div>
   );
 }

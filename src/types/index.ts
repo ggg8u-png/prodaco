@@ -28,6 +28,10 @@ export interface Review {
   //   "consultation_case" = 상담/접수 사례 기반 예시 → '상황 예시' 카드, 별점 없음, 스키마 제외
   //   "example"           = 순수 예시(준비중) → '상황 예시' 카드, 별점 없음, 스키마 제외
   sourceType?: "actual" | "consultation_case" | "example";
+  // 검색 노출 허용 — 이 후기의 개별 페이지(/reviews/<id>)를 색인 대상으로 삼을지.
+  // 기본(미지정)은 false 로 취급한다. 짧거나 중복되는 후기까지 검색용 페이지가
+  // 무한히 생기는 걸 막기 위해, 색인은 운영자가 건별로 켜는 구조다(src/lib/reviewDoc.ts).
+  searchIndexable?: boolean;
 }
 
 export interface FAQ {
@@ -68,6 +72,10 @@ export interface GalleryItem {
   buildingType?: string;
   /** 작업 면적(평/㎡ 표기 자유) — 선택. */
   area?: string;
+  /** 작업 범위·내용(예: "강마루 철거 + 본드 제거 + 샌딩") — 선택. */
+  workScope?: string;
+  /** 비용 또는 비용 범위(운영자가 적은 그대로 표기) — 선택. 없으면 표시하지 않는다. */
+  cost?: string;
 }
 
 export interface GalleryPhoto {

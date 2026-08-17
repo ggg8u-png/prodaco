@@ -61,6 +61,9 @@ function loadCmsGallery(): GalleryItem[] {
           ...(g.workDate ? { workDate: g.workDate } : {}),
           ...(g.buildingType ? { buildingType: g.buildingType } : {}),
           ...(g.area ? { area: g.area } : {}),
+          // 상세페이지(/gallery/<id>)에 표기할 선택 항목 — 값이 있을 때만 실린다.
+          ...(g.workScope ? { workScope: g.workScope } : {}),
+          ...(g.cost ? { cost: g.cost } : {}),
         });
       }
     } catch {

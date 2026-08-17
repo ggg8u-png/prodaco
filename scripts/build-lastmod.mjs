@@ -43,9 +43,58 @@ function gitDate(paths) {
   }
 }
 
+/** 주어진 경로가 처음 추가된 커밋 날짜(YYYY-MM-DD). 없으면 "". */
+function gitCreatedDate(rel) {
+  if (!fs.existsSync(path.join(ROOT, rel))) return "";
+  try {
+    // --diff-filter=A = 추가된 커밋만. --follow 는 이름이 바뀐 파일도 추적한다.
+    const out = execFileSync("git", ["log", "--follow", "--diff-filter=A", "--format=%cs", "--", rel], {
+      cwd: ROOT,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
+    // 여러 줄이면 마지막(가장 오래된) 줄이 최초 추가 시점이다.
+    const first = out.split("\n").filter((l) => DATE_RE.test(l.trim())).pop();
+    return first ? first.trim() : "";
+  } catch {
+    return "";
+  }
+}
+
 /** 날짜 문자열 중 가장 최신(빈 값은 무시). */
 function maxDate(...dates) {
   return dates.filter((d) => d && DATE_RE.test(d)).sort().pop() || "";
+}
+
+/**
+ * 디렉터리 안 글당 1파일(JSON) 구조의 발행일·수정일.
+ *   { [id]: { created, modified } }
+ * created 는 그 파일이 처음 커밋된 날 = 실제 발행일이고, modified 는 마지막 커밋일이다.
+ * 둘을 나눠 두는 이유는 "수정했다고 발행일이 바뀌면 안 된다"(요구사항 7)를 지키기 위해서다.
+ */
+function perFileDates(dirRel) {
+  const out = {};
+  let files = [];
+  try {
+    files = fs.readdirSync(path.join(ROOT, dirRel)).filter((f) => f.endsWith(".json"));
+  } catch {
+    return out;
+  }
+  for (const f of files) {
+    const rel = path.posix.join(dirRel, f);
+    const modified = gitDate([rel]);
+    if (!modified) continue;
+    // id 는 파일명(= CMS 자동 슬러그). JSON 안에 id 가 따로 있으면 그쪽을 존중한다.
+    let id = f.replace(/\.json$/, "");
+    try {
+      const j = JSON.parse(fs.readFileSync(path.join(ROOT, rel), "utf8"));
+      if (typeof j?.id === "string" && j.id.trim()) id = j.id.trim();
+    } catch {
+      /* 파싱 실패는 파일명 id 로 진행 */
+    }
+    out[id] = { created: gitCreatedDate(rel) || modified, modified };
+  }
+  return out;
 }
 
 // ─── 페이지 종류별 입력 파일 ────────────────────────────────────────────────────
@@ -119,6 +168,12 @@ const { regions, slugs } = galleryDates();
 // 지역 허브는 그 지역 사례·사진이 늘면 실제로 내용이 바뀐다.
 const hubs = maxDate(gitDate(HUB_INPUTS), photos);
 
+// 글당 1파일 콘텐츠(블로그·시공사례)의 발행일·수정일 — 상세페이지 datePublished/dateModified
+// 와 sitemap lastmod 가 모두 여기서 나온다. 운영자가 CMS 로 글을 고치면 커밋 날짜가 올라가
+// 별도 조치 없이 수정일이 반영된다.
+const posts = perFileDates("content/blog");
+const cases = perFileDates("content/gallery");
+
 const map = {
   // 사람이 파일만 열어봐도 무엇인지 알게 적어 둔다(빌드 산출물이라 커밋되지 않음).
   _note: "scripts/build-lastmod.mjs 가 git 커밋 날짜에서 생성 — 직접 수정하지 말 것",
@@ -127,9 +182,12 @@ const map = {
   hubs,
   regions,
   slugs,
+  posts,
+  cases,
 };
 
-const anyDate = maxDate(core, keywords, hubs, ...Object.values(regions), ...Object.values(slugs));
+const perFileValues = [...Object.values(posts), ...Object.values(cases)].map((v) => v.modified);
+const anyDate = maxDate(core, keywords, hubs, ...Object.values(regions), ...Object.values(slugs), ...perFileValues);
 
 if (PRINT_ONLY) {
   console.log(JSON.stringify(map, null, 2));
@@ -139,6 +197,6 @@ if (PRINT_ONLY) {
 } else {
   fs.writeFileSync(OUT, JSON.stringify(map, null, 2) + "\n");
   console.log(
-    `[lastmod] content/lastmod.json 생성 — core ${core || "-"} · keywords ${keywords || "-"} · hubs ${hubs || "-"} · 지역 ${Object.keys(regions).length}개 · 조합 ${Object.keys(slugs).length}개`
+    `[lastmod] content/lastmod.json 생성 — core ${core || "-"} · keywords ${keywords || "-"} · hubs ${hubs || "-"} · 지역 ${Object.keys(regions).length}개 · 조합 ${Object.keys(slugs).length}개 · 블로그 ${Object.keys(posts).length}개 · 시공사례 ${Object.keys(cases).length}개`
   );
 }

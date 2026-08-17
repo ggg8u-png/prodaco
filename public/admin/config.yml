@@ -586,7 +586,11 @@ collections:
               - { label: "내용", name: "content", widget: "text" }
               - { label: "별점", name: "rating", widget: "number", default: 5, value_type: "int", min: 1, max: 5 }
               - { label: "유형", name: "type", widget: "select", options: ["consumer", "business"], default: "consumer" }
-              - { label: "예시(준비용) 후기?", name: "sample", widget: "boolean", default: false, hint: "실제 후기가 아니면 켜기 → 카드에 '예시' 라벨 표시" }
+              - { label: "예시(준비용) 후기?", name: "sample", widget: "boolean", default: false, hint: "실제 후기가 아니면 켜기 → 카드에 '예시' 라벨 표시. 켜면 개별 후기 페이지가 만들어지지 않습니다." }
+              # 실제 후기에는 /reviews/<ID> 개별 페이지가 생기지만, 기본은 검색 제외다.
+              # 짧은 후기까지 검색용 페이지가 늘어나면 사이트 전체 평가에 불리하기 때문에,
+              # 검색에 내보낼 만한 후기만 운영자가 건별로 켜는 구조로 둔다.
+              - { label: "검색 노출 허용", name: "searchIndexable", widget: "boolean", default: false, required: false, hint: "이 후기를 구글·네이버 검색에 개별 페이지로 내보낼지. 기본 꺼짐. 내용이 150자 이상이고 실제 후기일 때만 켜세요(짧으면 켜도 제외됩니다)." }
               - { label: "날짜(선택)", name: "date", widget: "string", required: false, default: "" }
 
   # ─────────────────────────────────────────────────────────────
@@ -631,7 +635,15 @@ collections:
       - { label: "철거 전 사진", name: "beforeImage", widget: "image", hint: "폰으로 찍은 원본 그대로 올리셔도 됩니다 — 사이트에 나갈 때 자동으로 줄여서 내보냅니다." }
       - { label: "샌딩 후 사진", name: "afterImage", widget: "image" }
       - { label: "작업일(선택)", name: "workDate", widget: "datetime", date_format: "YYYY-MM-DD", time_format: false, picker_utc: false, required: false, hint: "기억나는 날짜만 넣으세요. 비워도 됩니다." }
-      - { label: "설명(선택)", name: "description", widget: "text", required: false, default: "", hint: "어떤 작업이었는지 한두 줄. 비워도 됩니다." }
+      # ⚠ 설명은 이제 검색 노출에 직접 영향을 준다.
+      #   시공사례마다 /gallery/<주소> 로 독립 페이지가 생기는데, 설명이 40자 미만이면
+      #   사진 말고 읽을 게 없는 페이지라 자동으로 검색 제외(noindex)된다.
+      - { label: "설명", name: "description", widget: "text", required: false, default: "", hint: "어떤 현장이었고 무슨 작업을 했는지 두세 문장. 40자 이상 쓰면 이 사례가 검색에 노출됩니다(짧으면 검색 제외). 예: 상가 홀 데코타일을 박리기로 걷어내고 바닥에 눌어붙은 본드를 샌딩으로 정리했습니다." }
+      # 아래 3개는 모두 선택 — 적으면 상세페이지 현장정보 표에 그대로 표시되고, 비우면 그 칸이 아예 안 나옵니다.
+      - { label: "건물 유형(선택)", name: "buildingType", widget: "string", required: false, default: "", hint: "예: 아파트 / 상가 / 사무실 / 학원" }
+      - { label: "작업 면적(선택)", name: "area", widget: "string", required: false, default: "", hint: "예: 32평 / 105㎡. 단위까지 그대로 적으세요." }
+      - { label: "작업 범위(선택)", name: "workScope", widget: "string", required: false, default: "", hint: "예: 강마루 철거 + 본드 제거 + 바닥 샌딩" }
+      - { label: "비용(선택)", name: "cost", widget: "string", required: false, default: "", hint: "실제 진행된 금액이나 범위를 적을 때만 채우세요. 확실하지 않으면 비워 두세요 — 비우면 표시되지 않습니다." }
       # ⚠ verified 는 색인 판정에 쓰인다(false 면 자동 색인 승급 제외). 폼에 두지 않으면
       #   기존 사례를 수정 저장할 때 값이 사라지므로 반드시 노출한다.
       - { label: "운영자가 직접 확인한 실제 사례", name: "verified", widget: "boolean", default: true, hint: "이 지역·품목이 실제 그 현장이 맞을 때만 켜세요. 끄면 검색 색인 승급에서 제외됩니다(사이트에는 계속 보입니다)." }
