@@ -42,6 +42,14 @@ function normalize(raw: Record<string, unknown>, file: string, mtime: Date): Blo
     ...(typeof raw.updatedAt === "string" && raw.updatedAt ? { updatedAt: raw.updatedAt.slice(0, 10) } : {}),
     category: typeof raw.category === "string" && raw.category.trim() ? raw.category.trim() : "정보",
     tags,
+    // 대표 썸네일(선택) — 비면 src/lib/featuredImage.ts 가 본문 첫 사진 → 기본 사진 순으로
+    // 폴백한다. 여기서 가짜 값을 채우지 않는다(기존 글은 이 키가 아예 없다).
+    ...(typeof raw.featuredImage === "string" && raw.featuredImage.trim()
+      ? { featuredImage: raw.featuredImage.trim() }
+      : {}),
+    ...(typeof raw.featuredImageAlt === "string" && raw.featuredImageAlt.trim()
+      ? { featuredImageAlt: raw.featuredImageAlt.trim() }
+      : {}),
   };
 }
 

@@ -608,18 +608,27 @@ collections:
     summary: "{{title}}  ·  {{date}}"
     sortable_fields: ["date", "title", "category"]
     preview_path: "blog/{{slug}}"
+    # 폼 순서 = 실제로 쓰는 순서: 제목 → 카테고리 → 대표 썸네일 → 요약 → 본문 → 태그 → 작성일.
+    # (필드 순서만 바뀔 뿐 저장되는 JSON 키는 그대로라 기존 글은 영향 없습니다.)
     fields:
       - { label: "제목", name: "title", widget: "string", hint: "이 제목이 그대로 주소가 됩니다. 저장한 뒤 제목을 고쳐도 주소는 그대로 유지되니 안심하고 다듬으세요." }
+      - { label: "카테고리", name: "category", widget: "select", options: ["비용정보", "가이드", "정보", "전문정보"], default: "정보" }
+      # ⚠ 대표 썸네일 — 검색결과·카카오톡 공유·목록 카드에 나가는 사진입니다.
+      #   비워 두면 ① 본문 첫 사진 ② 그것도 없으면 작업현장 사진 중 이 글 전용으로 고정된
+      #   한 장이 자동으로 쓰입니다(src/lib/featuredImage.ts). 직접 고르면 그 사진이 우선합니다.
+      #   ※ 네이버·구글이 실제로 어떤 썸네일을 고를지는 사이트가 강제할 수 없습니다.
+      #     여기서 지정한 값은 "우리가 대표로 제시하는 사진" 신호를 전부 같은 값으로 맞추는 역할입니다.
+      - { label: "대표 썸네일(검색결과·공유용)", name: "featuredImage", widget: "image", required: false, hint: "검색결과와 카카오톡 공유에 보이길 원하는 사진을 고르세요. 폰 원본 그대로 올려도 됩니다(자동으로 줄여 내보냅니다). 비워두면 본문 첫 사진이 자동으로 쓰입니다." }
+      - { label: "대표 썸네일 설명(선택)", name: "featuredImageAlt", widget: "string", required: false, default: "", hint: "사진이 안 보일 때 대신 읽히는 문구입니다. 비워두면 제목으로 자동 생성됩니다. 확인되지 않은 지역·날짜는 적지 마세요." }
+      - { label: "요약(비워두면 자동)", name: "excerpt", widget: "text", required: false, default: "", hint: "비워두면 본문 앞부분이 자동으로 요약으로 쓰입니다. 검색결과 설명을 직접 정하고 싶을 때만 채우세요." }
       - label: "본문"
         name: "content"
         widget: "markdown"
         buttons: ["bold", "italic", "link", "heading-two", "heading-three", "bulleted-list", "numbered-list", "quote"]
         editor_components: ["image"]
-        hint: "글자를 드래그해서 위쪽 버튼으로 굵게·목록·인용을 적용하세요. 사진은 '+' 버튼 → 이미지로 넣으면 됩니다(크기 조정 불필요 — 알아서 줄여 내보냅니다)."
-      - { label: "카테고리", name: "category", widget: "select", options: ["비용정보", "가이드", "정보", "전문정보"], default: "정보" }
-      - { label: "작성일", name: "date", widget: "datetime", date_format: "YYYY-MM-DD", time_format: false, picker_utc: false, hint: "오늘 날짜가 자동으로 들어갑니다. 그대로 두셔도 됩니다." }
-      - { label: "요약(비워두면 자동)", name: "excerpt", widget: "text", required: false, default: "", hint: "비워두면 본문 앞부분이 자동으로 요약으로 쓰입니다. 검색결과 설명을 직접 정하고 싶을 때만 채우세요." }
+        hint: "글자를 드래그해서 위쪽 버튼으로 굵게·목록·인용을 적용하세요. 사진은 넣고 싶은 위치에 커서를 두고 '+' 버튼 → 이미지를 고르면 그 자리에 들어갑니다(장수 제한 없음, 크기 조정 불필요 — 알아서 줄여 내보냅니다). 사진 설명란에 적은 문구는 사진 아래 캡션으로도 보입니다."
       - { label: "태그(선택)", name: "tags", widget: "list", required: false, default: [], hint: "없어도 됩니다. 예: 데코타일철거, 평당비용" }
+      - { label: "작성일", name: "date", widget: "datetime", date_format: "YYYY-MM-DD", time_format: false, picker_utc: false, hint: "오늘 날짜가 자동으로 들어갑니다. 그대로 두셔도 됩니다. 블로그 목록은 이 날짜 최신순으로 정렬됩니다." }
 
   # ─────────────────────────────────────────────────────────────
   # 9. 고객 후기
@@ -690,9 +699,41 @@ collections:
         required: true
         hint: "실제 철거한 바닥재 종류를 고르세요. 지역과 함께 이 값이 일치하는 페이지가 자동 색인됩니다."
         options: ["마루철거","강마루철거","강화마루철거","온돌마루철거","데코타일철거","데코륨철거","디럭스타일철거","타일철거","바닥타일철거","폴리싱타일철거","장판철거","륨장판철거","바닥재철거","바닥철거","바닥샌딩","면갈이","에폭시철거","우레탄철거"]
-      - { label: "철거 전 사진", name: "beforeImage", widget: "image", hint: "폰으로 찍은 원본 그대로 올리셔도 됩니다 — 사이트에 나갈 때 자동으로 줄여서 내보냅니다." }
-      - { label: "샌딩 후 사진", name: "afterImage", widget: "image" }
-      - { label: "작업일(선택)", name: "workDate", widget: "datetime", date_format: "YYYY-MM-DD", time_format: false, picker_utc: false, required: false, hint: "기억나는 날짜만 넣으세요. 비워도 됩니다." }
+      - { label: "철거 전 사진", name: "beforeImage", widget: "image", hint: "폰으로 찍은 원본 그대로 올리셔도 됩니다 — 사이트에 나갈 때 자동으로 줄여서 내보냅니다. 사진을 바꾸려면 이 칸을 눌러 다른 사진을 고르면 됩니다(기존 사진은 미디어함에 그대로 남습니다)." }
+      - { label: "샌딩 후 사진", name: "afterImage", widget: "image", hint: "같은 현장의 작업 후 사진을 올리세요. ⚠ 다른 현장 사진을 여기 넣으면 서로 다른 현장이 '작업 전/작업 후'로 짝지어 보이게 됩니다 — 반드시 같은 현장 사진만 넣어 주세요." }
+      # ── 대표 썸네일 ──────────────────────────────────────────────────────────
+      # 검색결과·카카오톡 공유·SNS 카드에 나가는 사진(og:image · 구조화데이터 image 첫 값).
+      # 아무것도 손대지 않으면 지금까지와 똑같이 '샌딩 후 사진'이 쓰입니다 — 기존 사례는 변화 없음.
+      # ※ 네이버·구글이 실제로 어떤 썸네일을 고를지는 사이트가 강제할 수 없습니다.
+      #   여기서 하는 일은 우리가 대표로 제시하는 사진을 모든 신호에 같은 값으로 맞추는 것까지입니다.
+      - label: "대표 썸네일로 쓸 사진"
+        name: "thumbnailChoice"
+        widget: "select"
+        required: false
+        default: "after"
+        hint: "검색결과·카톡 공유에 보이길 원하는 사진을 고르세요. 그대로 두면 '샌딩 후 사진'이 쓰입니다."
+        options:
+          - { label: "샌딩 후 사진 (기본)", value: "after" }
+          - { label: "철거 전 사진", value: "before" }
+          - { label: "아래에 따로 올린 사진", value: "custom" }
+      - { label: "대표 썸네일 직접 올리기(선택)", name: "featuredImage", widget: "image", required: false, hint: "위에서 '아래에 따로 올린 사진'을 골랐을 때 여기에 올리세요. (여기에 사진을 올리면 위 선택과 관계없이 이 사진이 대표로 쓰입니다.)" }
+      - { label: "대표 썸네일 설명(선택)", name: "featuredImageAlt", widget: "string", required: false, default: "", hint: "사진이 안 보일 때 대신 읽히는 문구. 비워두면 지역+작업종류로 자동 생성됩니다. 확인되지 않은 지역·날짜는 적지 마세요." }
+      # ── 현장 추가 사진 ───────────────────────────────────────────────────────
+      # 전/후 2장 말고도 이 현장에서 찍은 사진을 원하는 만큼 더 올릴 수 있습니다.
+      # 상세페이지에서 '이 현장 추가 사진'으로 전/후 쌍과 분리해 표시됩니다 —
+      # 대응 관계가 확인되지 않은 사진을 '작업 전/작업 후'로 묶어 보여 주지 않기 위해서입니다.
+      - label: "현장 추가 사진(선택)"
+        name: "photos"
+        widget: "list"
+        required: false
+        label_singular: "사진"
+        summary: "{{fields.caption}}"
+        hint: "이 현장에서 찍은 다른 사진들. 장수 제한은 없습니다. 오른쪽 손잡이를 끌어 순서를 바꾸고, 휴지통으로 지울 수 있습니다. ⚠ 다른 현장 사진은 넣지 마세요."
+        fields:
+          - { label: "사진", name: "src", widget: "image" }
+          - { label: "사진 설명(alt)", name: "alt", widget: "string", required: false, default: "", hint: "예: 데코타일 걷어낸 뒤 남은 본드 자국. 확인되지 않은 지역·날짜는 적지 마세요." }
+          - { label: "사진 아래 캡션(선택)", name: "caption", widget: "string", required: false, default: "" }
+      - { label: "작업일(선택)", name: "workDate", widget: "datetime", date_format: "YYYY-MM-DD", time_format: false, picker_utc: false, required: false, hint: "실제로 작업한 날짜입니다. 상세페이지에 '작업일'로 표시됩니다. 비워도 됩니다. ※ 목록 순서는 이 날짜가 아니라 '올린 순서'(최신 등록이 맨 위)로 정해집니다." }
       # ⚠ 설명은 이제 검색 노출에 직접 영향을 준다.
       #   시공사례마다 /gallery/<주소> 로 독립 페이지가 생기는데, 설명이 40자 미만이면
       #   사진 말고 읽을 게 없는 페이지라 자동으로 검색 제외(noindex)된다.
@@ -712,3 +753,6 @@ collections:
       - { label: "영상 제목(선택)", name: "videoTitle", widget: "string", required: false, default: "" }
       - { label: "운영자가 직접 확인한 실제 사례", name: "verified", widget: "boolean", default: true, hint: "이 지역·품목이 실제 그 현장이 맞을 때만 켜세요. 끄면 검색 색인 승급에서 제외됩니다(사이트에는 계속 보입니다)." }
       - { label: "제목(선택)", name: "title", widget: "string", required: false, default: "", hint: "비워두면 '지역 + 작업종류 + 시공사례'로 자동 생성됩니다." }
+      # 목록은 기본적으로 '최근에 올린 사례'가 맨 위입니다. 특정 사례를 계속 맨 위에 두고
+      # 싶을 때만 이 스위치를 켜세요(여러 개 켜면 그것들끼리 다시 최신순으로 정렬됩니다).
+      - { label: "목록 맨 위에 고정", name: "featured", widget: "boolean", default: false, required: false, hint: "켜면 이 사례가 시공사례 목록·홈 미리보기의 맨 앞에 고정됩니다. 평소에는 꺼 두세요 — 끄면 올린 순서(최신 먼저)대로 나옵니다." }

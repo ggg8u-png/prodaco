@@ -53,6 +53,13 @@ export interface BlogPost {
   updatedAt?: string;
   category: string;
   tags: string[];
+  // ── 대표 썸네일(선택) ───────────────────────────────────────────────────────
+  // 운영자가 검색결과·SNS 공유·목록 카드에 쓸 사진을 직접 고른 값.
+  // 비어 있으면 src/lib/featuredImage.ts 의 폴백 순서(본문 첫 사진 → 기본 사진)를 따른다.
+  /** 대표 썸네일 경로(/uploads/... 또는 절대 URL). */
+  featuredImage?: string;
+  /** 대표 썸네일 대체텍스트. 비면 제목 기반 문구를 쓴다. */
+  featuredImageAlt?: string;
 }
 
 export interface GalleryItem {
@@ -86,6 +93,31 @@ export interface GalleryItem {
   videoThumbnail?: string;
   /** 영상 제목(선택). 없으면 사례 제목을 쓴다. */
   videoTitle?: string;
+  // ── 대표 썸네일 / 추가 사진 / 고정 (전부 선택) ──────────────────────────────
+  /** 목록 맨 위 고정 — 운영자가 켠 사례만 최신순보다 앞에 온다. */
+  featured?: boolean;
+  /**
+   * 대표 썸네일로 쓸 사진 선택.
+   *   "after"(기본) · "before" · "custom"(featuredImage 에 직접 올린 사진)
+   * 미지정은 "after" 로 취급한다(기존 사례 하위호환 — 지금까지 og:image 가 afterImage 였다).
+   */
+  thumbnailChoice?: "after" | "before" | "custom";
+  /** 직접 올린 대표 썸네일. 값이 있으면 thumbnailChoice 와 무관하게 이 사진이 우선한다. */
+  featuredImage?: string;
+  /** 대표 썸네일 대체텍스트(선택). */
+  featuredImageAlt?: string;
+  /**
+   * 같은 현장에서 찍은 추가 사진(선택).
+   * 전/후 쌍과 구분해서 보여준다 — 임의의 두 장을 '작업 전/작업 후'로 묶지 않기 위해서다.
+   */
+  photos?: CasePhoto[];
+}
+
+/** 시공사례 상세에 붙는 추가 사진 한 장. */
+export interface CasePhoto {
+  src: string;
+  alt?: string;
+  caption?: string;
 }
 
 export interface GalleryPhoto {

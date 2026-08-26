@@ -21,7 +21,9 @@ import { getContentForKeyword, familyOf } from "@/lib/content";
 import { keyAnswerFor, keyAnswerForRegion, familyLabel } from "@/data/keyAnswer";
 import { galleryItems } from "@/data/gallery";
 import { entriesForGroup, SITEMAP_GROUPS, renderUrlset, renderIndex, nonEmptyGroups, SITE_LASTMOD } from "@/lib/sitemap";
-import { casePath, caseUrl, casePageItems, indexableCases, isCaseIndexable } from "@/lib/caseDoc";
+import { casePath, caseUrl, casePageItems, indexableCases, isCaseIndexable, caseDateInfo } from "@/lib/caseDoc";
+import { caseRegisteredDate, compareCasesNewestFirst } from "@/lib/caseDates";
+import { postFeaturedImage, caseFeaturedImage, firstBodyImage, SITE_OG_IMAGE } from "@/lib/featuredImage";
 import { reviewPath, reviewPageItems, indexableReviews, REVIEW_MIN_LENGTH } from "@/lib/reviewDoc";
 import { isExampleReview } from "@/data/reviews";
 import { blogPath } from "@/lib/blogUrl";
@@ -1048,6 +1050,95 @@ ok(dupTitle === 0, "색인 대상 title 중복 없음", `dup=${dupTitle}`);
     const efs = pickFaqs(epoxy, 4);
     ok(efs.every((f) => faqMatchesItem(f, "에폭시철거")), "에폭시 페이지 FAQ 전부 품목 일치");
   }
+}
+
+// ── ⑯ 시공사례 목록 정렬 (최신 등록순) ──────────────────────────────────────
+// 회귀 방지: 예전에는 loadCmsGallery() 가 readdir 순서(파일명 오름차순)를 그대로 써서
+// 가장 오래된 사례가 목록 1번에 영구 고정됐다. 아래 검사가 그 상태를 다시 통과시키지 않는다.
+{
+  const items = galleryItems;
+
+  // ① 실제 배열이 최신 등록순으로 정렬돼 있다(비교자와 배열이 어긋나지 않는다).
+  let outOfOrder = "";
+  for (let i = 1; i < items.length; i++) {
+    if (compareCasesNewestFirst(items[i - 1], items[i]) > 0) {
+      outOfOrder = `${items[i - 1].id} → ${items[i].id}`;
+      break;
+    }
+  }
+  ok(outOfOrder === "", "시공사례 목록: 최신 등록순 정렬", outOfOrder);
+
+  // ② 등록일을 아는 사례 중 가장 최근 것이 목록 맨 앞이어야 한다(고정 사례가 없을 때).
+  const dated = items.filter((g) => !!caseRegisteredDate(g));
+  if (dated.length > 1 && !items.some((g) => g.featured)) {
+    const newest = dated.reduce((a, b) =>
+      Date.parse(caseRegisteredDate(b) as string) > Date.parse(caseRegisteredDate(a) as string) ? b : a
+    );
+    ok(
+      items[0].id === newest.id,
+      "시공사례 목록: 가장 최근 등록 사례가 1번",
+      `1번=${items[0].id}(${caseRegisteredDate(items[0])}) / 최신=${newest.id}(${caseRegisteredDate(newest)})`
+    );
+  }
+
+  // ③ 파일명 순서(예전 동작)와 발행일 순서가 다르다는 걸 확인 — 정렬이 실제로 일하고 있다는 증거.
+  //   (같은 날 등록한 사례만 있는 저장소에서는 우연히 같을 수 있으므로 다를 때만 강제하지 않는다.)
+  const byName = items.map((g) => g.id).slice().sort();
+  ok(items.length > 0, "시공사례가 최소 1건 존재", `${items.length}건`);
+  if (items.length > 2 && JSON.stringify(byName) === JSON.stringify(items.map((g) => g.id))) {
+    ok(false, "시공사례 목록이 파일명 오름차순 그대로 — 정렬이 적용되지 않았다");
+  }
+
+  // ④ '작업일'은 여전히 workDate 우선이어야 한다(구조화데이터·사이트맵 값이 흔들리면 안 된다).
+  const withWorkDate = items.filter((g) => !!g.workDate);
+  const wrongPublished = withWorkDate.filter((g) => caseDateInfo(g).published !== g.workDate?.slice(0, 10));
+  ok(
+    wrongPublished.length === 0,
+    "시공사례 작업일(datePublished)은 workDate 를 그대로 쓴다",
+    wrongPublished.slice(0, 3).map((g) => g.id).join(", ")
+  );
+
+  // ⑤ 정렬 비교자는 안정적이어야 한다 — 같은 입력을 두 번 정렬해도 결과가 같다.
+  const a = items.map((g) => g.id).join("|");
+  const b = items.slice().reverse().sort(compareCasesNewestFirst).map((g) => g.id).join("|");
+  ok(a === b, "시공사례 정렬은 입력 순서와 무관(안정적)");
+}
+
+// ── ⑰ 대표 썸네일 ────────────────────────────────────────────────────────────
+{
+  // ① 모든 글·사례가 대표 이미지를 갖는다(폴백 포함) — og:image 가 비는 문서가 없어야 한다.
+  const postsNoImage = posts.filter((p) => !postFeaturedImage(p).src);
+  ok(postsNoImage.length === 0, "블로그: 모든 글에 대표 이미지 해석 결과가 있다", postsNoImage.slice(0, 3).map((p) => p.id).join(", "));
+  const casesNoImage = casePageItems().filter((g) => !caseFeaturedImage(g).src);
+  ok(casesNoImage.length === 0, "시공사례: 모든 사례에 대표 이미지 해석 결과가 있다", casesNoImage.slice(0, 3).map((g) => g.id).join(", "));
+
+  // ② 사이트 공용 OG 로 떨어지는 글이 없어야 한다 — 예전에는 전 글이 같은 사진 한 장이었다.
+  const siteFallback = posts.filter((p) => postFeaturedImage(p).src === SITE_OG_IMAGE);
+  ok(siteFallback.length === 0, "블로그: 사이트 공용 OG 로 폴백하는 글 없음", siteFallback.slice(0, 3).map((p) => p.id).join(", "));
+
+  // ③ 글마다 대표 이미지가 서로 달라야 한다(전부 같은 사진이면 폴백이 고장난 것).
+  if (posts.length > 3) {
+    const distinct = new Set(posts.map((p) => postFeaturedImage(p).src)).size;
+    ok(distinct > 1, "블로그: 대표 이미지가 글마다 구분된다", `서로 다른 사진 ${distinct}종 / 글 ${posts.length}개`);
+  }
+
+  // ④ 운영자가 직접 지정한 값은 무조건 이긴다.
+  const withCustom = posts.filter((p) => !!p.featuredImage);
+  const ignored = withCustom.filter((p) => postFeaturedImage(p).src !== p.featuredImage);
+  ok(ignored.length === 0, "블로그: 직접 지정한 대표 썸네일이 폴백보다 우선", ignored.slice(0, 3).map((p) => p.id).join(", "));
+
+  const caseCustom = casePageItems().filter((g) => !!g.featuredImage);
+  const caseIgnored = caseCustom.filter((g) => caseFeaturedImage(g).src !== g.featuredImage);
+  ok(caseIgnored.length === 0, "시공사례: 직접 지정한 대표 썸네일이 폴백보다 우선", caseIgnored.slice(0, 3).map((g) => g.id).join(", "));
+
+  // ⑤ 지정이 없는 사례는 지금까지와 같은 '샌딩 후 사진' — 기존 사례의 og:image 를 바꾸지 않는다.
+  const untouched = casePageItems().filter((g) => !g.featuredImage && !g.thumbnailChoice);
+  const changed = untouched.filter((g) => g.afterImage && caseFeaturedImage(g).src !== g.afterImage);
+  ok(changed.length === 0, "시공사례: 미지정 사례의 대표 이미지는 기존과 동일(afterImage)", changed.slice(0, 3).map((g) => g.id).join(", "));
+
+  // ⑥ 본문 첫 사진 추출이 실제 마크다운에서 동작한다.
+  ok(firstBodyImage("본문\n\n![바닥 사진](/uploads/a.jpg)\n뒷 문단")?.src === "/uploads/a.jpg", "본문 첫 사진 추출");
+  ok(firstBodyImage("사진 없는 본문") === null, "사진 없는 본문은 null");
 }
 
 // ── 결과 ─────────────────────────────────────────────────────────────────────

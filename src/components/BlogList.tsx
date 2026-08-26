@@ -4,6 +4,8 @@ import type { BlogPost } from "@/types";
 import { blogPath } from "@/lib/blogUrl";
 import Pagination from "@/components/Pagination";
 import type { Paged } from "@/lib/pagination";
+import { postFeaturedImage, SITE_OG_IMAGE } from "@/lib/featuredImage";
+import { uploadedImage } from "@/lib/cdnImage";
 import ui from "../../content/ui.json";
 
 const categoryColor: Record<string, string> = Object.fromEntries(
@@ -15,7 +17,10 @@ export default function BlogList({ paged }: { paged: Paged<BlogPost> }) {
     <section className="py-12 px-5">
       <div className="max-w-4xl mx-auto">
         <div className="divide-y divide-gray-100">
-          {paged.items.map((post) => (
+          {paged.items.map((post) => {
+            // 카드 썸네일 — 검색결과·SNS 와 같은 사진을 쓴다(src/lib/featuredImage.ts 단일 출처).
+            const featured = postFeaturedImage(post);
+            return (
             <Link
               key={post.id}
               href={blogPath(post.id)}
@@ -27,6 +32,16 @@ export default function BlogList({ paged }: { paged: Paged<BlogPost> }) {
                 </p>
                 <p className="text-xs text-gray-400 mt-1">{post.date}</p>
               </div>
+              {featured.src !== SITE_OG_IMAGE && (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  src={uploadedImage(featured.src, 320)}
+                  alt={featured.alt}
+                  loading="lazy"
+                  decoding="async"
+                  className="h-40 w-full shrink-0 rounded-sm border border-gray-200 bg-gray-100 object-cover md:h-[76px] md:w-[112px]"
+                />
+              )}
               <div className="flex-1 min-w-0">
                 <h2 className="font-bold text-base text-[#16181D] group-hover:text-[#9A8A2E] transition-colors mb-2 leading-snug">
                   {post.title}
@@ -39,7 +54,8 @@ export default function BlogList({ paged }: { paged: Paged<BlogPost> }) {
                 </div>
               </div>
             </Link>
-          ))}
+            );
+          })}
         </div>
         <Pagination paged={paged} label="블로그 글 목록 페이지 이동" />
       </div>

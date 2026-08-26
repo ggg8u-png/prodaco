@@ -11,7 +11,7 @@ import type { GalleryItem } from "@/types";
 import { galleryItems } from "@/data/gallery";
 import { getKeywordBySlug, hubDecisionFor } from "@/data/keywords";
 import { indexabilityFor } from "@/lib/seo/indexability";
-import { caseDates, newestDate } from "@/lib/contentDates";
+import { casePublishedDate, caseModifiedDate } from "@/lib/caseDates";
 
 /** 사이트 내부 경로 — <Link href> 용. */
 export function casePath(id: string): string {
@@ -69,17 +69,15 @@ export function caseById(id: string): GalleryItem | undefined {
 }
 
 /**
- * 사례의 발행일·수정일.
- *   발행일 = 운영자가 적은 작업일이 있으면 그 날, 없으면 파일이 처음 커밋된 날
+ * 사례의 발행일·수정일 — 목록 정렬과 완전히 같은 기준(src/lib/caseDates.ts).
+ *   발행일 = 작업일 → git 최초 커밋일 → 파일명(case-YYYYMMDD-HHMM) 날짜
  *   수정일 = 파일이 마지막으로 커밋된 날(발행일보다 이르면 발행일로 맞춘다)
- * git 을 못 읽는 환경이면 workDate 만 남고, 그것도 없으면 undefined 다 — 그때는
- * 구조화데이터에서 날짜 필드를 아예 빼서 없는 값을 지어내지 않는다.
+ * 근거가 하나도 없으면 undefined 다 — 그때는 구조화데이터에서 날짜 필드를 아예 빼서
+ * 없는 값을 지어내지 않는다.
  */
 export function caseDateInfo(g: GalleryItem): { published?: string; modified?: string } {
-  const git = caseDates(g.id);
-  const published = g.workDate?.slice(0, 10) || git.created;
-  const modified = newestDate(git.modified, published);
-  return { published, modified };
+  // 규칙 자체는 src/lib/caseDates.ts 하나에만 있다 — 목록 정렬과 같은 날짜를 쓰기 위해서다.
+  return { published: casePublishedDate(g), modified: caseModifiedDate(g) };
 }
 
 export interface CaseLink {

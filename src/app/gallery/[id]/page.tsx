@@ -23,6 +23,7 @@ import {
   decodeCaseId,
 } from "@/lib/caseDoc";
 import { uploadedImage } from "@/lib/cdnImage";
+import { caseFeaturedImage } from "@/lib/featuredImage";
 import CaseVideo, { videoEmbedUrl } from "@/components/CaseVideo";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://prodaco.kr";
@@ -54,6 +55,10 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const url = caseUrl(siteUrl, g.id);
   const description = descriptionFor(g.region, g.item, g.description);
   const indexable = isCaseIndexable(g);
+  // 대표 썸네일 — 운영자가 CMS 에서 '직접 올린 사진' 또는 '전/후 중 한 장'을 고르면 그 값,
+  // 고르지 않았으면 지금까지와 같은 샌딩 후 사진(기존 사례의 og:image 는 바뀌지 않는다).
+  const featured = caseFeaturedImage(g);
+  const featuredUrl = absoluteImage(featured.src);
   return {
     title: g.title,
     description,
@@ -65,8 +70,9 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       description,
       type: "article",
       url,
-      images: [absoluteImage(g.afterImage)],
+      images: [{ url: featuredUrl, alt: featured.alt }],
     },
+    twitter: { card: "summary_large_image", title: g.title, description, images: [featuredUrl] },
   };
 }
 
@@ -76,6 +82,7 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
   if (!g) notFound();
 
   const url = caseUrl(siteUrl, g.id);
+  const featured = caseFeaturedImage(g);
   const { published, modified } = caseDateInfo(g);
   const related = caseRelatedLinks(g);
   const siblings = siblingCases(g, 3);
@@ -101,7 +108,15 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
     inLanguage: "ko",
     url,
     mainEntityOfPage: { "@type": "WebPage", "@id": url },
-    image: [absoluteImage(g.beforeImage), absoluteImage(g.afterImage)],
+    // 대표 사진을 맨 앞에(구글은 배열 첫 값을 우선 후보로 본다) + 전/후 + 추가 사진.
+    // 같은 주소가 두 번 들어가지 않게 정리한다.
+    image: [
+      ...new Set(
+        [featured.src, g.beforeImage, g.afterImage, ...(g.photos ?? []).map((p) => p.src)]
+          .filter(Boolean)
+          .map(absoluteImage)
+      ),
+    ],
     // 날짜는 있는 것만 싣는다 — git 을 못 읽는 환경에서 없는 날짜를 지어내지 않는다.
     ...(published ? { datePublished: published } : {}),
     ...(modified ? { dateModified: modified } : {}),
@@ -195,6 +210,32 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
 
           {g.description && (
             <p className="mt-8 text-[15px] leading-[1.85] text-[#3A4048]">{g.description}</p>
+          )}
+
+          {/* 같은 현장의 추가 사진 — 운영자가 CMS 에서 올린 사진만.
+              ⚠ 위의 Before/After 와 분리해서 보여 준다. 여기 사진들은 이 현장에서 찍힌 것은
+                 맞지만 서로 '작업 전 ↔ 작업 후' 대응 관계라고는 확인되지 않았다.
+                 대응이 확인되지 않은 두 장을 '전/후'로 묶어 보여 주지 않기 위한 구분이다. */}
+          {(g.photos?.length ?? 0) > 0 && (
+            <section className="mt-10">
+              <h2 className="font-mono-pd mb-3 text-xs font-bold uppercase tracking-[0.16em] text-[#9A8A2E]">
+                이 현장 추가 사진
+              </h2>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {(g.photos ?? []).map((photo, i) => (
+                  <figure key={`${photo.src}-${i}`}>
+                    <GalleryImage
+                      src={photo.src}
+                      alt={photo.alt || `${g.region} ${g.item} 작업 현장 사진 ${i + 1}`}
+                      className="aspect-[4/3] w-full"
+                    />
+                    {photo.caption && (
+                      <figcaption className="mt-1.5 text-[12px] leading-snug text-gray-500">{photo.caption}</figcaption>
+                    )}
+                  </figure>
+                ))}
+              </div>
+            </section>
           )}
 
           {/* 시공 영상 — 값이 없으면 아무것도 그리지 않는다. */}

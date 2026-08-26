@@ -10,6 +10,8 @@ import { relatedServicesForPost } from "@/lib/relatedGuides";
 import { renderMarkdown } from "@/lib/markdown";
 import { blogPath, blogUrl, decodeBlogId } from "@/lib/blogUrl";
 import { postDates, newestDate } from "@/lib/contentDates";
+import { postFeaturedImage, absoluteImageUrl } from "@/lib/featuredImage";
+import { uploadedImage } from "@/lib/cdnImage";
 import { PhoneIcon, KakaoIcon } from "@/components/icons";
 import ui from "../../../../content/ui.json";
 
@@ -25,6 +27,10 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const post = posts.find((p) => p.id === decodeBlogId(rawId));
   if (!post) return {};
   const url = blogUrl(siteUrl, post.id);
+  // 대표 썸네일 — 운영자가 CMS 에서 고른 사진이 있으면 그 사진, 없으면 본문 첫 사진 →
+  // 글마다 고정된 기본 사진 순. 예전에는 모든 글이 사이트 공용 OG 한 장을 공유했다.
+  const featured = postFeaturedImage(post);
+  const featuredUrl = absoluteImageUrl(siteUrl, featured.src);
   return {
     // 레이아웃 template이 "| 프로다"를 붙이므로 제목만 지정 (이중 접미사 방지)
     title: post.title,
@@ -39,8 +45,10 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       publishedTime: post.date,
       modifiedTime: newestDate(postDates(post.id).modified, post.updatedAt) || post.date,
       tags: post.tags,
-      images: ["/opengraph-image"],
+      images: [{ url: featuredUrl, alt: featured.alt }],
     },
+    // 카카오톡·트위터 등 공유 카드도 같은 사진을 쓰게 명시한다(레이아웃 기본값 덮어쓰기).
+    twitter: { card: "summary_large_image", title: post.title, description: post.excerpt, images: [featuredUrl] },
   };
 }
 
@@ -51,6 +59,8 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
   if (!post) notFound();
 
   const postUrl = blogUrl(siteUrl, post.id);
+  const featured = postFeaturedImage(post);
+  const featuredUrl = absoluteImageUrl(siteUrl, featured.src);
   // 수정일은 git 커밋 날짜에서 온다 — 운영자가 CMS 로 글을 고치면 별도 입력 없이 반영된다.
   // 발행일(post.date)은 그대로 둔다: 고쳤다고 새 글로 보이게 하지 않는다(요구사항 7).
   const modifiedAt = newestDate(postDates(post.id).modified, post.updatedAt) || post.date;
@@ -77,7 +87,8 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
     inLanguage: "ko",
     url: postUrl,
     mainEntityOfPage: { "@type": "WebPage", "@id": postUrl },
-    image: [`${siteUrl}/opengraph-image`],
+    // 대표 이미지 — og:image·목록 카드와 같은 사진이어야 한다(신호를 하나로).
+    image: [featuredUrl],
     author: {
       "@type": "Organization",
       name: company.brandName,
@@ -143,6 +154,23 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
 
       <section className="py-12 px-5">
         <div className="max-w-3xl mx-auto">
+          {/* 대표 이미지 — 운영자가 CMS 에서 '대표 썸네일'을 직접 고른 글에만 붙인다.
+              폴백(본문 첫 사진·기본 사진)일 때는 그리지 않는다 — 본문에 이미 있는 사진을
+              바로 위에 한 번 더 반복해서 보여 주지 않기 위해서다. */}
+          {featured.explicit && (
+            <figure className="mb-8">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={uploadedImage(featured.src, 1200)}
+                alt={featured.alt}
+                loading="eager"
+                fetchPriority="high"
+                decoding="async"
+                className="w-full rounded-sm border border-gray-200 bg-gray-100"
+              />
+            </figure>
+          )}
+
           {/* 본문 — CMS 서식(굵게·목록·인용·사진·표)을 그대로 렌더 (src/lib/markdown.tsx) */}
           <article className="space-y-4">{renderMarkdown(post.content)}</article>
 

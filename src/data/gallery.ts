@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
-import type { GalleryItem } from "@/types";
+import type { CasePhoto, GalleryItem } from "@/types";
+import { compareCasesNewestFirst } from "@/lib/caseDates";
 
 const GALLERY_DIR = path.join(process.cwd(), "public", "assets", "gallery");
 
@@ -33,6 +34,35 @@ export const driveThumb = (id: string, w = 1600): string => {
 // CMS(/admin)로 추가한 시공사례 — content/gallery/*.json (이미지는 /uploads 자체 호스팅).
 // 기존(드라이브) 사례보다 앞에 노출된다. 서버 빌드 전용 로더.
 const CMS_GALLERY_DIR = path.join(process.cwd(), "content", "gallery");
+
+const THUMB_CHOICES = ["after", "before", "custom"];
+
+/**
+ * CMS 의 '현장 추가 사진' 목록 정리.
+ * 주소가 없는 항목은 버린다 — 빈 <img> 가 화면에 남지 않게 한다.
+ */
+function normalizePhotos(raw: unknown): CasePhoto[] {
+  if (!Array.isArray(raw)) return [];
+  const out: CasePhoto[] = [];
+  for (const p of raw) {
+    // 문자열만 넣은 경우(주소만)도 받아 준다.
+    if (typeof p === "string" && p.trim()) {
+      out.push({ src: p.trim() });
+      continue;
+    }
+    if (!p || typeof p !== "object") continue;
+    const o = p as Record<string, unknown>;
+    const src = typeof o.src === "string" ? o.src.trim() : "";
+    if (!src) continue;
+    out.push({
+      src,
+      ...(typeof o.alt === "string" && o.alt.trim() ? { alt: o.alt.trim() } : {}),
+      ...(typeof o.caption === "string" && o.caption.trim() ? { caption: o.caption.trim() } : {}),
+    });
+  }
+  return out;
+}
+
 function loadCmsGallery(): GalleryItem[] {
   let files: string[] = [];
   try {
@@ -69,6 +99,17 @@ function loadCmsGallery(): GalleryItem[] {
           ...(g.videoPlatform ? { videoPlatform: g.videoPlatform } : {}),
           ...(g.videoThumbnail ? { videoThumbnail: g.videoThumbnail } : {}),
           ...(g.videoTitle ? { videoTitle: g.videoTitle } : {}),
+          // ── 대표 썸네일 / 추가 사진 / 고정 ─────────────────────────────────
+          // 전부 선택 항목이라 값이 있을 때만 싣는다(기존 사례 JSON 은 이 키가 없다).
+          ...(g.featured === true ? { featured: true } : {}),
+          ...(THUMB_CHOICES.includes(g.thumbnailChoice) ? { thumbnailChoice: g.thumbnailChoice } : {}),
+          ...(typeof g.featuredImage === "string" && g.featuredImage.trim()
+            ? { featuredImage: g.featuredImage.trim() }
+            : {}),
+          ...(typeof g.featuredImageAlt === "string" && g.featuredImageAlt.trim()
+            ? { featuredImageAlt: g.featuredImageAlt.trim() }
+            : {}),
+          ...(normalizePhotos(g.photos).length > 0 ? { photos: normalizePhotos(g.photos) } : {}),
         });
       }
     } catch {
@@ -147,11 +188,21 @@ const legacyGalleryItems: GalleryItem[] = [
   },
 ];
 
-// CMS 추가 사례 + 기존 사례 (CMS 항목이 앞에 노출)
+// CMS 추가 사례 + 기존 사례.
 // CMS 사례가 있으면 그것만(중복 없음), 하나도 없으면 레거시로 폴백 →
 // 홈페이지 galleryItems[0]/[1] 접근이 빈 배열로 크래시("Application error")나지 않게 보장.
+//
+// ⚠ 정렬 — 여기서 한 번만 한다.
+//   예전에는 loadCmsGallery() 가 fs.readdirSync 순서(= 파일명 오름차순)를 그대로 돌려줬다.
+//   CMS 가 만드는 파일명이 case-YYYYMMDD-HHMM 이라서 파일명 오름차순 = 등록 오래된 순이고,
+//   결과적으로 "가장 오래된 사례가 목록 1번에 영구 고정, 새 사례는 그 뒤에 추가" 가 됐다.
+//   (증상 재현: case-20260812-1126 이 항상 맨 앞)
+//   이제 compareCasesNewestFirst 로 발행일 내림차순 정렬한다 — 목록·홈 미리보기·관련 사례·
+//   사이트맵이 전부 이 배열을 쓰므로 한 곳만 고치면 모든 화면이 같이 맞는다.
 const _cmsGallery = loadCmsGallery();
-export const galleryItems: GalleryItem[] = _cmsGallery.length > 0 ? _cmsGallery : legacyGalleryItems;
+export const galleryItems: GalleryItem[] = (_cmsGallery.length > 0 ? _cmsGallery : legacyGalleryItems)
+  .slice()
+  .sort(compareCasesNewestFirst);
 
 // 작업 현장 사진 — src/data/work-photos.json(승인 manifest) + src/lib/workPhotos.ts 로 이전.
 //   구글드라이브 "3.사진_작업현장" 전체를 photos:scan→sync→optimize→audit 파이프라인으로
