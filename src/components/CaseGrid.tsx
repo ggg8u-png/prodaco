@@ -4,6 +4,7 @@ import type { GalleryItem } from "@/types";
 import GalleryImage from "@/components/GalleryImage";
 import Pagination from "@/components/Pagination";
 import type { Paged } from "@/lib/pagination";
+import { caseFeaturedImage } from "@/lib/featuredImage";
 
 export default function CaseGrid({ paged, heading }: { paged: Paged<GalleryItem>; heading: string }) {
   return (
@@ -13,8 +14,18 @@ export default function CaseGrid({ paged, heading }: { paged: Paged<GalleryItem>
           <h2 className="text-xl font-black">{heading}</h2>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {paged.items.map((item) => (
+          {paged.items.map((item) => {
+            const featured = caseFeaturedImage(item);
+            return (
             <div key={item.id}>
+              {featured.source === "custom" ? (
+                <GalleryImage
+                  src={featured.src}
+                  alt={featured.alt}
+                  label="대표 사진"
+                  className="mb-3 h-52 w-full"
+                />
+              ) : (
               <div className="grid grid-cols-2 gap-0.5 mb-3">
                 <div>
                   <p className="text-xs text-gray-400 uppercase tracking-widest mb-1">Before</p>
@@ -25,6 +36,7 @@ export default function CaseGrid({ paged, heading }: { paged: Paged<GalleryItem>
                   <GalleryImage src={item.afterImage} alt={`${item.title} 샌딩 후`} className="h-36 w-full" />
                 </div>
               </div>
+              )}
               {/* 상세 문서로 가는 <a href> — 검색로봇이 목록에서 개별 사례를 발견하는 유일한 경로다.
                   JS 클릭 핸들러가 아니라 실제 링크여야 한다. */}
               <Link href={`/gallery/${encodeURIComponent(item.id)}`} className="group block">
@@ -37,7 +49,8 @@ export default function CaseGrid({ paged, heading }: { paged: Paged<GalleryItem>
                 <span className="text-xs text-gray-500">{item.item}</span>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
         <Pagination paged={paged} label="시공사례 목록 페이지 이동" />
       </div>

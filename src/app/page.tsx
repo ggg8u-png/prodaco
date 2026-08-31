@@ -4,6 +4,7 @@ import { company } from "@/data/company";
 import { allReviews } from "@/data/reviews";
 import { faqs } from "@/data/faq";
 import { galleryItems } from "@/data/gallery";
+import { caseFeaturedImage } from "@/lib/featuredImage";
 import { quoteFactors, consultPrep, ctaConfig } from "@/data/landing";
 import { getKeywords, hubDecisionFor } from "@/data/keywords";
 import { itemGuidesFor, itemAnchorFor } from "@/lib/itemGuides";
@@ -410,16 +411,28 @@ export default function Home() {
             </h2>
           </div>
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8">
-            {galleryItems.slice(0, 6).map((item, i) => (
+            {galleryItems.slice(0, 6).map((item, i) => {
+              const featured = caseFeaturedImage(item);
+              return (
               <div key={item.id}>
+                {featured.source === "custom" ? (
+                  <GalleryImage
+                    src={featured.src}
+                    alt={featured.alt}
+                    label="대표 사진"
+                    className={`aspect-[8/3] w-full rounded-[3px] border-2 ${i === 5 ? "border-[#FFD400]" : "border-[#16181D]"}`}
+                  />
+                ) : (
                 <div className={`grid grid-cols-1 gap-1 overflow-hidden rounded-[3px] border-2 sm:grid-cols-2 ${i === 5 ? "border-[#FFD400]" : "border-[#16181D]"}`}>
                   <GalleryImage src={item.beforeImage} alt={`${item.title} 철거 전`} label={home.labels.galleryBeforeChip} className="aspect-[4/3] w-full" />
                   <GalleryImage src={item.afterImage} alt={`${item.title} 샌딩 후`} label={home.labels.galleryAfterChip} className="aspect-[4/3] w-full" />
                 </div>
+                )}
                 <p className="mb-0.5 mt-3 text-[15.5px] font-extrabold tracking-[-0.02em]">{item.title}</p>
                 <p className="text-[13px] text-[#6B7280]">{item.description}</p>
               </div>
-            ))}
+              );
+            })}
           </div>
           <div className="mt-9 text-center lg:mt-12">
             <Link

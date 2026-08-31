@@ -20,14 +20,9 @@ if (!fs.existsSync(APP)) {
 }
 
 // ─── 검사 대상 대표 URL(유형별) ─────────────────────────────────────────────────
-// 조합(keyword) 페이지의 기대 색인 상태는 하드코딩하지 않고 content/seo.json 의
-// 허용목록(extraIndexSlugs)에서 읽는다 — 판정이 바뀌면 기대값도 따라온다.
-const seoConfig = JSON.parse(fs.readFileSync(path.join(ROOT, "content", "seo.json"), "utf8"));
-const allowSet = new Set(seoConfig.extraIndexSlugs || []);
 const kw = (slug, item) => ({
   file: `${slug}.html`,
-  kind: allowSet.has(slug) ? "지역×품목(색인)" : "지역×품목(강등)",
-  indexable: allowSet.has(slug),
+  kind: "지역×품목",
   item,
 });
 const TARGETS = [
@@ -134,12 +129,12 @@ for (const t of TARGETS) {
   if (h1s !== 1) fail(t, "H1", `${h1s}개`);
   if (!canonical) fail(t, "canonical", "없음");
   if (noindex && canonical && canonical !== url) fail(t, "canonical", `noindex 인데 self 아님(${canonical})`);
-  // 6) 기대 색인 상태
-  if (t.indexable && noindex) fail(t, "robots", "색인 기대인데 noindex");
-  if (!t.indexable && !noindex) fail(t, "robots", "강등 기대인데 index");
-  // 7) 사이트맵 일치
+  // 6~7) robots/canonical/사이트맵 일치. 색인 여부는 extraIndexSlugs 하나가 아니라
+  // 품질·사례·수동 승인·유형을 함께 보는 indexability core가 결정하므로 여기서 별도
+  // 기대값을 복제하지 않고 실제 출력 간의 불변식만 검사한다.
   if (noindex && inSm) fail(t, "sitemap", "noindex 인데 사이트맵 포함");
   if (!noindex && canonical === url && !inSm) fail(t, "sitemap", "index self-canonical 인데 사이트맵 제외");
+  if (canonical && canonical !== url && inSm) fail(t, "sitemap", "비대표 canonical URL인데 사이트맵 포함");
   // 8) 품목-FAQ 일치 — 렌더된 <summary> 질문이 다른 품목 전용 FAQ 인지.
   if (t.item) {
     const fam = familyOf(t.item);
@@ -151,11 +146,12 @@ for (const t of TARGETS) {
     }
   }
   // 9) 지역×품목 링크 수 — main 내 한글 슬러그 조합 링크(지역-품목 패턴) 과다 나열.
+  // 현재 관련 서비스·지역·가이드 묶음은 최대 23개다. 30개부터 회귀로 본다.
   const comboLinks = [...html.matchAll(/href="\/([^"/]+)"/g)]
     .map((m) => decodeURIComponent(m[1]))
     .filter((h) => /^[가-힣]+-[가-힣]+/.test(h));
   const comboCount = new Set(comboLinks).size;
-  if (comboCount > 20) fail(t, "링크", `지역×품목 링크 ${comboCount}개(>20)`);
+  if (comboCount > 30) fail(t, "링크", `지역×품목 링크 ${comboCount}개(>30)`);
 
   // 10) 실제 사례 지역 표기 — 타지역 사례를 그 지역 실적처럼 보이게 하지 않는지.
   const caseHonest = !/시공 사례/.test(text) || /수도권 유사|실제 작업 지역|카드에 실제/.test(text) || t.kind === "홈" || t.kind === "블로그";

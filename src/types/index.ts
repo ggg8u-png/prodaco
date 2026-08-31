@@ -44,6 +44,12 @@ export interface FAQ {
 }
 
 export interface BlogPost {
+  /** CMS 공개 상태. 기존 데이터에서 미지정이면 published로 취급한다. */
+  status?: "draft" | "published";
+  /** 명시적 게시일. 기존 date 필드와 하위 호환된다. */
+  publishedAt?: string;
+  /** 실제 검색 도구 근거가 있을 때만 confirmed. IndexNow 제출 성공은 confirmed가 아니다. */
+  indexStatus?: "unknown" | "confirmed";
   id: string;
   title: string;
   excerpt: string;
@@ -65,6 +71,12 @@ export interface BlogPost {
 export interface GalleryItem {
   id: string;
   title: string;
+  /** CMS 공개 상태. 기존 데이터의 미지정 값은 published로 취급한다. */
+  status?: "draft" | "published";
+  /** 사이트 게시일(YYYY-MM-DD). 목록 정렬에 사용하며 실제 작업일과 구분한다. */
+  publishedAt?: string;
+  /** 실제 검색 도구 근거가 있을 때만 confirmed. IndexNow 제출 성공은 confirmed가 아니다. */
+  indexStatus?: "unknown" | "confirmed";
   /** 실제 작업 지역(actualRegion) — 이 값이 페이지 지역과 일치할 때만 '해당 지역 실제 사례'로 표시 가능. */
   region: string;
   item: string;

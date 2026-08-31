@@ -18,6 +18,8 @@ const ID_STAMP_RE = /^case-(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})$/;
 /** 정렬·날짜 계산에 필요한 최소 정보만 받는다(GalleryItem 전체를 요구하지 않는다). */
 export interface CaseDateInput {
   id: string;
+  /** 사이트에 게시한 날짜. 실제 현장 작업일(workDate)과 구분한다. */
+  publishedAt?: string;
   workDate?: string;
   /** 운영자가 목록 맨 위에 고정한 사례. */
   featured?: boolean;
@@ -61,7 +63,7 @@ export function caseModifiedDate(g: CaseDateInput): string | undefined {
  *   ③ 그것도 없으면(레거시 수기 사례) workDate 로 폴백
  */
 export function caseRegisteredDate(g: CaseDateInput): string | undefined {
-  return clean(caseDates(g.id).created) || stampFromCaseId(g.id)?.date || clean(g.workDate);
+  return clean(g.publishedAt) || clean(caseDates(g.id).created) || stampFromCaseId(g.id)?.date || clean(g.workDate);
 }
 
 /**

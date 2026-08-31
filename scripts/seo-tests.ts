@@ -662,6 +662,13 @@ for (const from of ["http://prodaco.kr/*", "http://www.prodaco.kr/*", "https://w
   ok(block.includes("status = 301"), `redirect ${from} 301`);
   ok(block.includes("force = true"), `redirect ${from} force`);
 }
+{
+  const edge = fs.readFileSync(path.join(process.cwd(), "netlify", "edge-functions", "canonical-host.ts"), "utf8");
+  ok(edge.includes('"stirring-strudel-d081f4.netlify.app"') && edge.includes("Response.redirect(destination, 301)") && edge.includes('path: "/*"'),
+    "Netlify production default host → apex 경로 보존 301");
+  ok(!edge.includes("main--stirring-strudel-d081f4.netlify.app"),
+    "branch/deploy preview host는 강제 리디렉션하지 않음");
+}
 ok(!toml.includes("status = 302"), "netlify.toml 에 302 없음");
 
 // ── ⑧-0 벤치마크 §7 실행 플레이북 회귀 게이트 ────────────────────────────────
@@ -1056,7 +1063,7 @@ ok(dupTitle === 0, "색인 대상 title 중복 없음", `dup=${dupTitle}`);
 // 회귀 방지: 예전에는 loadCmsGallery() 가 readdir 순서(파일명 오름차순)를 그대로 써서
 // 가장 오래된 사례가 목록 1번에 영구 고정됐다. 아래 검사가 그 상태를 다시 통과시키지 않는다.
 {
-  const items = galleryItems;
+const items = galleryItems;
 
   // ① 실제 배열이 최신 등록순으로 정렬돼 있다(비교자와 배열이 어긋나지 않는다).
   let outOfOrder = "";
@@ -1102,8 +1109,17 @@ ok(dupTitle === 0, "색인 대상 title 중복 없음", `dup=${dupTitle}`);
   const a = items.map((g) => g.id).join("|");
   const b = items.slice().reverse().sort(compareCasesNewestFirst).map((g) => g.id).join("|");
   ok(a === b, "시공사례 정렬은 입력 순서와 무관(안정적)");
-}
 
+  // ⑥ CMS 게시일이 있으면 파일 생성일보다 우선한다. 작업일과 게시일을 섞지 않는다.
+  const publishDateFixture = [
+    { id: "older-file", publishedAt: "2026-08-02", workDate: "2026-08-20" },
+    { id: "newer-file", publishedAt: "2026-08-21", workDate: "2026-07-01" },
+  ].sort(compareCasesNewestFirst);
+  ok(publishDateFixture[0].id === "newer-file", "시공사례 목록: publishedAt DESC 우선");
+
+  // ⑦ loader가 draft를 공개 배열에 흘리지 않아야 목록·홈·상세·사이트맵이 함께 숨겨진다.
+  ok(items.every((g) => g.status !== "draft"), "시공사례 초안은 공개 galleryItems에서 제외");
+}
 // ── ⑰ 대표 썸네일 ────────────────────────────────────────────────────────────
 {
   // ① 모든 글·사례가 대표 이미지를 갖는다(폴백 포함) — og:image 가 비는 문서가 없어야 한다.
@@ -1139,6 +1155,27 @@ ok(dupTitle === 0, "색인 대상 title 중복 없음", `dup=${dupTitle}`);
   // ⑥ 본문 첫 사진 추출이 실제 마크다운에서 동작한다.
   ok(firstBodyImage("본문\n\n![바닥 사진](/uploads/a.jpg)\n뒷 문단")?.src === "/uploads/a.jpg", "본문 첫 사진 추출");
   ok(firstBodyImage("사진 없는 본문") === null, "사진 없는 본문은 null");
+
+  // ⑦ 대표 이미지 삭제 시 깨진 빈 주소가 아니라 기존 fallback으로 돌아간다.
+  const fallbackCase = caseFeaturedImage({
+    id: "fixture",
+    title: "fixture",
+    region: "수원",
+    item: "마루철거",
+    description: "fixture",
+    beforeImage: "/before.jpg",
+    afterImage: "/after.jpg",
+    featuredImage: "",
+  });
+  ok(fallbackCase.src === "/after.jpg", "시공사례: 대표 이미지 삭제 후 afterImage fallback");
+
+  // ⑧ 카드·상세가 같은 resolver를 직접 사용해야 metadata와 화면이 어긋나지 않는다.
+  const caseGridSource = fs.readFileSync(path.join(process.cwd(), "src/components/CaseGrid.tsx"), "utf8");
+  const casePageSource = fs.readFileSync(path.join(process.cwd(), "src/app/gallery/[id]/page.tsx"), "utf8");
+  const homeSource = fs.readFileSync(path.join(process.cwd(), "src/app/page.tsx"), "utf8");
+  ok(caseGridSource.includes("caseFeaturedImage(item)"), "시공사례 목록 카드가 공통 대표 이미지 resolver 사용");
+  ok(casePageSource.includes('featured.source === "custom"'), "시공사례 상세가 직접 지정 대표 이미지 표시");
+  ok(homeSource.includes("caseFeaturedImage(item)"), "홈 시공사례 카드가 공통 대표 이미지 resolver 사용");
 }
 
 // ── 결과 ─────────────────────────────────────────────────────────────────────

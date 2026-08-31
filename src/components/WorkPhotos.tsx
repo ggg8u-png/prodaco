@@ -64,6 +64,7 @@ export default function WorkPhotos({
               height={p.thumbHeight}
               loading="lazy"
               decoding="async"
+              sizes={wide ? "(min-width: 640px) 25vw, 50vw" : "(min-width: 640px) 256px, 33vw"}
               className="aspect-square w-full object-cover bg-[#EDEBE4]"
             />
           ))}

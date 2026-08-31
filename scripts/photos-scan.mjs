@@ -12,6 +12,8 @@ import path from "node:path";
 const ROOT = process.cwd();
 const OUT_DIR = path.join(ROOT, "content", "photos");
 const OUT_FILE = path.join(OUT_DIR, "drive-inventory.json");
+const REPORT_FILE = path.join(ROOT, "reports", "phase05-photo-scan.json");
+const DRY_RUN = process.argv.includes("--dry-run");
 
 // 운영 폴더(링크 공유). env 로 교체 가능.
 const WORKSITE_FOLDER = process.env.GOOGLE_DRIVE_WORKSITE_FOLDER_ID || "1RLyyr7y4pAF2qBGuVgxDp8rt7ZJVylNY"; // 3.사진_작업현장
@@ -77,6 +79,11 @@ async function scan() {
           originalFilename: f.name,
           folder: `2.사진_비포애프터/${sub.name}`,
           category: "before-after",
+          siteId: `drive-${sub.id}`,
+          projectName: sub.name,
+          pairRole: /(?:^|[^a-z])before(?:[^a-z]|$)|비포|철거\s*전/i.test(f.name) ? "before"
+            : /(?:^|[^a-z])after(?:[^a-z]|$)|애프터|철거\s*후/i.test(f.name) ? "after"
+              : null,
           isImage: IMAGE_EXT.test(f.name),
         });
       }
@@ -99,11 +106,40 @@ async function scan() {
     files: inventory,
   };
 
-  fs.mkdirSync(OUT_DIR, { recursive: true });
-  fs.writeFileSync(OUT_FILE, JSON.stringify(result, null, 2), "utf8");
+  const previous = fs.existsSync(OUT_FILE)
+    ? JSON.parse(fs.readFileSync(OUT_FILE, "utf8"))
+    : { files: [] };
+  const previousIds = new Set(previous.files.map((x) => x.driveFileId));
+  const currentIds = new Set(inventory.map((x) => x.driveFileId));
+  const changes = {
+    added: inventory.filter((x) => !previousIds.has(x.driveFileId)).map((x) => x.driveFileId),
+    removed: previous.files.filter((x) => !currentIds.has(x.driveFileId)).map((x) => x.driveFileId),
+    unchanged: inventory.filter((x) => previousIds.has(x.driveFileId)).length,
+  };
+  const report = {
+    ...result,
+    mode: DRY_RUN ? "dry-run" : "write",
+    changes: {
+      addedCount: changes.added.length,
+      removedCount: changes.removed.length,
+      unchangedCount: changes.unchanged,
+      addedDriveFileIds: changes.added,
+      removedDriveFileIds: changes.removed,
+    },
+    guarantees: { driveWrites: false, sourceDeletes: false, inventoryWritten: !DRY_RUN },
+  };
+
+  if (!DRY_RUN) {
+    fs.mkdirSync(OUT_DIR, { recursive: true });
+    fs.writeFileSync(OUT_FILE, JSON.stringify(result, null, 2), "utf8");
+  }
+  fs.mkdirSync(path.dirname(REPORT_FILE), { recursive: true });
+  fs.writeFileSync(REPORT_FILE, JSON.stringify(report, null, 2), "utf8");
   console.log(`[photos:scan] total=${result.counts.total} worksite=${result.counts.worksite} beforeAfter=${result.counts.beforeAfter} nonImage=${result.counts.nonImage}`);
+  console.log(`[photos:scan] changes added=${changes.added.length} removed=${changes.removed.length} unchanged=${changes.unchanged}`);
   for (const w of warnings) console.log(`[photos:scan] ⚠ ${w}`);
-  console.log(`[photos:scan] → ${path.relative(ROOT, OUT_FILE)}`);
+  console.log(`[photos:scan] ${DRY_RUN ? "dry-run: inventory unchanged" : `→ ${path.relative(ROOT, OUT_FILE)}`}`);
+  console.log(`[photos:scan] report → ${path.relative(ROOT, REPORT_FILE)}`);
 }
 
 scan().catch((e) => {

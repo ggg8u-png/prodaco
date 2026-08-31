@@ -26,7 +26,9 @@ function normalize(raw: Record<string, unknown>, file: string, mtime: Date): Blo
     excerpt = plain.length > 155 ? `${plain.slice(0, 152).trimEnd()}…` : plain;
   }
 
-  const rawDate = typeof raw.date === "string" ? raw.date.slice(0, 10) : "";
+  const rawDate = typeof raw.publishedAt === "string" && raw.publishedAt
+    ? raw.publishedAt.slice(0, 10)
+    : typeof raw.date === "string" ? raw.date.slice(0, 10) : "";
   const date = /^\d{4}-\d{2}-\d{2}$/.test(rawDate) ? rawDate : mtime.toISOString().slice(0, 10);
 
   const tags = Array.isArray(raw.tags)
@@ -36,6 +38,11 @@ function normalize(raw: Record<string, unknown>, file: string, mtime: Date): Blo
   return {
     id,
     title,
+    ...(raw.status === "draft" || raw.status === "published" ? { status: raw.status } : {}),
+    ...(typeof raw.publishedAt === "string" && raw.publishedAt
+      ? { publishedAt: raw.publishedAt.slice(0, 10) }
+      : {}),
+    ...(raw.indexStatus === "unknown" || raw.indexStatus === "confirmed" ? { indexStatus: raw.indexStatus } : {}),
     excerpt,
     content,
     date,
@@ -68,7 +75,7 @@ function loadPosts(): BlogPost[] {
       const raw = JSON.parse(fs.readFileSync(full, "utf8")) as Record<string, unknown>;
       const post = normalize(raw, f, fs.statSync(full).mtime);
       // id 중복(같은 주소 두 글)은 뒤 글을 버린다 — 사이트맵 중복·정적 경로 충돌 방지.
-      if (post && !seen.has(post.id)) {
+      if (post && post.status !== "draft" && !seen.has(post.id)) {
         seen.add(post.id);
         list.push(post);
       }

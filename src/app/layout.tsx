@@ -12,8 +12,6 @@ const isProduction = siteUrl === "https://prodaco.kr";
 
 const seoTitle = settings.seoTitle || "바닥재 철거·마루 철거 견적 상담 | 프로다";
 const seoDescription = settings.seoDescription || "마루·데코타일·장판 철거, 상가·사무실 원상복구 바닥 철거 상담. 현장 사진과 면적을 보내면 작업 범위와 견적 기준을 안내합니다. 서울·경기·인천 수도권. ☎ 010-8470-4965";
-// 어드민(⑪ SEO 설정) 표시용 — meta 태그로는 내보내지 않는다(위 metadata 주석 참조).
-export const seoKeywords = (settings.seoKeywords || "바닥재철거,마루철거,데코타일철거,장판철거,타일철거,바닥샌딩,면갈이,상가원상복구,사무실원상복구,수도권바닥철거,서울,경기,인천").split(",").map((k: string) => k.trim());
 const naverVerify = process.env.NEXT_PUBLIC_NAVER_VERIFY || settings.naverVerify || "464f17eada9bd24d089330e0143cb118086cec15";
 // 구글 소유확인 — 기본은 DNS TXT(도메인 속성) 방식이라 코드가 필요 없다(docs/dns-google-verification.md).
 // HTML 태그 방식(URL 접두어 속성)을 병행할 때만 값을 채운다. 이때 넣는 값은 서치콘솔이
@@ -22,6 +20,7 @@ const googleVerify = process.env.NEXT_PUBLIC_GOOGLE_VERIFY || settings.googleVer
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
+  applicationName: company.brand.name,
   title: {
     default: seoTitle,
     template: "%s | 프로다",
@@ -34,7 +33,7 @@ export const metadata: Metadata = {
     type: "website",
     locale: "ko_KR",
     url: siteUrl,
-    siteName: "프로다",
+    siteName: company.brand.name,
     title: seoTitle,
     description: seoDescription,
   },
@@ -107,7 +106,7 @@ const localBusinessJsonLd = {
   "@type": "HomeAndConstructionBusiness",
   "@id": `${siteUrl}/#business`,
   name: company.brandName,
-  alternateName: company.nameEn,
+  alternateName: company.brand.alternateNames[0],
   url: siteUrl,
   // 로고는 '정사각'(/logo.png) — 네이버/구글이 로고를 정사각으로 크롭해도 '프로다'가 안 잘린다.
   // 대표 이미지는 가로형 OG(중앙정렬)로 별도 제공.
@@ -162,7 +161,7 @@ const organizationJsonLd = {
   "@type": "Organization",
   "@id": `${siteUrl}/#organization`,
   name: company.brandName,
-  alternateName: company.nameEn,
+  alternateName: company.brand.alternateNames[0],
   ...(b.legalName ? { legalName: b.legalName } : {}),
   ...(b.representativeName ? { founder: { "@type": "Person", name: b.representativeName } } : {}),
   url: siteUrl,
@@ -190,9 +189,9 @@ const webSiteJsonLd = {
   "@type": "WebSite",
   "@id": `${siteUrl}/#website`,
   url: siteUrl,
-  name: "프로다",
+  name: company.brand.name,
   // 검색결과 사이트명 신호: 정식명은 '프로다', 보조명으로 영문·업종설명을 제공(억지 키워드 반복 아님).
-  alternateName: ["PRODA", "프로다 바닥철거·샌딩"],
+  alternateName: company.brand.alternateNames,
   description: "수도권 바닥재 철거 전문",
   inLanguage: "ko",
   publisher: { "@id": `${siteUrl}/#business` },

@@ -183,6 +183,16 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
 
       <section className="px-5 py-12">
         <div className="mx-auto max-w-3xl">
+          {/* 직접 올린 대표 사진만 별도 노출한다. before/after를 대표로 고른 경우에는
+              아래 비교 사진과 같은 이미지를 자동으로 한 번 더 반복하지 않는다. */}
+          {featured.source === "custom" && (
+            <figure className="mb-8">
+              <figcaption className="mb-1 font-mono-pd text-[11px] font-bold uppercase tracking-widest text-[#9A8A2E]">
+                Featured · 대표 사진
+              </figcaption>
+              <GalleryImage src={featured.src} alt={featured.alt} className="h-64 w-full sm:h-80" priority />
+            </figure>
+          )}
           {/* 철거 전 / 샌딩 후 — alt 에 지역·품목을 넣어 이미지 검색에서도 의미가 통하게 한다. */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <figure>

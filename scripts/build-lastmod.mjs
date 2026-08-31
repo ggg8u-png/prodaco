@@ -147,6 +147,9 @@ function galleryDates() {
     } catch {
       continue;
     }
+    // 초안은 공개 페이지·지역 허브·사이트맵 내용을 바꾸지 않는다. CMS에 초안을 저장한
+    // 것만으로 공개 URL lastmod가 올라가면 거짓 갱신 신호가 되므로 계산에서 제외한다.
+    if (g?.status === "draft") continue;
     const region = typeof g?.region === "string" ? g.region.trim() : "";
     const item = typeof g?.item === "string" ? g.item.trim() : "";
     if (!region) continue;

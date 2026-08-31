@@ -1,0 +1,14 @@
+.seo-preview { box-sizing: border-box; max-width: 760px; margin: 24px auto; padding: 24px; color: #1f2937; background: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+.seo-preview__eyebrow { margin: 0 0 10px; color: #8a7415; font-weight: 800; font-size: 12px; letter-spacing: .12em; }
+.seo-preview__notice { margin: 0 0 16px; padding: 12px; border-left: 3px solid #eab308; background: #fefce8; font-size: 13px; line-height: 1.55; }
+.seo-preview__status { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.seo-preview__status span { padding: 5px 9px; border-radius: 999px; background: #e2e8f0; font-size: 12px; font-weight: 700; }
+.seo-preview__serp, .seo-preview__image { padding: 18px; border: 1px solid #dbe3ed; background: #fff; }
+.seo-preview__site, .seo-preview__canonical { margin: 0 0 8px; color: #557c3e; font-size: 13px; overflow-wrap: anywhere; }
+.seo-preview__serp h1 { margin: 0 0 8px; color: #1a0dab; font-size: 20px; line-height: 1.35; font-weight: 500; }
+.seo-preview__description { margin: 0; color: #4b5563; font-size: 14px; line-height: 1.55; }
+.seo-preview__canonical { margin-top: 14px; color: #64748b; }
+.seo-preview__image { margin-top: 14px; }
+.seo-preview__image strong { display: block; margin-bottom: 10px; font-size: 13px; }
+.seo-preview__image img { display: block; width: 100%; max-height: 320px; object-fit: cover; }
+.seo-preview__image p { margin: 0; color: #64748b; font-size: 13px; line-height: 1.5; }

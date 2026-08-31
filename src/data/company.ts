@@ -48,6 +48,7 @@ const sameAsList: string[] = [
 ].filter((u) => u.length > 0);
 
 const brandName = str(businessRaw.brandName) || "프로다";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://prodaco.kr";
 const serviceArea = toStringArray(businessRaw.serviceArea).length
   ? toStringArray(businessRaw.serviceArea)
   : ["서울", "경기", "인천", "수도권"];
@@ -84,6 +85,16 @@ const openingHours =
     : null;
 const priceRange = str((businessRaw as Record<string, unknown>).priceRange);
 
+// 검색·공유·앱 메타데이터에 쓰는 브랜드 신호의 단일 출처.
+// 전화·서비스 지역은 CMS 설정의 실제 값에서만 가져오며, 미확인 NAP를 새로 만들지 않는다.
+const brand = {
+  name: brandName,
+  alternateNames: ["PRODA", "프로다 바닥철거·샌딩"],
+  url: siteUrl,
+  phone,
+  serviceArea,
+};
+
 export const company = {
   // 확인된 값이 있을 때만 구조화데이터에 실린다(없으면 필드 자체를 생략).
   openingHours,
@@ -92,6 +103,7 @@ export const company = {
   nameEn: companyContent.nameEn,
   // 브랜드명(고객이 부르는 이름) — 로고·구조화데이터 name 에 사용. businessConfig 단일 출처.
   brandName,
+  brand,
   // 웹사이트 노출 전화 = 인입 추적용 전용 번호. content/settings.json 에서 수정.
   phone,
   // 숫자만(하이픈 없음) — OG 이미지·구조화데이터처럼 서식 없는 표기가 필요한 곳의 단일 출처.
@@ -125,7 +137,7 @@ export const company = {
   business,
   // 엔티티 그래프 sameAs — 값 있는 외부 프로필 URL만(JSON-LD 용 플랫 배열).
   sameAs: sameAsList,
-  siteUrl: process.env.NEXT_PUBLIC_SITE_URL || "https://prodaco.kr",
+  siteUrl,
   // 응대 안내 문구 (보장 표현 금지 — 안내 톤만)
   responseTimeText: process.env.NEXT_PUBLIC_RESPONSE_TIME_TEXT || settings.responseTimeText || "영업시간 내 빠르게 답변드립니다",
   region: companyContent.region,

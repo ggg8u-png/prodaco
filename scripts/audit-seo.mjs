@@ -17,10 +17,24 @@ function textOf(html) {
   return b.replace(/<[^>]+>/g, " ").replace(/&[a-z#0-9]+;/gi, " ").replace(/\s+/g, " ").trim();
 }
 
+function routeForFile(file) {
+  const relative = path.relative(APP, file).replace(/\\/g, "/").replace(/\.html$/, "");
+  if (relative === "index") return "/";
+  return `/${relative.replace(/\/index$/, "")}`;
+}
+
+function htmlFiles(dir) {
+  return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const target = path.join(dir, entry.name);
+    if (entry.isDirectory()) return htmlFiles(target);
+    return entry.isFile() && entry.name.endsWith(".html") ? [target] : [];
+  });
+}
+
 function auditFile(file) {
   const html = fs.readFileSync(file, "utf8");
-  const name = path.basename(file, ".html");
-  const url = name === "index" ? "/" : `/${name}`;
+  const url = routeForFile(file);
+  const name = url === "/" ? "index" : url.slice(1);
   const title = (html.match(/<title>([^<]*)<\/title>/) || [])[1] || "";
   const canonical = (html.match(/rel="canonical" href="([^"]+)"/) || [])[1] || "";
   const robots = (html.match(/name="robots" content="([^"]+)"/) || [])[1] || "";
@@ -44,8 +58,8 @@ function main() {
     console.error("[seo:audit] .next 빌드가 없습니다. 먼저 `npm run build` 를 실행하세요.");
     process.exit(1);
   }
-  const files = fs.readdirSync(APP).filter((f) => f.endsWith(".html"));
-  const rows = files.map((f) => auditFile(path.join(APP, f)));
+  const files = htmlFiles(APP);
+  const rows = files.map(auditFile);
 
   // 중복 title
   const titleCount = new Map();

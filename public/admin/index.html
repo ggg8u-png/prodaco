@@ -7,11 +7,88 @@
     <title>프로다 콘텐츠 관리</title>
     <!-- Netlify Identity (로그인) -->
     <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+    <!-- Decap 맞춤 미리보기 컴포넌트용 React. 관리자 화면에서만 사용합니다. -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   </head>
   <body>
     <!-- Decap CMS (구 Netlify CMS) -->
     <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
     <script>
+      // SEO 메타데이터 미리보기 — Decap 편집 값만 사용하며 저장된 사이트를 바꾸지 않습니다.
+      // 실제 검색결과 표시는 검색엔진이 결정합니다.
+      (function () {
+        var siteName = "프로다";
+        var siteUrl = "https://prodaco.kr";
+        var h;
+
+        function text(entry, name, fallback) {
+          var value = entry.getIn(["data", name]);
+          return typeof value === "string" && value.trim() ? value.trim() : (fallback || "");
+        }
+        function entrySlug(entry, fallback) {
+          var slug = entry.get("slug") || entry.getIn(["data", "slug"]);
+          return slug ? String(slug) : fallback;
+        }
+        function plainExcerpt(value) {
+          return String(value || "")
+            .replace(/!\[[^\]]*\]\([^)]*\)/g, "")
+            .replace(/[#>*_`\-]/g, " ")
+            .replace(/\s+/g, " ").trim().slice(0, 155);
+        }
+        function imageUrl(props, source) {
+          if (!source) return "";
+          try { return props.getAsset(source).toString(); } catch (_) { return source; }
+        }
+        function preview(props, kind) {
+          var entry = props.entry;
+          var isBlog = kind === "blog";
+          var title = isBlog
+            ? text(entry, "title", "제목을 입력하세요")
+            : text(entry, "title", (text(entry, "region", "") + " " + text(entry, "item", "") + " 시공사례").trim());
+          var description = isBlog
+            ? text(entry, "excerpt", plainExcerpt(text(entry, "content", "")))
+            : text(entry, "description", "시공사례 설명을 입력하세요");
+          var slug = entrySlug(entry, "저장 후 생성됩니다");
+          var canonical = isBlog ? siteUrl + "/blog/" + slug : siteUrl + "/gallery/" + slug;
+          var featured = isBlog ? text(entry, "featuredImage", "") : (text(entry, "featuredImage", "") || text(entry, "afterImage", ""));
+          var status = text(entry, "status", "published");
+          var indexStatus = text(entry, "indexStatus", "unknown");
+          var image = imageUrl(props, featured);
+          return h("div", { className: "seo-preview" },
+            h("p", { className: "seo-preview__eyebrow" }, "SEO METADATA PREVIEW"),
+            h("p", { className: "seo-preview__notice" }, "검색엔진에 제공되는 메타데이터 미리보기이며 실제 검색결과 표시는 검색엔진이 결정합니다."),
+            h("div", { className: "seo-preview__status" },
+              h("span", null, "발행 상태: " + status),
+              h("span", null, "색인 상태: " + indexStatus)
+            ),
+            h("div", { className: "seo-preview__serp" },
+              h("p", { className: "seo-preview__site" }, siteUrl + " › " + (isBlog ? "바닥철거 정보" : "시공사례")),
+              h("h1", null, title + " | " + siteName),
+              h("p", { className: "seo-preview__description" }, description || "설명을 입력하면 이 자리에 표시됩니다."),
+              h("p", { className: "seo-preview__canonical" }, "canonical: " + canonical)
+            ),
+            h("div", { className: "seo-preview__image" },
+              h("strong", null, "대표 이미지"),
+              image ? h("img", { src: image, alt: title + " 대표 이미지" }) : h("p", null, "직접 지정한 대표 이미지가 없습니다. 저장 시 기존 폴백 규칙이 적용됩니다.")
+            )
+          );
+        }
+        function register(attempt) {
+          // CDN 초기화가 늦어도 관리자 저장 화면을 깨지 않게 잠시 기다린다.
+          if (!window.CMS || typeof CMS.registerPreviewTemplate !== "function" || !window.React) {
+            if (attempt < 40) window.setTimeout(function () { register(attempt + 1); }, 250);
+            return;
+          }
+          h = window.React.createElement;
+          CMS.registerPreviewStyle("/admin/seo-preview.css");
+          function BlogPreview(props) { return preview(props, "blog"); }
+          function GalleryPreview(props) { return preview(props, "gallery"); }
+          CMS.registerPreviewTemplate("blog", BlogPreview);
+          CMS.registerPreviewTemplate("gallery", GalleryPreview);
+        }
+        register(0);
+      })();
+
       // 로그인 후 /admin/ 으로 들어오도록 처리
       if (window.netlifyIdentity) {
         window.netlifyIdentity.on("init", function (user) {

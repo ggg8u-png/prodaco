@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import type { CasePhoto, GalleryItem } from "@/types";
 import { compareCasesNewestFirst } from "@/lib/caseDates";
+import { loadDriveProject } from "@/lib/driveProjects";
 
 const GALLERY_DIR = path.join(process.cwd(), "public", "assets", "gallery");
 
@@ -74,7 +75,10 @@ function loadCmsGallery(): GalleryItem[] {
   for (const f of files) {
     try {
       const g = JSON.parse(fs.readFileSync(path.join(CMS_GALLERY_DIR, f), "utf8"));
-      if (g && g.beforeImage && g.afterImage) {
+      const driveProject = typeof g?.driveProjectId === "string" ? loadDriveProject(g.driveProjectId) : null;
+      const beforeImage = driveProject?.beforeImage || g?.beforeImage;
+      const afterImage = driveProject?.afterImage || g?.afterImage;
+      if (g && beforeImage && afterImage) {
         const region = g.region || "수도권";
         const item = g.item || "바닥재 철거";
         out.push({
@@ -83,9 +87,15 @@ function loadCmsGallery(): GalleryItem[] {
           title: g.title || `${region} ${item} 시공사례`,
           region,
           item,
-          beforeImage: g.beforeImage,
-          afterImage: g.afterImage,
+          beforeImage,
+          afterImage,
           description: g.description || "",
+          // 공개 상태와 게시일. 기존 파일에는 값이 없으므로 published로 간주해 노출을 유지한다.
+          ...(g.status === "draft" || g.status === "published" ? { status: g.status } : {}),
+          ...(typeof g.publishedAt === "string" && g.publishedAt
+            ? { publishedAt: g.publishedAt.slice(0, 10) }
+            : {}),
+          ...(g.indexStatus === "unknown" || g.indexStatus === "confirmed" ? { indexStatus: g.indexStatus } : {}),
           // 검증·부가 필드(있을 때만) — verified:false 사례는 자동 색인 승급에서 제외된다.
           ...(typeof g.verified === "boolean" ? { verified: g.verified } : {}),
           ...(g.workDate ? { workDate: g.workDate } : {}),
@@ -109,7 +119,9 @@ function loadCmsGallery(): GalleryItem[] {
           ...(typeof g.featuredImageAlt === "string" && g.featuredImageAlt.trim()
             ? { featuredImageAlt: g.featuredImageAlt.trim() }
             : {}),
-          ...(normalizePhotos(g.photos).length > 0 ? { photos: normalizePhotos(g.photos) } : {}),
+          ...([...normalizePhotos(g.photos), ...(driveProject?.photos ?? [])].length > 0
+            ? { photos: [...normalizePhotos(g.photos), ...(driveProject?.photos ?? [])] }
+            : {}),
         });
       }
     } catch {
@@ -200,7 +212,8 @@ const legacyGalleryItems: GalleryItem[] = [
 //   이제 compareCasesNewestFirst 로 발행일 내림차순 정렬한다 — 목록·홈 미리보기·관련 사례·
 //   사이트맵이 전부 이 배열을 쓰므로 한 곳만 고치면 모든 화면이 같이 맞는다.
 const _cmsGallery = loadCmsGallery();
-export const galleryItems: GalleryItem[] = (_cmsGallery.length > 0 ? _cmsGallery : legacyGalleryItems)
+const _publishedCmsGallery = _cmsGallery.filter((g) => g.status !== "draft");
+export const galleryItems: GalleryItem[] = (_cmsGallery.length > 0 ? _publishedCmsGallery : legacyGalleryItems)
   .slice()
   .sort(compareCasesNewestFirst);
 

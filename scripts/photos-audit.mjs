@@ -20,6 +20,7 @@ const PUBLIC_DIR = path.join(ROOT, "public", "images", "work");
 const PUBLIC_THUMB = path.join(PUBLIC_DIR, "thumb");
 const DATA_OUT = path.join(ROOT, "src", "data", "work-photos.json");
 const REPORTS = path.join(ROOT, "reports");
+const REPORT_ONLY = process.argv.includes("--report-only");
 
 // ── 판정 기준(보수적) ─────────────────────────────────────────────────────────
 const MIN_DIM = 500;          // 최소 변 길이
@@ -32,6 +33,7 @@ const HAMMING_NEAR = 6;       // dHash 근접 중복 임계
 
 const SCREENSHOT_NAME = /screen\s*shot|screenshot|스크린샷|캡처|capture|kakaotalk_snapshot|img_capture/i;
 const DOC_NAME = /견적|계약|세금|invoice|receipt|명함|사업자|등록증|통장|송장/i;
+const PRIVACY_NAME = /전화번호|phone|주소|address|호수|번호판|license.?plate|얼굴|face|계좌|account|공동현관|출입번호|door.?code/i;
 
 function hamming(aHex, bHex) {
   let x = BigInt("0x" + aHex) ^ BigInt("0x" + bHex);
@@ -64,6 +66,7 @@ function main() {
         review = true; flags.push("스크린샷/캡처 의심");
       }
       if (DOC_NAME.test(p.originalFilename)) { review = true; flags.push("문서/개인정보 의심(파일명)"); }
+      if (PRIVACY_NAME.test(p.originalFilename)) { review = true; flags.push("개인정보 의심(파일명)"); }
     }
     p._flags = flags;
     p.excludedReason = excluded;
@@ -142,10 +145,14 @@ function main() {
   const review = photos.filter((p) => p.reviewNeeded && !p.excludedReason);
 
   // ── 4) 공개 디렉터리 동기화(승인분만) ──
-  fs.mkdirSync(PUBLIC_THUMB, { recursive: true });
+  if (!REPORT_ONLY) fs.mkdirSync(PUBLIC_THUMB, { recursive: true });
   const wanted = new Set();
   let published = 0;
   for (const p of approved) {
+    if (REPORT_ONLY) {
+      if (p.publicPath && fs.existsSync(path.join(ROOT, "public", p.publicPath.replace(/^\//, "")))) published++;
+      continue;
+    }
     const main = path.join(DERIVED, `${p.id}.webp`);
     const thumb = path.join(DERIVED, `${p.id}.thumb.webp`);
     if (!fs.existsSync(main) || !fs.existsSync(thumb)) { p.approved = false; p.excludedReason = "파생본 없음"; continue; }
@@ -157,9 +164,11 @@ function main() {
     published++;
   }
   // 승인 목록에 없는 파일은 public 에서 제거
-  for (const dir of [PUBLIC_DIR, PUBLIC_THUMB]) {
-    for (const f of fs.readdirSync(dir)) {
-      if (f.endsWith(".webp") && !wanted.has(f)) fs.rmSync(path.join(dir, f));
+  if (!REPORT_ONLY) {
+    for (const dir of [PUBLIC_DIR, PUBLIC_THUMB]) {
+      for (const f of fs.readdirSync(dir)) {
+        if (f.endsWith(".webp") && !wanted.has(f)) fs.rmSync(path.join(dir, f));
+      }
     }
   }
 
@@ -180,11 +189,11 @@ function main() {
         thumbHeight: p.derived.thumb.height,
       })),
   };
-  fs.writeFileSync(DATA_OUT, JSON.stringify(pub, null, 2), "utf8");
+  if (!REPORT_ONLY) fs.writeFileSync(DATA_OUT, JSON.stringify(pub, null, 2), "utf8");
 
   // ── 6) 리포트 ──
   const csv = (rows) => rows.map((r) => r.map((v) => `"${String(v ?? "").replace(/"/g, "'")}"`).join(",")).join("\n");
-  fs.writeFileSync(path.join(REPORTS, "photo-audit.csv"), "﻿" + csv([
+  const auditCsv = "﻿" + csv([
     ["id", "originalFilename", "status", "reason_or_flags", "width", "height", "luma", "sharpness", "origKB", "webpKB"],
     ...photos.map((p) => [
       p.id, p.originalFilename,
@@ -193,11 +202,16 @@ function main() {
       p.original.width, p.original.height, p.metrics.meanLuma, p.metrics.laplacianVar,
       Math.round(p.original.bytes / 1024), Math.round((p.derived?.main?.bytes || 0) / 1024),
     ]),
-  ]), "utf8");
-  fs.writeFileSync(path.join(REPORTS, "photo-duplicates.csv"), "﻿" + csv([["id", "filename", "type", "kept_id"], ...dupRows]), "utf8");
-  fs.writeFileSync(path.join(REPORTS, "photo-review-needed.csv"), "﻿" + csv([
+  ]);
+  const duplicatesCsv = "﻿" + csv([["id", "filename", "type", "kept_id"], ...dupRows]);
+  const reviewCsv = "﻿" + csv([
     ["id", "filename", "flags"], ...review.map((p) => [p.id, p.originalFilename, p._flags.join(" · ")]),
-  ]), "utf8");
+  ]);
+  for (const [name, value] of [
+    ["photo-audit.csv", auditCsv], ["phase06-photo-audit.csv", auditCsv],
+    ["photo-duplicates.csv", duplicatesCsv], ["phase06-photo-duplicates.csv", duplicatesCsv],
+    ["photo-review-needed.csv", reviewCsv], ["phase06-photo-review-needed.csv", reviewCsv],
+  ]) fs.writeFileSync(path.join(REPORTS, name), value, "utf8");
 
   // 컨택트 시트(로컬 검토용) — derived 썸네일을 상대 경로로 표시
   const sheetRow = (p, cls) => {
@@ -220,10 +234,10 @@ img{width:100%;aspect-ratio:1;object-fit:cover}figcaption{font-size:11px;color:#
 
   // manifest 저장(_flags 는 임시필드 → flags 로 보존)
   for (const p of photos) { p.flags = p._flags; delete p._flags; }
-  fs.writeFileSync(MANIFEST, JSON.stringify(manifest, null, 2), "utf8");
+  if (!REPORT_ONLY) fs.writeFileSync(MANIFEST, JSON.stringify(manifest, null, 2), "utf8");
 
-  console.log(`[photos:audit] 전체 ${photos.length} · 승인/공개 ${published} · 검토필요 ${review.length} · 제외 ${excluded.length}(중복 ${dupRows.length})`);
-  console.log(`[photos:audit] 공개 manifest → src/data/work-photos.json (${pub.count}장)`);
+  console.log(`[photos:audit]${REPORT_ONLY ? " report-only" : ""} 전체 ${photos.length} · 승인/공개 ${published} · 검토필요 ${review.length} · 제외 ${excluded.length}(중복 ${dupRows.length})`);
+  console.log(`[photos:audit] ${REPORT_ONLY ? "공개 manifest 변경 없음" : "공개 manifest → src/data/work-photos.json"} (${pub.count}장)`);
   console.log(`[photos:audit] 검토 시트 → reports/photo-contact-sheet.html`);
 }
 

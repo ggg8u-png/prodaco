@@ -66,6 +66,7 @@ export default function GalleryPage() {
                 alt={workPhotoAlt("gallery", photo.id)}
                 width={photo.thumbWidth}
                 height={photo.thumbHeight}
+                sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
                 loading="lazy"
                 decoding="async"
                 className="aspect-square w-full object-cover bg-[#EDEBE4]"
