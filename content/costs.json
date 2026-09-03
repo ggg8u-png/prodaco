@@ -3,21 +3,21 @@
     {
       "key": "ganmaru",
       "label": "마루철거",
-      "minPrice": 2,
-      "maxPrice": 7,
-      "note": "강마루, 합판마루, 온돌마루\n\n<특수마루>\n맥반석마루, 원목마루, MD마루, SB마루, 패드(스펀지마루)"
+      "minPrice": 2.5,
+      "maxPrice": 3,
+      "note": "강마루, 합판마루, 온돌마루\n장판시공용 정밀 샌딩시 5000원추가"
     },
     {
       "key": "ganghwa",
       "label": "강화·합판마루",
       "minPrice": 2,
-      "maxPrice": 4,
-      "note": "못 박음 구조는 상대적으로 저렴"
+      "maxPrice": "",
+      "note": "조립식 마루 폐기물 처리 포함입니다."
     },
     {
       "key": "wonmok",
       "label": "원목마루",
-      "minPrice": 3,
+      "minPrice": 3.5,
       "maxPrice": 5,
       "note": "두께·접착 방식에 따라 차이"
     },
@@ -45,15 +45,15 @@
     {
       "key": "coating",
       "label": "에폭시·우레탄 코팅",
-      "minPrice": 3,
+      "minPrice": 3.5,
       "maxPrice": 7,
       "note": "면적·코팅 두께에 따라 별도 산정"
     },
     {
       "key": "sanding",
       "label": "바닥 샌딩 (면갈이)",
-      "minPrice": 1,
-      "maxPrice": 2,
+      "minPrice": 1.5,
+      "maxPrice": 3,
       "note": "바닥 상태·코팅 목적에 따라 별도 산정"
     }
   ],
