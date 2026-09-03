@@ -1,0 +1,20 @@
+{
+  "photos": [],
+  "workScope": "",
+  "indexStatus": "unknown",
+  "verified": false,
+  "area": "",
+  "thumbnailChoice": "after",
+  "cost": "",
+  "buildingType": "",
+  "featured": false,
+  "videoPlatform": "",
+  "status": "draft",
+  "item": "바닥철거",
+  "videoUrl": "",
+  "region": "수도권",
+  "title": "[QA TEST] CMS 저장·수정·게시·삭제 검증 2026-09-03",
+  "featuredImageAlt": "",
+  "description": "운영 배포 후 Decap CMS의 초안 저장, 수정, 대표 이미지 지정, 게시 및 삭제 흐름을 확인하기 위한 테스트 데이터입니다. 실제 시공 사례가 아닙니다.",
+  "videoTitle": ""
+}
