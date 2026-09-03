@@ -30,6 +30,7 @@
 - `package.json`
 - `package-lock.json`
 - `next.config.ts`
+- `public/admin/config.yml`
 - `public/admin/index.html`
 - `scripts/seo-tests.ts`
 - `scripts/stabilization-route-smoke.mjs`
