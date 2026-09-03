@@ -1,11 +1,10 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { company } from "@/data/company";
 import { materialOptions, regionOptions, consultPrep, ctaConfig } from "@/data/landing";
 import { FLOOR_COSTS, costKeyOf } from "@/data/costs";
 import { PhoneIcon, KakaoIcon } from "@/components/icons";
 import { trackEvent, onCtaClick } from "@/lib/analytics";
-import { useEffect, useRef } from "react";
 import ui from "../../content/ui.json";
 
 // 견적 상담 체크리스트 + 참고 비용 범위 계산.
@@ -41,11 +40,13 @@ export default function QuoteChecklist() {
 
   // 면적과 바닥재가 둘 다 있고, 그 바닥재에 참고 단가가 있을 때만 범위를 낸다.
   const pyeong = Number(area);
-  const perPyeong = material ? perPyeongRangeFor(material) : null;
-  const estimate =
-    Number.isFinite(pyeong) && pyeong > 0 && pyeong <= 10000 && perPyeong
+  const perPyeong = useMemo(() => material ? perPyeongRangeFor(material) : null, [material]);
+  const estimate = useMemo(
+    () => Number.isFinite(pyeong) && pyeong > 0 && pyeong <= 10000 && perPyeong
       ? { min: Math.round(pyeong * perPyeong[0]), max: Math.round(pyeong * perPyeong[1]), perPyeong }
-      : null;
+      : null,
+    [perPyeong, pyeong],
+  );
   // 단가가 없는 품목을 골랐을 때는 계산 대신 그 사실을 알린다(빈 화면·0원 표시 금지).
   const noRate = !!material && !perPyeong && material !== "잘 모르겠어요";
 

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { galleryItems } from "@/data/gallery";
 import CaseGrid from "@/components/CaseGrid";
 import { paginate, CASE_PAGE_SIZE } from "@/lib/pagination";
@@ -60,7 +61,7 @@ export default function GalleryPage() {
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {selectWorkPhotos("gallery", 24).map((photo) => (
-              <img
+              <Image
                 key={photo.id}
                 src={photo.thumb}
                 alt={workPhotoAlt("gallery", photo.id)}

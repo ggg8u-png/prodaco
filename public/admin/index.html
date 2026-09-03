@@ -7,8 +7,6 @@
     <title>프로다 콘텐츠 관리</title>
     <!-- Netlify Identity (로그인) -->
     <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
-    <!-- Decap 맞춤 미리보기 컴포넌트용 React. 관리자 화면에서만 사용합니다. -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   </head>
   <body>
     <!-- Decap CMS (구 Netlify CMS) -->
@@ -75,11 +73,14 @@
         }
         function register(attempt) {
           // CDN 초기화가 늦어도 관리자 저장 화면을 깨지 않게 잠시 기다린다.
-          if (!window.CMS || typeof CMS.registerPreviewTemplate !== "function" || !window.React) {
+          if (!window.CMS || typeof CMS.registerPreviewTemplate !== "function" || typeof window.h !== "function") {
             if (attempt < 40) window.setTimeout(function () { register(attempt + 1); }, 250);
             return;
           }
-          h = window.React.createElement;
+          // Decap 이 노출하는 h(내부 React.createElement)를 반드시 사용한다.
+          // 별도 React 로 만든 element를 넘기면 Decap 내부 React와 버전이 달라
+          // 편집기 미리보기에서 React error #525가 발생한다.
+          h = window.h;
           CMS.registerPreviewStyle("/admin/seo-preview.css");
           function BlogPreview(props) { return preview(props, "blog"); }
           function GalleryPreview(props) { return preview(props, "gallery"); }

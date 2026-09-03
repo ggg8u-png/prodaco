@@ -990,6 +990,23 @@ ok(!toml.includes("status = 302"), "netlify.toml 에 302 없음");
       `required:false → identifier_field 를 필수 필드로 지정할 것`
     );
   }
+
+  // Decap 브라우저 번들은 자신과 동일한 React의 createElement를 window.h로 제공한다.
+  // 외부 React를 추가 로드해 만든 element를 Decap에 넘기면 버전이 어긋나
+  // 편집 미리보기에서 React error #525가 발생한다.
+  const adminHtml = fs.readFileSync(path.join(process.cwd(), "public", "admin", "index.html"), "utf8");
+  ok(!/<script[^>]+(?:unpkg\.com|jsdelivr\.net)[^>]+\/react(?:@|\/)/i.test(adminHtml), "Decap: 별도 React CDN을 로드하지 않음");
+  ok(/h\s*=\s*window\.h\s*;/.test(adminHtml), "Decap: 맞춤 미리보기는 Decap 제공 window.h 사용");
+  ok(!/window\.React\.createElement/.test(adminHtml), "Decap: 외부 React element 생성 금지");
+
+  // fields를 가진 list 위젯은 default가 없으면 빈 자식 1개를 자동으로 만든다.
+  // 선택 사진인데도 "No src" 항목이 처음부터 생겨 게시 검증을 방해하지 않게 빈 배열로 시작한다.
+  const galleryCollection = blocks.find((col) => col.name === "gallery");
+  const galleryConfig = galleryCollection?.lines.join("\n") || "";
+  ok(
+    /name:\s*"?photos"?[\s\S]{0,180}?widget:\s*"?list"?[\s\S]{0,180}?default:\s*\[\]/.test(galleryConfig),
+    "Decap[gallery]: 선택 사진 목록은 빈 배열로 시작"
+  );
 }
 
 // ── ⑩ 본문 최소 분량(전 페이지) ──────────────────────────────────────────────

@@ -57,7 +57,9 @@ next-env.d.ts
 /content/lastmod.json
 
 # internal SEO QA artifacts (not part of the deployed site)
-/reports/
+/reports/*
+!/reports/stabilization-error-inventory.md
+!/reports/stabilization-final-qa.md
 /tests/
 /scripts/seo-*.mjs
 /scripts/lib/

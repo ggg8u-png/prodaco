@@ -4,6 +4,7 @@
 //
 // 표기 원칙: 섹션 제목·alt·문구에 확인되지 않은 지역명·공정명을 쓰지 않는다.
 // (해당 지역 시공사례처럼 보이게 하지 않기 — 고지 문구 포함)
+import Image from "next/image";
 import { selectWorkPhotos, workPhotoAlt, workPhotoFootnote, attestedRegionLabel, allAttested } from "@/lib/workPhotos";
 
 interface WorkPhotosProps {
@@ -56,7 +57,7 @@ export default function WorkPhotos({
         {intro && <p className="text-xs text-gray-500 mb-5 leading-relaxed">{intro}</p>}
         <div className={`grid ${cols} gap-2 sm:gap-3 ${intro ? "" : "mt-3"}`}>
           {photos.map((p) => (
-            <img
+            <Image
               key={p.id}
               src={p.thumb}
               alt={workPhotoAlt(routeKey, p.id)}
