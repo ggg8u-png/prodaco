@@ -4,7 +4,8 @@
   "indexStatus": "unknown",
   "verified": false,
   "area": "",
-  "thumbnailChoice": "after",
+  "thumbnailChoice": "custom",
+  "featuredImage": "/uploads/20260902_152744.jpg",
   "cost": "",
   "buildingType": "",
   "featured": false,
@@ -15,6 +16,6 @@
   "region": "수도권",
   "title": "[QA TEST] CMS 저장·수정·게시·삭제 검증 2026-09-03",
   "featuredImageAlt": "",
-  "description": "운영 배포 후 Decap CMS의 초안 저장, 수정, 대표 이미지 지정, 게시 및 삭제 흐름을 확인하기 위한 테스트 데이터입니다. 실제 시공 사례가 아닙니다.",
+  "description": "운영 배포 후 Decap CMS의 초안 저장, 수정, 대표 이미지 지정, 게시 및 삭제 흐름을 확인하기 위한 테스트 데이터입니다. 실제 시공 사례가 아닙니다. 1차 저장 후 수정 확인 완료.",
   "videoTitle": ""
 }
