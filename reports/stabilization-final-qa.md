@@ -2,8 +2,9 @@
 
 - 일자: 2026-09-03 (Asia/Seoul)
 - 저장소: `https://github.com/ggg8u-png/prodaco`
-- 배포·QA 기준: `main` at `c9ba223`
-- Release 판정: **CONDITIONALLY READY**
+- 안정화 코드 기준: `c9ba223`
+- production CMS E2E 및 정리 기준: `main` at `e0ebd5d`
+- Release 판정: **READY**
 
 ## 1. 재현된 오류
 
@@ -152,7 +153,10 @@ npm audit
 - 기존 시공사례 `case-20260902-1116`: 저장된 제목·설명·canonical·대표 이미지 preview 정상.
 - 새 블로그: 오른쪽 SEO metadata preview 정상, 오류 화면 없음.
 - 배포 이후 위 세 화면의 Chrome console error 0건.
-- **NEEDS INPUT:** 실제 콘텐츠 생성은 외부 변경이므로 draft 저장 → 수정 → 이미지 지정 → publish → 삭제 E2E는 수행하지 않았다.
+- production CMS E2E용 시공사례 `case-20260903-0702`를 생성해 draft 저장 → 본문 수정 → 대표 이미지 지정 → publish를 실제 수행했다.
+- 필수 before/after 이미지가 없는 상태에서는 상세 URL이 404로 유지되고, 이미지를 지정한 뒤 배포 `726c721`에서 상세 URL HTTP 200을 확인했다.
+- 게시된 상세 페이지에서 제목·설명·대표/전/후 이미지·self-canonical·OG 이미지가 CMS 입력값과 일치했고 Chrome console error는 0건이었다.
+- 테스트 사례는 사용자 승인 후 Decap CMS에서 삭제했다. 삭제 커밋 `e0ebd5d`의 Netlify production deploy가 `ready`이며, 상세 URL HTTP 404 및 cases sitemap 미포함을 확인했다.
 
 ## 13. SEO QA 결과
 
@@ -164,6 +168,8 @@ npm audit
 - BreadcrumbList 중복 0.
 - 내부 링크 orphan 0, 최대 3 click, violation 0.
 - live vs local 표본 26개 불일치 0, sitemap 1,418 vs 1,418 MATCH.
+- 실제 네이버 `site:prodaco.kr/gallery` 검색에서 목록 페이지만이 아니라 여러 `/gallery/case-*` 상세 URL의 개별 노출을 확인했다.
+- 신규·최근 사례의 네이버 노출은 크롤링/색인 시차가 있으며 모든 URL의 즉시 노출을 보장하지 않는다.
 - P3: full 유사도 휴리스틱에서 5개 클러스터(11 URL) 경고. 확인되지 않은 내용을 만들어 해소하지 않음.
 
 ## 14. Image/Drive QA 결과
@@ -186,18 +192,17 @@ npm audit
 
 ## 16. 사용자 입력/credential 필요한 부분
 
-1. 테스트 콘텐츠를 실제 생성해도 되는 경우 CMS draft-save-edit-publish-delete E2E 확인.
-2. Drive credential 또는 파일 공유 권한으로 14개 이미지 다운로드 확인.
-3. 보류 사진 1건 육안검토.
+1. Drive credential 또는 파일 공유 권한으로 14개 이미지 다운로드 확인.
+2. 보류 사진 1건 육안검토.
 
 ## 17. Release 판정
 
-**CONDITIONALLY READY**
+**READY**
 
-코드 기준 P0=0, P1=0이며 build/typecheck/lint/tests/핵심 routes가 모두 통과했다. 사용자가 보고한 React #525의 직접 원인을 제거했고, 배포 후 인증된 production CMS에서 새 글·기존 글 preview와 console까지 통과했다. 다만 실제 콘텐츠를 만드는 save/publish E2E와 Drive credential 검증, 보류 사진 1건의 육안검토가 남아 있으므로 무조건 READY로 표기하지 않는다.
+코드 기준 P0=0, P1=0이며 build/typecheck/lint/tests/핵심 routes가 모두 통과했다. 사용자가 보고한 React #525의 직접 원인을 제거했고, 인증된 production Decap CMS에서 preview뿐 아니라 실제 draft 저장·수정·이미지 지정·publish·상세 URL 확인·삭제까지 E2E를 완료했다. 테스트 데이터 삭제 배포와 공개 URL 404, sitemap 제거도 확인했다. 남은 Drive 다운로드 14건과 보류 사진 1건은 fallback/비공개 처리가 적용된 비차단 후속 항목이다.
 
-배포 후 확인 조건:
+완료된 배포 후 확인:
 
-1. draft 저장 후 수정/게시가 정상인지 확인(테스트 콘텐츠 생성 승인 시).
-2. 대표 이미지 카드·상세·OG 일치 확인.
-3. 배포 빌드에서 dependency audit/build가 동일하게 통과하는지 확인.
+1. draft 저장 후 수정/게시/삭제 정상 동작 확인.
+2. 대표 이미지·상세·OG 일치 확인.
+3. production 배포 상태 `ready`, 삭제 후 상세 HTTP 404 및 sitemap 제거 확인.
