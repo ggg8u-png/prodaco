@@ -2,7 +2,7 @@
 
 - 조사일: 2026-09-03 (Asia/Seoul)
 - 저장소: `https://github.com/ggg8u-png/prodaco`
-- 기준 브랜치/커밋: `main` / `95e8d75`
+- 배포·QA 기준 브랜치/커밋: `main` / `c9ba223`
 - 기준 문서: `PRODACO_CODEX_SEQUENTIAL_MASTER_PLAN_V2.md` (사용자 제공 로컬 사본)
 - 원칙: 기존 콘텐츠·URL·canonical·사용자 변경을 reset/revert하지 않음
 
@@ -17,6 +17,7 @@
 | STAB-005 | P2 | NEEDS INPUT | prebuild에서 외부 Drive 이미지 14건 다운로드 실패, URL fallback으로 빌드는 정상 |
 | STAB-006 | P3 | OPEN | full SEO 유사도 감사에서 5개 클러스터(11 URL) 경고 |
 | STAB-007 | P3 | NEEDS REVIEW | 사진 1건이 스크린샷/캡처 의심으로 공개 보류 |
+| STAB-008 | P2 | FIXED | 새 시공사례의 선택형 추가 사진 목록이 빈 `No src` 항목 1건으로 시작 |
 
 ## 상세
 
@@ -34,9 +35,18 @@
   - `window.h`가 준비될 때까지 등록을 지연하도록 guard 변경.
   - 외부 React 재도입을 막는 회귀 테스트 3개 추가.
 - 검증:
-  - `npm run test:seo`: 관련 회귀 테스트 포함 1,568개 통과.
-  - 최종 production build의 `/admin/index.html`: Identity + Decap만 로드, 외부 React 없음, 브라우저 콘솔 error 0건.
-- 제한: Git Gateway 인증 세션이 없는 로컬 브라우저에서는 실제 draft 저장/수정/publish까지 수행하지 못함.
+  - `npm run test:seo`: 관련 회귀 테스트 포함 1,569개 통과.
+  - Netlify production deploy `c9ba223` 완료 후 로그인된 Chrome에서 새 시공사례, 기존 시공사례, 새 블로그 preview 정상.
+  - 실제 production `/admin/`는 Identity + Decap만 로드하고 외부 React가 없으며, 배포 이후 Chrome console error 0건.
+- 제한: 테스트 콘텐츠를 production에 남기지 않기 위해 실제 draft 저장/수정/publish/delete는 수행하지 않음.
+
+### STAB-008 — 선택 사진 목록의 빈 항목 자동 생성
+
+- 등급: P2
+- 재현: 새 시공사례 화면에서 선택사항인 `현장 추가 사진`이 처음부터 `1 사진 / No src`로 표시.
+- root cause: Decap의 `fields` 기반 list widget은 `default`가 없으면 자식 기본값으로 항목 1개를 자동 생성한다.
+- 수정: `photos` list에 `default: []` 지정.
+- 검증: 배포 후 로그인된 Chrome의 새 시공사례 화면에서 `0 현장 추가 사진(선택)` 표시, 오른쪽 preview 정상, console error 0건.
 
 ### STAB-002 — 프로덕션 의존성 고위험 취약점
 

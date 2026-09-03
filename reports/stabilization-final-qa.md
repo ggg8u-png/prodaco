@@ -2,7 +2,7 @@
 
 - 일자: 2026-09-03 (Asia/Seoul)
 - 저장소: `https://github.com/ggg8u-png/prodaco`
-- 기준: `main` at `95e8d75`
+- 배포·QA 기준: `main` at `c9ba223`
 - Release 판정: **CONDITIONALLY READY**
 
 ## 1. 재현된 오류
@@ -12,6 +12,7 @@
 3. ESLint 경고 3건.
 4. Next workspace root 자동 추론 경고.
 5. prebuild Drive 이미지 다운로드 14건 실패(기존 URL fallback 정상).
+6. 새 시공사례의 선택형 추가 사진 목록이 빈 사진 1건(`No src`)으로 시작.
 
 세부 재현 정보는 `reports/stabilization-error-inventory.md`에 기록했다.
 
@@ -41,6 +42,7 @@
 ## 4. 수정 내용
 
 - 외부 React 18 CDN을 제거하고 Decap 제공 `window.h`로 preview element 생성.
+- 선택형 현장 추가 사진 목록에 `default: []`를 지정해 빈 사진 0건으로 시작하도록 변경.
 - Next/ESLint config를 15.5.25로 패치하고 `postcss`/`sharp` 및 lockfile을 보안 패치 버전으로 갱신.
 - Next 전이 의존성도 패치 버전을 쓰도록 npm overrides 적용.
 - `outputFileTracingRoot`를 현재 저장소로 고정.
@@ -54,6 +56,7 @@
 - Decap 관리자 HTML에 별도 React CDN이 없는지 검사.
 - 맞춤 미리보기가 `window.h`를 사용하는지 검사.
 - `window.React.createElement` 재도입 방지.
+- 시공사례의 선택형 사진 목록이 빈 배열로 시작하는지 검사.
 - sitemap에서 실제 표본을 선택하는 `test:routes` 추가:
   - core 6
   - gallery detail 5
@@ -124,7 +127,7 @@ npm audit
 ## 10. Test 결과
 
 - PASS
-- `test:seo`: 1,568개 검증 통과.
+- `test:seo`: 1,569개 검증 통과.
 - Phase 09 콘텐츠: 15/15 통과.
 - Phase 10 sitemap: 7 group, 1,418 URL, violation 0.
 - `test:photos`: workphotos 8/8, Drive 6/6 통과.
@@ -141,11 +144,14 @@ npm audit
 ## 12. CMS QA 결과
 
 - Decap config/save identifier 회귀 검사 PASS.
-- 관리자 production HTML 초기화 PASS.
-- 외부 React 로드 없음.
-- 브라우저 콘솔 error 0건.
-- 시공사례/블로그 맞춤 preview 등록 코드가 Decap 제공 renderer를 사용함.
-- **NEEDS INPUT:** 로컬 브라우저에 Git Gateway 인증 세션이 없어 실제 draft 생성 → 저장 → 수정 → 이미지 지정 → publish → 삭제까지는 수행하지 않았다. 테스트 콘텐츠를 production에 남기거나 인증을 우회하지 않았다.
+- Git Gateway로 로그인된 별도 Chrome 세션에서 production Decap CMS QA 수행.
+- Netlify production deploy `c9ba223` 상태 `ready`, deploy error 없음(143초).
+- 외부 React 18 로드 없음, `window.h` 사용, `window.React.createElement` 없음.
+- 새 시공사례: 오른쪽 SEO metadata preview 정상, 오류 화면 없음, 추가 사진 0건으로 시작.
+- 기존 시공사례 `case-20260902-1116`: 저장된 제목·설명·canonical·대표 이미지 preview 정상.
+- 새 블로그: 오른쪽 SEO metadata preview 정상, 오류 화면 없음.
+- 배포 이후 위 세 화면의 Chrome console error 0건.
+- **NEEDS INPUT:** 실제 콘텐츠 생성은 외부 변경이므로 draft 저장 → 수정 → 이미지 지정 → publish → 삭제 E2E는 수행하지 않았다.
 
 ## 13. SEO QA 결과
 
@@ -179,7 +185,7 @@ npm audit
 
 ## 16. 사용자 입력/credential 필요한 부분
 
-1. Git Gateway 인증이 있는 CMS 세션에서 실제 새 시공사례/블로그 draft-save-edit-publish-delete E2E 확인.
+1. 테스트 콘텐츠를 실제 생성해도 되는 경우 CMS draft-save-edit-publish-delete E2E 확인.
 2. Drive credential 또는 파일 공유 권한으로 14개 이미지 다운로드 확인.
 3. 보류 사진 1건 육안검토.
 
@@ -187,11 +193,10 @@ npm audit
 
 **CONDITIONALLY READY**
 
-코드 기준 P0=0, P1=0이며 build/typecheck/lint/tests/핵심 routes가 모두 통과했다. 사용자가 보고한 React #525의 직접 원인을 제거했고 회귀 테스트도 추가했다. 다만 실제 production CMS의 authenticated save/publish E2E와 Drive credential 검증, 보류 사진 1건의 육안검토가 남아 있으므로 무조건 READY로 표기하지 않는다.
+코드 기준 P0=0, P1=0이며 build/typecheck/lint/tests/핵심 routes가 모두 통과했다. 사용자가 보고한 React #525의 직접 원인을 제거했고, 배포 후 인증된 production CMS에서 새 글·기존 글 preview와 console까지 통과했다. 다만 실제 콘텐츠를 만드는 save/publish E2E와 Drive credential 검증, 보류 사진 1건의 육안검토가 남아 있으므로 무조건 READY로 표기하지 않는다.
 
 배포 후 확인 조건:
 
-1. `/admin/` 시공사례 새 글 화면의 오른쪽 미리보기에 오류가 없는지 확인.
-2. draft 저장 후 수정/게시가 정상인지 확인.
-3. 대표 이미지 카드·상세·OG 일치 확인.
-4. 배포 빌드에서 dependency audit/build가 동일하게 통과하는지 확인.
+1. draft 저장 후 수정/게시가 정상인지 확인(테스트 콘텐츠 생성 승인 시).
+2. 대표 이미지 카드·상세·OG 일치 확인.
+3. 배포 빌드에서 dependency audit/build가 동일하게 통과하는지 확인.
