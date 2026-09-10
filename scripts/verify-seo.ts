@@ -6,7 +6,7 @@
 // 여기서 보는 것(벤치마크 §7 실행 플레이북 대응):
 //   · indexable / sitemap URL 수와 그 일치
 //   · title·description·canonical·H1 누락 및 중복
-//   · OG 이미지 생성 입력(지역·서비스·전화번호)이 전 페이지에 전달되는가
+//   · 서비스 대표 이미지가 승인된 자체 호스팅 현장 사진인가
 //   · Service / FAQPage / BreadcrumbList 스키마 발생 수
 //   · 고아 페이지(내부링크로 도달 불가) · 깨진 내부링크
 //
@@ -23,7 +23,7 @@ import { getContentForKeyword, contentProfileIdFor } from "@/lib/content";
 import { faqItemsFor } from "@/data/faqPool";
 import { entriesForGroup, SITEMAP_GROUPS } from "@/lib/sitemap";
 import { company } from "@/data/company";
-import { regionVariants } from "@/data/regionVariants";
+import { serviceFeaturedImage } from "@/lib/serviceFeaturedImage";
 import { neighborsOf } from "@/data/regions";
 import { itemGuidesFor } from "@/lib/itemGuides";
 import { casePageItems, indexableCases, casePath, caseRelatedLinks } from "@/lib/caseDoc";
@@ -68,22 +68,17 @@ const dupDescs = [...descs.entries()].filter(([, v]) => v.length > 1);
 for (const [t, v] of dupTitles.slice(0, 10)) bad("title 중복", v.slice(0, 3).join(","), t);
 for (const [d, v] of dupDescs.slice(0, 10)) bad("description 중복", v.slice(0, 3).join(","), d.slice(0, 60));
 
-// ─── ② OG 이미지 생성 입력 ─────────────────────────────────────────────────────
-// 각 지역×품목 페이지의 OG 는 [slug]/opengraph-image.tsx 가 만든다. 그 라우트가 쓰는
-// 입력(지역 표기·품목·전화번호)이 전 페이지에서 실제로 채워지는지 여기서 확인한다.
-// 하나라도 비면 그 페이지 OG 에서 핵심 정보가 사라진다.
-const phone = company.phoneDigits;
-if (!/^\d{9,11}$/.test(phone)) bad("OG 전화번호 형식", "company.phoneDigits", phone);
+// ─── ② 서비스 대표 이미지 ──────────────────────────────────────────────────────
+// 검색 썸네일은 페이지 본문에도 보이는 승인 현장 사진이어야 한다. 검은 텍스트 배너는
+// 네이버의 정사각형 crop에서 글자 조각만 남으므로 서비스 페이지 대표 이미지로 금지한다.
 let ogChecked = 0;
 for (const k of indexed) {
-  const vs = regionVariants(k.region);
-  const ogRegion = vs.length > 1 ? vs[1] : k.region || "서울 · 경기 · 인천";
-  const ogService = k.item || "바닥재 철거";
-  if (!ogRegion.trim()) bad("OG 지역 비어 있음", k.slug);
-  if (!ogService.trim()) bad("OG 서비스 비어 있음", k.slug);
-  // 긴 라벨은 폰트 축소로 처리하지만, 과도하게 길면 두 줄로도 안 들어간다.
-  if (ogRegion.length > 14) soft("OG 지역명 과장", k.slug, ogRegion);
-  if (ogService.length > 16) soft("OG 품목명 과장", k.slug, ogService);
+  const image = serviceFeaturedImage(k.slug, { siteUrl, region: k.region, visiblePhotoCount: 6 });
+  if (image.source !== "work-photo") bad("서비스 OG 현장 사진 없음", k.slug, image.src);
+  if (/\/opengraph-image(?:$|\?)/.test(image.src)) bad("서비스 OG 홍보 배너 사용", k.slug, image.src);
+  if (image.width < 300 || image.height < 300) bad("서비스 OG 크기 부족", k.slug, `${image.width}x${image.height}`);
+  const assetPath = decodeURIComponent(new URL(image.src).pathname).replace(/^\/+/, "");
+  if (!fs.existsSync(path.join(process.cwd(), "public", assetPath))) bad("서비스 OG 파일 없음", k.slug, assetPath);
   ogChecked++;
 }
 
@@ -169,7 +164,7 @@ console.log(`missing description   ${missingDesc}`);
 console.log(`duplicate description ${dupDescs.length}`);
 console.log(`missing canonical     ${missingCanonical}`);
 console.log(`missing H1            ${missingH1}`);
-console.log(`missing OG image      0  (라우트 규약 — ${ogChecked}개 페이지 입력 검증 완료)`);
+console.log(`service OG work photo ${ogChecked}  (승인 자체호스팅 파일 검증 완료)`);
 console.log(`Service schema        ${serviceSchemaPages}`);
 console.log(`FAQPage schema        ${faqSchemaPages}`);
 console.log(`BreadcrumbList        ${breadcrumbPages}`);
@@ -181,7 +176,6 @@ console.log(`콘텐츠 프로파일       ${JSON.stringify(Object.fromEntries([.
 console.log(`시공사례              생성 ${casePageItems().length} · index ${indexableCases().length}`);
 console.log(`고객후기              생성 ${reviewPageItems().length} · index ${indexableReviews().length}`);
 console.log(`블로그                ${posts.length}`);
-console.log(`OG 전화번호           ${phone}`);
 
 fs.mkdirSync(path.join(process.cwd(), "reports"), { recursive: true });
 fs.writeFileSync(

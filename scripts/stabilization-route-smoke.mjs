@@ -59,6 +59,8 @@ function inspectJsonLd(html) {
   let breadcrumbs = 0;
   let articles = 0;
   let article = null;
+  let services = 0;
+  let service = null;
   const walk = (value) => {
     if (!value || typeof value !== "object") return;
     if (Array.isArray(value)) { value.forEach(walk); return; }
@@ -66,11 +68,23 @@ function inspectJsonLd(html) {
     if (value["@type"] === "Article") { articles++; article ||= value; }
     Object.values(value).forEach(walk);
   };
+  // 전역 LocalBusiness의 hasOfferCatalog 안에도 Service가 여럿 있다. 여기서는 페이지가
+  // 독립 JSON-LD 블록(또는 @graph 최상위 노드)으로 선언한 대표 Service만 센다.
+  const recordTopLevelServices = (value) => {
+    if (!value || typeof value !== "object") return;
+    if (Array.isArray(value)) { value.forEach(recordTopLevelServices); return; }
+    if (value["@type"] === "Service") { services++; service ||= value; }
+    if (Array.isArray(value["@graph"])) value["@graph"].forEach(recordTopLevelServices);
+  };
   for (const block of blocks) {
-    try { walk(JSON.parse(block[1].replace(/&quot;/g, '"'))); }
+    try {
+      const value = JSON.parse(block[1].replace(/&quot;/g, '"'));
+      recordTopLevelServices(value);
+      walk(value);
+    }
     catch { valid = false; }
   }
-  return { count: blocks.length, valid, breadcrumbs, articles, article };
+  return { count: blocks.length, valid, breadcrumbs, articles, article, services, service };
 }
 
 async function inspectRoute(route, kind, sitemap) {
@@ -85,14 +99,21 @@ async function inspectRoute(route, kind, sitemap) {
   const robotsCount = countTags(html, "meta", "name", "robots");
   const description = attr(html, "meta", "name", "description", "content");
   const ogImage = attr(html, "meta", "property", "og:image", "content");
+  const ogImageWidth = Number(attr(html, "meta", "property", "og:image:width", "content")) || 0;
+  const ogImageHeight = Number(attr(html, "meta", "property", "og:image:height", "content")) || 0;
+  const twitterImage = attr(html, "meta", "name", "twitter:image", "content");
   const ogUrl = attr(html, "meta", "property", "og:url", "content");
-  const bodyTextLength = stripTags(html.match(/<body\b[^>]*>([\s\S]*?)<\/body>/i)?.[1] || html).length;
+  const bodyHtml = html.match(/<body\b[^>]*>([\s\S]*?)<\/body>/i)?.[1] || html;
+  const bodyTextLength = stripTags(bodyHtml).length;
   const internalLinks = [...html.matchAll(/<a\b[^>]*href=["'](\/[^"'#?]*)/gi)].length;
   const cta = /href=["'](?:tel:|sms:|https:\/\/open\.kakao\.com\/)/i.test(html);
   const finalPath = normalizedPath(response.url);
   const included = sitemap.has(normalizedPath(route));
   const isMissing = kind === "404";
+  const isServicePage = kind === "combo" || kind === "region";
   const failures = [];
+  let featuredImageStatus = 0;
+  let featuredImageType = "";
   if (isMissing) {
     if (response.status !== 404) failures.push(`expected 404, got ${response.status}`);
   } else {
@@ -111,6 +132,32 @@ async function inspectRoute(route, kind, sitemap) {
     if (!included) failures.push("not in sitemap");
     if (!internalLinks) failures.push("no internal links");
     if (!cta) failures.push("missing CTA");
+    if (isServicePage) {
+      let ogImagePath = "";
+      try {
+        const imageUrl = new URL(ogImage, BASE);
+        ogImagePath = decodeURIComponent(imageUrl.pathname);
+        if (canonical && imageUrl.origin !== new URL(canonical, BASE).origin) failures.push(`service og:image origin ${imageUrl.origin}`);
+      }
+      catch { failures.push("invalid og:image URL"); }
+      if (!/^\/images\/work\/[a-f0-9]+\.webp$/i.test(ogImagePath)) failures.push(`service og:image is not a work photo: ${ogImagePath || "missing"}`);
+      const photoId = ogImagePath.match(/\/([a-f0-9]+)\.webp$/i)?.[1] || "";
+      const renderedImages = bodyHtml.match(/<img\b[^>]*>/gi) || [];
+      if (!photoId || !renderedImages.some((tag) => tag.includes(photoId))) failures.push("service representative photo is not visible in body");
+      if (ogImageWidth < 300 || ogImageHeight < 300) failures.push(`service og:image dimensions ${ogImageWidth}x${ogImageHeight}`);
+      if (!twitterImage || twitterImage !== ogImage) failures.push("service twitter:image mismatch");
+      if (jsonLd.services !== 1) failures.push(`Service x${jsonLd.services}`);
+      const serviceImage = typeof jsonLd.service?.image === "string" ? jsonLd.service.image : jsonLd.service?.image?.url;
+      if (!serviceImage || serviceImage !== ogImage) failures.push("Service image mismatch");
+      if (ogImagePath) {
+        const imageResponse = await fetch(`${BASE}${encodeURI(ogImagePath)}`, { redirect: "follow" });
+        featuredImageStatus = imageResponse.status;
+        featuredImageType = imageResponse.headers.get("content-type") || "";
+        if (!imageResponse.ok || !featuredImageType.toLowerCase().startsWith("image/")) {
+          failures.push(`service image HTTP ${featuredImageStatus} ${featuredImageType || "no content-type"}`);
+        }
+      }
+    }
     if (kind === "gallery") {
       const h1 = stripTags(h1s[0]?.[1] || "");
       if (robots.toLowerCase().includes("noindex")) failures.push("gallery noindex");
@@ -128,7 +175,8 @@ async function inspectRoute(route, kind, sitemap) {
     h1: stripTags(h1s[0]?.[1] || ""), h1Count: h1s.length, canonical,
     canonicalCount, robots, robotsCount, description, bodyTextLength,
     jsonLdCount: jsonLd.count, jsonLdValid: jsonLd.valid, articleCount: jsonLd.articles,
-    breadcrumbCount: jsonLd.breadcrumbs, ogImage, ogUrl, sitemapIncluded: included,
+    breadcrumbCount: jsonLd.breadcrumbs, serviceCount: jsonLd.services, ogImage, ogImageWidth,
+    ogImageHeight, twitterImage, featuredImageStatus, featuredImageType, ogUrl, sitemapIncluded: included,
     internalLinks, cta, result: failures.length ? "FAIL" : "PASS", failures,
   };
 }
@@ -199,9 +247,9 @@ async function main() {
     `- Base: ${BASE}`,
     `- Sitemap URLs: ${sitemap.size}`,
     `- Result: ${rows.filter((row) => row.result === "PASS").length}/${rows.length} PASS`, "",
-    "| kind | route | HTTP | H1 | canonical | robots | SSR chars | JSON-LD | Breadcrumb | OG | sitemap | links | CTA | result |",
-    "|---|---|---:|---:|---:|---|---:|---:|---:|---:|---:|---:|---:|---|",
-    ...rows.map((row) => `| ${row.kind} | ${row.route} | ${row.status} | ${row.h1Count} | ${row.canonicalCount} | ${row.robots} | ${row.bodyTextLength} | ${row.jsonLdValid ? row.jsonLdCount : "INVALID"} | ${row.breadcrumbCount} | ${row.ogImage ? "O" : "X"} | ${row.sitemapIncluded ? "O" : "X"} | ${row.internalLinks} | ${row.cta ? "O" : "X"} | ${row.result}${row.failures.length ? `: ${row.failures.join("; ")}` : ""} |`),
+    "| kind | route | HTTP | H1 | canonical | robots | SSR chars | JSON-LD | Breadcrumb | OG | Twitter | Service image | sitemap | links | CTA | result |",
+    "|---|---|---:|---:|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|",
+    ...rows.map((row) => `| ${row.kind} | ${row.route} | ${row.status} | ${row.h1Count} | ${row.canonicalCount} | ${row.robots} | ${row.bodyTextLength} | ${row.jsonLdValid ? row.jsonLdCount : "INVALID"} | ${row.breadcrumbCount} | ${row.ogImage ? "O" : "X"} | ${row.twitterImage ? "O" : "X"} | ${row.serviceCount ? `${row.serviceCount}/${row.featuredImageStatus || "-"}` : "-"} | ${row.sitemapIncluded ? "O" : "X"} | ${row.internalLinks} | ${row.cta ? "O" : "X"} | ${row.result}${row.failures.length ? `: ${row.failures.join("; ")}` : ""} |`),
     "",
   ].join("\n");
   fs.writeFileSync(path.join(OUT, "stabilization-route-smoke.md"), markdown);

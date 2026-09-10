@@ -22,6 +22,7 @@ import { applyReplacements } from "@/lib/replacements";
 import GalleryImage from "@/components/GalleryImage";
 import KeyAnswer from "@/components/KeyAnswer";
 import WorkPhotos from "@/components/WorkPhotos";
+import { serviceFeaturedImage } from "@/lib/serviceFeaturedImage";
 import { caseGroupLabelFor } from "@/lib/caseGroups";
 import { notFound } from "next/navigation";
 import { josa, josaEnd } from "@/lib/josa";
@@ -56,11 +57,6 @@ export async function generateStaticParams() {
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://prodaco.kr";
 
-// 이 페이지 전용 OG 이미지 절대 URL(정확히 한 번만 인코딩).
-function ogImageUrlFor(slug: string): string {
-  return `${siteUrl}/${encodeURIComponent(slug)}/opengraph-image`;
-}
-
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug: rawSlug } = await params;
   // 한글 슬러그는 런타임에 퍼센트 인코딩(%EA%B0%95…)되어 들어오므로 디코딩 후 조회한다.
@@ -70,7 +66,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   // 페이지마다 다른 고유 description(품목·지역·실제 비용·권역 반영) — 중복 description 방지.
   const desc = uniqueDescription(keyword, company.phone);
   const title = uniqueTitle(keyword);
-  const ogImageUrl = ogImageUrlFor(slug);
+  const visiblePhotoCount = 4 + (slugSeed(slug) % 3);
+  const featuredImage = serviceFeaturedImage(slug, {
+    siteUrl,
+    region: keyword.region,
+    visiblePhotoCount,
+  });
   // 색인 게이트(단일 출처: src/lib/seo/indexability.ts) —
   //   Tier A: index,follow + self-canonical(사이트맵 포함)
   //   Tier B: noindex,follow 또는 canonical 을 대표 URL(동의어 대표·지역 허브)로 통합
@@ -87,11 +88,20 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       description: desc,
       type: "website",
       url: canonicalUrl,
-      // 이 라우트의 opengraph-image.tsx(지역·품목·대표번호)를 가리킨다.
-      // 파일 규약에 맡기면 한글 슬러그가 이중 인코딩(%25EC%25…)돼 미리보기가 깨진다 —
-      // 동적 세그먼트가 이미 퍼센트 인코딩된 상태로 들어오는데 Next 가 한 번 더 인코딩하기 때문이다.
-      // 그래서 여기서 정확히 한 번만 인코딩한 절대 URL 을 직접 지정한다.
-      images: [{ url: ogImageUrl, width: 1200, height: 630, alt: `${keyword.keyword} — 프로다` }],
+      // 네이버가 정사각형으로 잘라도 현장을 알아볼 수 있는 실제 작업 사진.
+      // 본문 WorkPhotos의 첫 사진과 같은 resolver를 써 메타데이터와 화면을 일치시킨다.
+      images: [{
+        url: featuredImage.src,
+        width: featuredImage.width,
+        height: featuredImage.height,
+        alt: featuredImage.alt,
+      }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: applyReplacements(`${keyword.keyword} | 프로다`),
+      description: desc,
+      images: [{ url: featuredImage.src, alt: featuredImage.alt }],
     },
     other: keyword.region
       ? { "geo.region": "KR", "geo.placename": keyword.region }
@@ -244,6 +254,11 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
   //      (풀이 커져도 기존 페이지 조합이 일괄 재배치되지 않음 — src/lib/workPhotos.ts)
   //      장수는 4~6장으로 시드 변형해 형제 페이지 간 구성 차이를 만든다.
   const workPhotoCount = 4 + (seed % 3);
+  const serviceImage = serviceFeaturedImage(slug, {
+    siteUrl,
+    region: keyword.region,
+    visiblePhotoCount: workPhotoCount,
+  });
   // 2) 품목별 실제 비용 참고표 — 전 품목 표 반복 대신 현재 품목 행만(공통 블록 축소).
   //    품목 매칭 행이 없는 페이지(b2b 등)만 전체 표 폴백.
   const costKey = costKeyOf(keyword.item);
@@ -290,6 +305,7 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
       : { "@type": "AdministrativeArea", name: "서울·경기·인천 수도권" },
     provider: { "@id": `${siteUrl}/#business` },
     url: pageUrl,
+    image: serviceImage.src,
   };
 
   // ⚠ 예전에는 여기서 LocalBusiness 를 다시 선언했다. @id 가 루트 레이아웃과 같은데

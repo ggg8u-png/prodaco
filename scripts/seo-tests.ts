@@ -24,6 +24,7 @@ import { entriesForGroup, SITEMAP_GROUPS, renderUrlset, renderIndex, nonEmptyGro
 import { casePath, caseUrl, casePageItems, indexableCases, isCaseIndexable, caseDateInfo } from "@/lib/caseDoc";
 import { caseRegisteredDate, compareCasesNewestFirst } from "@/lib/caseDates";
 import { postFeaturedImage, caseFeaturedImage, firstBodyImage, SITE_OG_IMAGE } from "@/lib/featuredImage";
+import { serviceFeaturedImage } from "@/lib/serviceFeaturedImage";
 import { reviewPath, reviewPageItems, indexableReviews, REVIEW_MIN_LENGTH } from "@/lib/reviewDoc";
 import { isExampleReview } from "@/data/reviews";
 import { blogPath } from "@/lib/blogUrl";
@@ -719,22 +720,46 @@ ok(!toml.includes("status = 302"), "netlify.toml 에 302 없음");
       ok(body.includes(f.q), "본문 FAQ 와 스키마 FAQ 항목 일치", f.q.slice(0, 24));
   }
 
-  // ④ OG 이미지 — 지역·품목·전화번호 세 정보가 전부 들어가야 한다.
+  // ④ 서비스 대표 이미지 — 검색결과에는 검은 홍보 배너가 아니라 실제 현장 사진이 나와야 한다.
   {
-    const og = read("src", "lib", "ogImage.tsx");
-    ok(/company\.phoneDigits/.test(og), "OG: 전화번호를 company 단일 출처에서 가져옴(하드코딩 아님)");
-    ok(/\{region\}/.test(og) && /\{service\}/.test(og), "OG: 지역·서비스 렌더");
-    ok(!/fonts:\s*\[/.test(og), "OG: 외부 폰트 배열을 넘기지 않음(빌드 파손 이력 방지)");
-    ok(!/cdn\.jsdelivr|fonts\.googleapis|https?:\/\//.test(og), "OG: 외부 네트워크 의존 없음");
-    ok(/^\d{9,11}$/.test(company.phoneDigits), "OG 전화번호 형식", company.phoneDigits);
-    for (const route of [["src", "app", "[slug]", "opengraph-image.tsx"], ["src", "app", "services", "[region]", "opengraph-image.tsx"]]) {
-      const src = read(...route);
-      ok(/renderOgImage\(/.test(src), `OG 라우트 존재: ${route.slice(2).join("/")}`);
-    }
-    // 한글 슬러그 이중 인코딩 방지 — 페이지가 직접 인코딩한 절대 URL 을 지정해야 한다.
+    const serviceImages = keywords.map((k) => serviceFeaturedImage(k.slug, {
+      siteUrl,
+      region: k.region,
+      visiblePhotoCount: 4 + (seedOfSlug(k.slug) % 3),
+    }));
+    const fallbackPages = serviceImages.filter((image) => image.source !== "work-photo");
+    ok(fallbackPages.length === 0, "서비스: 모든 키워드 페이지 대표 이미지가 승인 현장 사진", `${fallbackPages.length}개 fallback`);
+    const promotionalBanners = serviceImages.filter((image) => /\/opengraph-image(?:$|\?)/.test(image.src));
+    ok(promotionalBanners.length === 0, "서비스: 검은 텍스트 OG 배너를 대표 이미지로 사용하지 않음", `${promotionalBanners.length}개`);
+    const foreignOrigins = serviceImages.filter((image) => new URL(image.src).origin !== new URL(siteUrl).origin);
+    ok(foreignOrigins.length === 0, "서비스: 대표 이미지는 사이트와 같은 origin", foreignOrigins.slice(0, 3).map((image) => image.src).join(", "));
+    const missingAssets = serviceImages.filter((image) => {
+      const pathname = decodeURIComponent(new URL(image.src).pathname).replace(/^\/+/, "");
+      return !fs.existsSync(path.join(process.cwd(), "public", pathname));
+    });
+    ok(missingAssets.length === 0, "서비스: 대표 이미지 파일이 모두 자체 호스팅됨", missingAssets.slice(0, 3).map((image) => image.src).join(", "));
+    const undersized = serviceImages.filter((image) => image.width < 300 || image.height < 300);
+    ok(undersized.length === 0, "서비스: 대표 이미지가 검색 썸네일 최소 크기 충족", `${undersized.length}개`);
+    const distinct = new Set(serviceImages.map((image) => image.src)).size;
+    ok(distinct >= Math.min(50, serviceImages.length), "서비스: URL별 대표 사진이 충분히 분산됨", `${distinct}종/${serviceImages.length}개`);
+
+    const regions = [...new Set(keywords.filter((k) => k.type === "region-item" && k.region).map((k) => k.region as string))];
+    const regionImages = regions.map((region) => serviceFeaturedImage(`services/${region}`, {
+      siteUrl,
+      region,
+      visiblePhotoCount: 6,
+    }));
+    ok(regionImages.every((image) => image.source === "work-photo"), "지역 허브: 모두 승인 현장 사진을 대표 이미지로 사용");
+
+    // metadata·Twitter·Service JSON-LD가 같은 resolver를 써야 검색 채널마다 사진이 갈리지 않는다.
     const slugPage = read("src", "app", "[slug]", "page.tsx");
-    ok(/ogImageUrlFor\(/.test(slugPage) && /images:\s*\[\{\s*url:\s*ogImageUrl/.test(slugPage),
-      "OG URL 을 직접 지정(파일 규약 위임 시 한글이 이중 인코딩됨)");
+    const regionPage = read("src", "app", "services", "[region]", "page.tsx");
+    for (const [label, source] of [["서비스", slugPage], ["지역 허브", regionPage]] as const) {
+      ok(source.includes("serviceFeaturedImage("), `${label}: 공통 현장 사진 resolver 사용`);
+      ok(/twitter:\s*\{[\s\S]*?images:\s*\[\{\s*url:\s*featuredImage\.src/.test(source), `${label}: Twitter 이미지도 OG와 일치`);
+      ok(/image:\s*serviceImage\.src/.test(source), `${label}: Service JSON-LD 이미지도 OG와 일치`);
+      ok(!source.includes("/opengraph-image`, width: 1200"), `${label}: 동적 검은 배너 직접 참조 없음`);
+    }
   }
 
   // ⑤ 측정 — GA ID 가 없어도 안전해야 한다.

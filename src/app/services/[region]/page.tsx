@@ -14,6 +14,7 @@ import { reviews } from "@/data/reviews";
 import GalleryImage from "@/components/GalleryImage";
 import KeyAnswer from "@/components/KeyAnswer";
 import WorkPhotos from "@/components/WorkPhotos";
+import { serviceFeaturedImage } from "@/lib/serviceFeaturedImage";
 import { notFound } from "next/navigation";
 import { indexabilityFor } from "@/lib/seo/indexability";
 import { itemAnchorFor } from "@/lib/itemGuides";
@@ -102,6 +103,11 @@ export async function generateMetadata({ params }: { params: Promise<{ region: s
   const desc = `${region} 바닥재 철거·바닥 샌딩 현장 방문 작업. ${
     itemLead ? `${itemLead} 등 ${hubItems.length}개 품목 안내와 ` : ""
   }평당 참고가(실측 정산), 자주 묻는 질문을 정리했습니다. ${cluster} 방문 ☎ ${company.phone}`;
+  const featuredImage = serviceFeaturedImage(`services/${region}`, {
+    siteUrl,
+    region,
+    visiblePhotoCount: 6,
+  });
   return {
     title: itemLead
       ? `${region} 바닥재 철거 | ${itemLead} 등 ${hubItems.length}개`
@@ -119,9 +125,18 @@ export async function generateMetadata({ params }: { params: Promise<{ region: s
       description: desc,
       type: "website",
       url: `${siteUrl}/services/${encodeURIComponent(region)}`,
-      // 이 허브 전용 OG 이미지. 한글 세그먼트가 이중 인코딩되지 않도록 직접 지정한다
-      // (파일 규약에 맡기면 %25EC%25… 로 깨진 URL 이 나간다).
-      images: [{ url: `${siteUrl}/services/${encodeURIComponent(region)}/opengraph-image`, width: 1200, height: 630, alt: `${region} 바닥재 철거 — 프로다` }],
+      images: [{
+        url: featuredImage.src,
+        width: featuredImage.width,
+        height: featuredImage.height,
+        alt: featuredImage.alt,
+      }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${region} 바닥재 철거 | 프로다`,
+      description: desc,
+      images: [{ url: featuredImage.src, alt: featuredImage.alt }],
     },
     other: { "geo.region": "KR", "geo.placename": region },
   };
@@ -133,6 +148,11 @@ export default async function RegionHub({ params }: { params: Promise<{ region: 
   if (!regionsWithPages().includes(region)) notFound();
 
   const seed = seedOf(region);
+  const serviceImage = serviceFeaturedImage(`services/${region}`, {
+    siteUrl,
+    region,
+    visiblePhotoCount: 6,
+  });
   const items = itemsForRegion(region);
   const cluster = clusterLabelOf(region);
   // 인접 지역 링크는 '허브가 실제로 존재하는 지역'만(neighborsOf 는 인접 클러스터 데이터라
@@ -206,6 +226,7 @@ export default async function RegionHub({ params }: { params: Promise<{ region: 
     areaServed: { "@type": "City", name: region },
     provider: { "@id": `${siteUrl}/#business` },
     url: `${siteUrl}/services/${encodeURIComponent(region)}`,
+    image: serviceImage.src,
   };
   const faqJsonLd = {
     "@context": "https://schema.org",
