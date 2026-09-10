@@ -65,6 +65,16 @@
       "sourceCommit": "cd72ad97fd4cc2ccb9699cc822c29e61ab836e0b",
       "semanticHash": "96dd8e32787dacf9da4bdb14ca748152f7e95a982fc14811ea94d3357d3cc00b",
       "submittedToIndexNowAt": "2026-09-10T04:45:23.065Z"
+    },
+    {
+      "id": "gallery-a4e5e2726a42-content_update-case-20260904-1423",
+      "url": "https://prodaco.kr/gallery/case-20260904-1423",
+      "event": "content_update",
+      "publishedAt": "2026-09-04",
+      "note": "Git 변경에서 감지한 시공사례의 의미 있는 콘텐츠·색인 신호 수정",
+      "status": "pending",
+      "sourceCommit": "a4e5e2726a42013dc7d6e4da5bc6e765db7c1382",
+      "semanticHash": "6f2ea8fb478e4432baeaf231af123b9845081321f2a34c2ce96e37c0571a3af5"
     }
   ]
 }
