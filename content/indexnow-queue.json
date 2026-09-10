@@ -6,9 +6,10 @@
       "event": "publish",
       "publishedAt": "2026-09-03",
       "note": "Git 변경에서 감지한 신규 색인 가능 시공사례",
-      "status": "pending",
+      "status": "submitted",
       "sourceCommit": "cd72ad97fd4cc2ccb9699cc822c29e61ab836e0b",
-      "semanticHash": "020d4896e2d8d4c068f349576750525d60497b16350e77310bf49cbae92be525"
+      "semanticHash": "020d4896e2d8d4c068f349576750525d60497b16350e77310bf49cbae92be525",
+      "submittedToIndexNowAt": "2026-09-10T04:45:23.065Z"
     },
     {
       "id": "gallery-cd72ad97fd4c-publish-case-20260904-1416",
@@ -16,9 +17,10 @@
       "event": "publish",
       "publishedAt": "2026-09-04",
       "note": "Git 변경에서 감지한 신규 색인 가능 시공사례",
-      "status": "pending",
+      "status": "submitted",
       "sourceCommit": "cd72ad97fd4cc2ccb9699cc822c29e61ab836e0b",
-      "semanticHash": "385e4e182dc8e64d25a0b41917dd8096531deb8afab9adecd69755cc416882bc"
+      "semanticHash": "385e4e182dc8e64d25a0b41917dd8096531deb8afab9adecd69755cc416882bc",
+      "submittedToIndexNowAt": "2026-09-10T04:45:23.065Z"
     },
     {
       "id": "gallery-cd72ad97fd4c-publish-case-20260904-1423",
@@ -26,9 +28,10 @@
       "event": "publish",
       "publishedAt": "2026-09-04",
       "note": "Git 변경에서 감지한 신규 색인 가능 시공사례",
-      "status": "pending",
+      "status": "submitted",
       "sourceCommit": "cd72ad97fd4cc2ccb9699cc822c29e61ab836e0b",
-      "semanticHash": "44d093b2e30705a7d6baa9667a4635b173d05627cbb1135f920ea582eae89636"
+      "semanticHash": "44d093b2e30705a7d6baa9667a4635b173d05627cbb1135f920ea582eae89636",
+      "submittedToIndexNowAt": "2026-09-10T04:45:23.065Z"
     },
     {
       "id": "gallery-cd72ad97fd4c-publish-case-20260908-0751",
@@ -36,9 +39,10 @@
       "event": "publish",
       "publishedAt": "2026-09-08",
       "note": "Git 변경에서 감지한 신규 색인 가능 시공사례",
-      "status": "pending",
+      "status": "submitted",
       "sourceCommit": "cd72ad97fd4cc2ccb9699cc822c29e61ab836e0b",
-      "semanticHash": "c95a45498ddd990dcf9c9f10983f0247548866e009d9b3febdc8f163afeb22ca"
+      "semanticHash": "c95a45498ddd990dcf9c9f10983f0247548866e009d9b3febdc8f163afeb22ca",
+      "submittedToIndexNowAt": "2026-09-10T04:45:23.065Z"
     },
     {
       "id": "gallery-cd72ad97fd4c-publish-case-20260908-0756",
@@ -46,9 +50,10 @@
       "event": "publish",
       "publishedAt": "2026-09-08",
       "note": "Git 변경에서 감지한 신규 색인 가능 시공사례",
-      "status": "pending",
+      "status": "submitted",
       "sourceCommit": "cd72ad97fd4cc2ccb9699cc822c29e61ab836e0b",
-      "semanticHash": "d4ff22305228d9db0e97c906a46f5f3d2c3213bd269f66c1e67287ed8d89f1d9"
+      "semanticHash": "d4ff22305228d9db0e97c906a46f5f3d2c3213bd269f66c1e67287ed8d89f1d9",
+      "submittedToIndexNowAt": "2026-09-10T04:45:23.065Z"
     },
     {
       "id": "gallery-cd72ad97fd4c-publish-case-20260908-0812",
@@ -56,9 +61,10 @@
       "event": "publish",
       "publishedAt": "2026-09-08",
       "note": "Git 변경에서 감지한 신규 색인 가능 시공사례",
-      "status": "pending",
+      "status": "submitted",
       "sourceCommit": "cd72ad97fd4cc2ccb9699cc822c29e61ab836e0b",
-      "semanticHash": "96dd8e32787dacf9da4bdb14ca748152f7e95a982fc14811ea94d3357d3cc00b"
+      "semanticHash": "96dd8e32787dacf9da4bdb14ca748152f7e95a982fc14811ea94d3357d3cc00b",
+      "submittedToIndexNowAt": "2026-09-10T04:45:23.065Z"
     }
   ]
 }
