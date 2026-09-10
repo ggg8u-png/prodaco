@@ -1,3 +1,106 @@
 {
-  "entries": []
+  "entries": [
+    {
+      "url": "https://prodaco.kr/gallery/case-w17-mapo-lyum",
+      "engine": "naver",
+      "indexStatus": "indexed",
+      "lastIndexCheckAt": "2026-09-10T04:44:00.000Z",
+      "exactTitleStatus": "visible",
+      "keywordStatus": "unknown",
+      "lastSearchCheckAt": "2026-09-10T04:44:00.000Z",
+      "query": "마포 륨장판철거 시공사례",
+      "note": "네이버 통합검색에서 정확한 전체 제목과 전체 URL 검색 모두 해당 상세 URL을 정식 결과로 확인."
+    },
+    {
+      "url": "https://prodaco.kr/gallery/case-guri-decotile",
+      "engine": "naver",
+      "indexStatus": "indexed",
+      "lastIndexCheckAt": "2026-09-10T04:44:00.000Z",
+      "exactTitleStatus": "visible",
+      "keywordStatus": "unknown",
+      "lastSearchCheckAt": "2026-09-10T04:44:00.000Z",
+      "query": "구리 상가 데코타일 철거 시공사례",
+      "note": "네이버 통합검색에서 정확한 전체 제목과 전체 URL 검색 모두 해당 상세 URL을 정식 결과로 확인."
+    },
+    {
+      "url": "https://prodaco.kr/gallery/case-20260826-1031",
+      "engine": "naver",
+      "indexStatus": "unknown",
+      "exactTitleStatus": "not_visible",
+      "keywordStatus": "unknown",
+      "lastSearchCheckAt": "2026-09-10T04:44:00.000Z",
+      "query": "서울 송파구 마루철거 잠실포스크더샵 합리적인 비용",
+      "note": "정확한 전체 제목 검색에서는 /gallery 목록만 노출되고 해당 상세 URL은 보이지 않음. 전체 URL 검색 결과도 없음. Search Advisor URL 검사를 하지 않았으므로 미색인으로 단정하지 않음."
+    },
+    {
+      "url": "https://prodaco.kr/gallery/case-20260831-0847",
+      "engine": "naver",
+      "indexStatus": "unknown",
+      "exactTitleStatus": "not_visible",
+      "keywordStatus": "unknown",
+      "lastSearchCheckAt": "2026-09-10T04:44:00.000Z",
+      "query": "용인 마루철거 기흥구 기흥 더샵프라임뷰 아파트 작업사례",
+      "note": "정확한 전체 제목과 전체 URL 검색에서 해당 상세 URL을 확인하지 못함. Search Advisor URL 검사를 하지 않았으므로 미색인으로 단정하지 않음."
+    },
+    {
+      "url": "https://prodaco.kr/gallery/case-20260902-1101",
+      "engine": "naver",
+      "indexStatus": "unknown",
+      "exactTitleStatus": "not_visible",
+      "keywordStatus": "unknown",
+      "lastSearchCheckAt": "2026-09-10T04:44:00.000Z",
+      "query": "경기도 김포 한강센트럴자이 1단지 아파트 마루철거",
+      "note": "정확한 전체 제목과 전체 URL 검색에서 해당 상세 URL을 확인하지 못함. Search Advisor URL 검사를 하지 않았으므로 미색인으로 단정하지 않음."
+    },
+    {
+      "url": "https://prodaco.kr/gallery/case-20260903-1038",
+      "engine": "naver",
+      "indexStatus": "unknown",
+      "exactTitleStatus": "not_visible",
+      "keywordStatus": "unknown",
+      "lastSearchCheckAt": "2026-09-10T04:44:00.000Z",
+      "query": "서울 동대문 데코타일철거 본드제거 시공사례",
+      "note": "정확한 전체 제목과 전체 URL 검색에서 해당 상세 URL을 확인하지 못함. Search Advisor URL 검사를 하지 않았으므로 미색인으로 단정하지 않음."
+    },
+    {
+      "url": "https://prodaco.kr/gallery/case-20260904-1416",
+      "engine": "naver",
+      "indexStatus": "unknown",
+      "exactTitleStatus": "not_visible",
+      "keywordStatus": "unknown",
+      "lastSearchCheckAt": "2026-09-10T04:44:00.000Z",
+      "query": "마포 데코타일, 도기타일 제거후 바닥샌딩 시공사례",
+      "note": "정확한 전체 제목과 전체 URL 검색에서 해당 상세 URL을 확인하지 못함. Search Advisor URL 검사를 하지 않았으므로 미색인으로 단정하지 않음."
+    },
+    {
+      "url": "https://prodaco.kr/gallery/case-20260908-0751",
+      "engine": "naver",
+      "indexStatus": "unknown",
+      "exactTitleStatus": "not_visible",
+      "keywordStatus": "unknown",
+      "lastSearchCheckAt": "2026-09-10T04:44:00.000Z",
+      "query": "부천 면갈이 바닥샌딩 상동 상가 데코타일 시공전 작업비용",
+      "note": "정확한 전체 제목과 전체 URL 검색에서 해당 상세 URL을 확인하지 못함. Search Advisor URL 검사를 하지 않았으므로 미색인으로 단정하지 않음."
+    },
+    {
+      "url": "https://prodaco.kr/gallery/case-20260908-0756",
+      "engine": "naver",
+      "indexStatus": "unknown",
+      "exactTitleStatus": "not_visible",
+      "keywordStatus": "unknown",
+      "lastSearchCheckAt": "2026-09-10T04:44:00.000Z",
+      "query": "고양 일산 데코타일철거 후곡마을 16단지 장판 시공전 바닥재제거 샌딩",
+      "note": "정확한 전체 제목과 전체 URL 검색에서 해당 상세 URL을 확인하지 못함. Search Advisor URL 검사를 하지 않았으므로 미색인으로 단정하지 않음."
+    },
+    {
+      "url": "https://prodaco.kr/gallery/case-20260908-0812",
+      "engine": "naver",
+      "indexStatus": "unknown",
+      "exactTitleStatus": "not_visible",
+      "keywordStatus": "unknown",
+      "lastSearchCheckAt": "2026-09-10T04:44:00.000Z",
+      "query": "서울 강남 마루철거 작업비용 안내",
+      "note": "정확한 전체 제목과 전체 URL 검색에서 해당 상세 URL을 확인하지 못함. Search Advisor URL 검사를 하지 않았으므로 미색인으로 단정하지 않음."
+    }
+  ]
 }
