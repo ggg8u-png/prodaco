@@ -72,9 +72,10 @@
       "event": "content_update",
       "publishedAt": "2026-09-04",
       "note": "Git 변경에서 감지한 시공사례의 의미 있는 콘텐츠·색인 신호 수정",
-      "status": "pending",
+      "status": "submitted",
       "sourceCommit": "a4e5e2726a42013dc7d6e4da5bc6e765db7c1382",
-      "semanticHash": "6f2ea8fb478e4432baeaf231af123b9845081321f2a34c2ce96e37c0571a3af5"
+      "semanticHash": "6f2ea8fb478e4432baeaf231af123b9845081321f2a34c2ce96e37c0571a3af5",
+      "submittedToIndexNowAt": "2026-09-10T05:04:47.136Z"
     }
   ]
 }
