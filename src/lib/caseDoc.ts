@@ -36,6 +36,19 @@ export function decodeCaseId(raw: string): string {
 // 그런 페이지를 색인시키면 지금까지 지켜 온 "얇은 페이지 대량 색인 금지" 를 스스로 깨는 셈이다.
 export const CASE_MIN_DESCRIPTION = 40;
 
+/** 사례별 검색 설명. 직접 입력 설명을 우선하고, 없을 때만 실제 입력된 작업 범위를 사용한다. */
+export function caseMetaDescription(
+  g: Pick<GalleryItem, "region" | "item" | "description" | "workScope">
+): string {
+  const head = `${g.region} ${g.item} 시공사례.`;
+  const source = (g.description || g.workScope || "").trim().replace(/\s+/g, " ");
+  const full = source ? `${head} ${source}` : head;
+  if (full.length <= 158) return full;
+  const slice = full.slice(0, 155);
+  const lastSpace = slice.lastIndexOf(" ");
+  return `${slice.slice(0, lastSpace > 100 ? lastSpace : 155).trim()}…`;
+}
+
 /**
  * 검색 색인 대상인가.
  *   · verified === false        → 운영자가 실제 현장이 아니라고 표시한 사례. 제외.
@@ -44,6 +57,7 @@ export const CASE_MIN_DESCRIPTION = 40;
  * (CMS 사례가 하나도 없을 때만 쓰이는 레거시 폴백 사례들은 설명이 짧아 여기서 자동 제외된다.)
  */
 export function isCaseIndexable(g: GalleryItem): boolean {
+  if (g.status === "draft") return false;
   if (g.verified === false) return false;
   if (!g.beforeImage || !g.afterImage) return false;
   return (g.description || "").trim().length >= CASE_MIN_DESCRIPTION;
@@ -53,7 +67,7 @@ export function isCaseIndexable(g: GalleryItem): boolean {
 export function casePageItems(): GalleryItem[] {
   const seen = new Set<string>();
   return galleryItems.filter((g) => {
-    if (!g.id || seen.has(g.id)) return false;
+    if (!g.id || g.status === "draft" || seen.has(g.id)) return false;
     seen.add(g.id);
     return true;
   });
@@ -70,8 +84,8 @@ export function caseById(id: string): GalleryItem | undefined {
 
 /**
  * 사례의 발행일·수정일 — 목록 정렬과 완전히 같은 기준(src/lib/caseDates.ts).
- *   발행일 = 작업일 → git 최초 커밋일 → 파일명(case-YYYYMMDD-HHMM) 날짜
- *   수정일 = 파일이 마지막으로 커밋된 날(발행일보다 이르면 발행일로 맞춘다)
+ *   발행일 = CMS publishedAt → git 최초 커밋일 → 파일명(case-YYYYMMDD-HHMM) 날짜
+ *   수정일 = CMS updatedAt·git 마지막 수정일·발행일 중 가장 최신 날짜
  * 근거가 하나도 없으면 undefined 다 — 그때는 구조화데이터에서 날짜 필드를 아예 빼서
  * 없는 값을 지어내지 않는다.
  */
@@ -99,13 +113,18 @@ export function caseRelatedLinks(g: GalleryItem): CaseLink[] {
   if (hubDecisionFor(g.region).index) {
     out.push({ href: `/services/${encodeURIComponent(g.region)}`, label: `${g.region} 전체 서비스` });
   }
+  out.push({ href: "/faq", label: "바닥 철거 자주 묻는 질문" });
   return out;
 }
 
-/** 같은 품목의 다른 사례 — 부족하면 같은 지역 사례로 채운다. */
+/** 같은 지역·품목 → 같은 지역 → 같은 품목 순으로 실제 관련 사례를 고른다. */
 export function siblingCases(g: GalleryItem, limit = 3): GalleryItem[] {
   const rest = casePageItems().filter((x) => x.id !== g.id && isCaseIndexable(x));
-  const sameItem = rest.filter((x) => x.item === g.item);
-  const sameRegion = rest.filter((x) => x.item !== g.item && x.region === g.region);
-  return [...sameItem, ...sameRegion, ...rest.filter((x) => !sameItem.includes(x) && !sameRegion.includes(x))].slice(0, limit);
+  const sameRegionAndItem = rest.filter((x) => x.region === g.region && x.item === g.item);
+  const sameRegion = rest.filter((x) => x.region === g.region && x.item !== g.item);
+  const sameItem = rest.filter((x) => x.region !== g.region && x.item === g.item);
+  const fallback = rest.filter(
+    (x) => !sameRegionAndItem.includes(x) && !sameRegion.includes(x) && !sameItem.includes(x)
+  );
+  return [...sameRegionAndItem, ...sameRegion, ...sameItem, ...fallback].slice(0, limit);
 }

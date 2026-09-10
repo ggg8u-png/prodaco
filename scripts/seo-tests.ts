@@ -1113,14 +1113,16 @@ const items = galleryItems;
     ok(false, "시공사례 목록이 파일명 오름차순 그대로 — 정렬이 적용되지 않았다");
   }
 
-  // ④ '작업일'은 여전히 workDate 우선이어야 한다(구조화데이터·사이트맵 값이 흔들리면 안 된다).
-  const withWorkDate = items.filter((g) => !!g.workDate);
-  const wrongPublished = withWorkDate.filter((g) => caseDateInfo(g).published !== g.workDate?.slice(0, 10));
+  // ④ Article/RSS 게시일은 현장 작업일과 분리한다. CMS publishedAt이 있으면 그것이 우선이다.
+  const withPublishedAt = items.filter((g) => !!g.publishedAt);
+  const wrongPublished = withPublishedAt.filter((g) => caseDateInfo(g).published !== g.publishedAt?.slice(0, 10));
   ok(
     wrongPublished.length === 0,
-    "시공사례 작업일(datePublished)은 workDate 를 그대로 쓴다",
+    "시공사례 문서 datePublished는 publishedAt을 우선한다",
     wrongPublished.slice(0, 3).map((g) => g.id).join(", ")
   );
+  const casePageSource = fs.readFileSync(path.join(process.cwd(), "src/app/gallery/[id]/page.tsx"), "utf8");
+  ok(casePageSource.includes('[["작업일", g.workDate.slice(0, 10)]]'), "현장 작업일은 상세 정보에 별도 표시");
 
   // ⑤ 정렬 비교자는 안정적이어야 한다 — 같은 입력을 두 번 정렬해도 결과가 같다.
   const a = items.map((g) => g.id).join("|");

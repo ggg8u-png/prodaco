@@ -75,6 +75,8 @@ export interface GalleryItem {
   status?: "draft" | "published";
   /** 사이트 게시일(YYYY-MM-DD). 목록 정렬에 사용하며 실제 작업일과 구분한다. */
   publishedAt?: string;
+  /** 운영자가 기록한 실제 콘텐츠 수정일. 없으면 Git 마지막 수정일을 사용한다. */
+  updatedAt?: string;
   /** 실제 검색 도구 근거가 있을 때만 confirmed. IndexNow 제출 성공은 confirmed가 아니다. */
   indexStatus?: "unknown" | "confirmed";
   /** 실제 작업 지역(actualRegion) — 이 값이 페이지 지역과 일치할 때만 '해당 지역 실제 사례'로 표시 가능. */

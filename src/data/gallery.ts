@@ -83,8 +83,8 @@ function loadCmsGallery(): GalleryItem[] {
         const item = g.item || "바닥재 철거";
         out.push({
           // id·제목은 CMS 에서 입력하지 않는다 — 파일명(자동 슬러그)과 지역·품목으로 채운다.
-          id: g.id || f.replace(/\.json$/, ""),
-          title: g.title || `${region} ${item} 시공사례`,
+          id: typeof g.id === "string" && g.id.trim() ? g.id.trim() : f.replace(/\.json$/, ""),
+          title: typeof g.title === "string" && g.title.trim() ? g.title.trim() : `${region} ${item} 시공사례`,
           region,
           item,
           beforeImage,
@@ -94,6 +94,9 @@ function loadCmsGallery(): GalleryItem[] {
           ...(g.status === "draft" || g.status === "published" ? { status: g.status } : {}),
           ...(typeof g.publishedAt === "string" && g.publishedAt
             ? { publishedAt: g.publishedAt.slice(0, 10) }
+            : {}),
+          ...(typeof g.updatedAt === "string" && g.updatedAt
+            ? { updatedAt: g.updatedAt.slice(0, 10) }
             : {}),
           ...(g.indexStatus === "unknown" || g.indexStatus === "confirmed" ? { indexStatus: g.indexStatus } : {}),
           // 검증·부가 필드(있을 때만) — verified:false 사례는 자동 색인 승급에서 제외된다.

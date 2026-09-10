@@ -5,10 +5,12 @@
 //   npm run seo:indexnow                # pending 항목만 제출하고 submitted로 기록
 //   npm run seo:indexnow -- --retry-failed
 //
-// content/indexnow-queue.json 은 Decap CMS의 "⑨ IndexNow 제출 대기열"에서 관리한다.
+// content/indexnow-queue.json 은 Decap CMS의 "⑧ IndexNow 제출 대기열"에서 관리한다.
 // sitemap/lastmod/사진 manifest 변경은 이 파일을 바꾸지 않으므로 제출 대상이 될 수 없다.
 import fs from "node:fs";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
+import { randomUUID } from "node:crypto";
 
 const HOST = "prodaco.kr";
 const SITE = `https://${HOST}`;
@@ -18,6 +20,7 @@ const MAX_BATCH = 100;
 const EVENTS = new Set(["publish", "content_update", "delete"]);
 const PENDING = "pending";
 const RETRYABLE = new Set(["pending", "failed"]);
+const REQUEST_TIMEOUT_MS = 30 * 1000;
 
 function findKey() {
   const pub = path.join(process.cwd(), "public");
@@ -37,10 +40,15 @@ function readQueue(file) {
   return raw;
 }
 
-function validUrl(url) {
+export function validUrl(url) {
+  if (typeof url !== "string" || !url.trim() || url !== url.trim()) return false;
   try {
     const parsed = new URL(url);
-    return parsed.protocol === "https:" && parsed.host === HOST;
+    if (parsed.protocol !== "https:" || parsed.host !== HOST || parsed.username || parsed.password) return false;
+    if (parsed.search || parsed.hash || /%2f|%5c/i.test(parsed.pathname)) return false;
+    const decoded = decodeURIComponent(parsed.pathname);
+    if (decoded.includes("\\") || decoded.split("/").includes("..")) return false;
+    return parsed.pathname.startsWith("/");
   } catch {
     return false;
   }
@@ -66,19 +74,82 @@ function eligibleEntries(entries, retryFailed) {
   return { eligible, invalid };
 }
 
-function writeQueue(file, queue) {
-  fs.writeFileSync(file, `${JSON.stringify(queue, null, 2)}\n`);
+function writeQueueAtomic(file, queue) {
+  const temp = `${file}.${process.pid}.${Date.now()}.tmp`;
+  try {
+    fs.writeFileSync(temp, `${JSON.stringify(queue, null, 2)}\n`, "utf8");
+    fs.renameSync(temp, file);
+  } finally {
+    if (fs.existsSync(temp)) fs.unlinkSync(temp);
+  }
 }
 
-function mark(entries, urls, status, extras = {}) {
+function entrySignature(entry) {
+  return JSON.stringify([
+    entry.url,
+    entry.event,
+    entry.publishedAt || "",
+    entry.sourceCommit || "",
+    entry.semanticHash || "",
+  ]);
+}
+
+function selectionFor(entries, urls) {
   const set = new Set(urls);
+  const selected = entries.filter((entry) =>
+    set.has(entry.url) && (entry.status === PENDING || entry.status === "failed")
+  );
+  return {
+    ids: new Set(selected.map((entry) => entry.id).filter((id) => typeof id === "string" && id)),
+    legacy: new Set(selected.filter((entry) => !entry.id).map(entrySignature)),
+  };
+}
+
+function mark(entries, selection, status, extras = {}) {
   for (const entry of entries) {
-    if (set.has(entry.url) && (entry.status === PENDING || entry.status === "failed")) {
+    const selected = entry.id ? selection.ids.has(entry.id) : selection.legacy.has(entrySignature(entry));
+    if (selected && (entry.status === PENDING || entry.status === "failed")) {
       entry.status = status;
       Object.assign(entry, extras);
       if (status === "submitted") delete entry.lastError;
     }
   }
+}
+
+function acquireQueueLock(file) {
+  const lockFile = `${file}.lock`;
+  const token = randomUUID();
+  let handle;
+  const open = () => {
+    const fd = fs.openSync(lockFile, "wx");
+    fs.writeFileSync(fd, JSON.stringify({ pid: process.pid, createdAt: new Date().toISOString(), token }), "utf8");
+    return fd;
+  };
+  try {
+    handle = open();
+  } catch (error) {
+    if (error?.code === "EEXIST") {
+      throw new Error(`대기열이 다른 프로세스에서 갱신 중입니다. 실행 중인 제출기가 없다면 남은 lock을 확인하세요: ${lockFile}`);
+    }
+    throw error;
+  }
+  let released = false;
+  const release = () => {
+    if (released) return;
+    released = true;
+    process.off("SIGINT", onSigint);
+    process.off("SIGTERM", onSigterm);
+    fs.closeSync(handle);
+    try {
+      const current = JSON.parse(fs.readFileSync(lockFile, "utf8"));
+      if (current.token === token) fs.unlinkSync(lockFile);
+    } catch { /* 소유권이 없거나 이미 정리된 lock은 건드리지 않는다. */ }
+  };
+  const onSigint = () => { release(); process.exit(130); };
+  const onSigterm = () => { release(); process.exit(143); };
+  process.once("SIGINT", onSigint);
+  process.once("SIGTERM", onSigterm);
+  return release;
 }
 
 async function main() {
@@ -91,6 +162,11 @@ async function main() {
   }
 
   const queueFile = path.resolve(process.cwd(), customQueue || DEFAULT_QUEUE);
+  // 실제 제출은 선택→POST→상태 기록 전체를 단일 writer lock으로 감싼다.
+  // 따라서 동시 실행한 제출기나 후보 생성기가 같은 pending을 중복 전송하거나
+  // 네트워크 대기 중 추가된 항목을 stale snapshot으로 덮어쓸 수 없다.
+  const releaseQueueLock = dry ? null : acquireQueueLock(queueFile);
+  try {
   const queue = readQueue(queueFile);
   const { eligible, invalid } = eligibleEntries(queue.entries, retryFailed);
   if (invalid.length) {
@@ -105,6 +181,7 @@ async function main() {
   }
 
   const urls = eligible.map((entry) => entry.url);
+  const selection = selectionFor(queue.entries, urls);
   const keyInfo = findKey();
   const payload = keyInfo
     ? { host: HOST, key: keyInfo.key, keyLocation: keyInfo.keyLocation, urlList: urls }
@@ -118,31 +195,41 @@ async function main() {
 
   const attemptedAt = new Date().toISOString();
   let res;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
     res = await fetch(ENDPOINT, {
       method: "POST",
       headers: { "Content-Type": "application/json; charset=utf-8" },
       body: JSON.stringify(payload),
+      signal: controller.signal,
     });
   } catch (error) {
-    mark(queue.entries, urls, "failed", { lastAttemptAt: attemptedAt, lastError: String(error?.message || error) });
-    writeQueue(queueFile, queue);
+    mark(queue.entries, selection, "failed", { lastAttemptAt: attemptedAt, lastError: String(error?.message || error) });
+    writeQueueAtomic(queueFile, queue);
     throw error;
+  } finally {
+    clearTimeout(timeout);
   }
 
   if (!res.ok) {
-    mark(queue.entries, urls, "failed", { lastAttemptAt: attemptedAt, lastError: `HTTP ${res.status} ${res.statusText}` });
-    writeQueue(queueFile, queue);
+    mark(queue.entries, selection, "failed", { lastAttemptAt: attemptedAt, lastError: `HTTP ${res.status} ${res.statusText}` });
+    writeQueueAtomic(queueFile, queue);
     throw new Error(`IndexNow HTTP ${res.status} ${res.statusText}`);
   }
 
   // submitted는 API 접수 성공일 뿐 검색엔진 색인 완료가 아니다.
-  mark(queue.entries, urls, "submitted", { submittedToIndexNowAt: attemptedAt });
-  writeQueue(queueFile, queue);
+  mark(queue.entries, selection, "submitted", { submittedToIndexNowAt: attemptedAt });
+  writeQueueAtomic(queueFile, queue);
   console.log(`[indexnow] ${urls.length}건 제출 기록 완료 (HTTP ${res.status}). 검색 색인 여부는 별도 확인이 필요합니다.`);
+  } finally {
+    releaseQueueLock?.();
+  }
 }
 
-main().catch((error) => {
-  console.error(`[indexnow] 오류: ${error?.message || error}`);
-  process.exit(1);
-});
+if (process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url) {
+  main().catch((error) => {
+    console.error(`[indexnow] 오류: ${error?.message || error}`);
+    process.exit(1);
+  });
+}

@@ -634,6 +634,9 @@ collections:
               - { label: "IndexNow 제출 시각", name: "submittedToIndexNowAt", widget: "datetime", date_format: "YYYY-MM-DD", time_format: "HH:mm", picker_utc: true, required: false, hint: "자동 기록용입니다. 검색 색인 시각이 아닙니다." }
               - { label: "마지막 시도 시각", name: "lastAttemptAt", widget: "datetime", date_format: "YYYY-MM-DD", time_format: "HH:mm", picker_utc: true, required: false }
               - { label: "마지막 오류", name: "lastError", widget: "string", required: false, default: "" }
+              - { label: "감지한 Git 커밋", name: "sourceCommit", widget: "string", required: false, default: "", hint: "자동 후보 생성기가 기록합니다. 같은 변경의 중복 제출을 막는 값입니다." }
+              - { label: "콘텐츠 의미 해시", name: "semanticHash", widget: "string", required: false, default: "", hint: "제목·설명·사진 등 검색 문서에 영향을 주는 값의 자동 해시입니다." }
+              - { label: "대기열 항목 ID", name: "id", widget: "string", required: false, default: "", hint: "자동 후보 생성기가 기록하는 중복 방지 ID입니다." }
 
   # ─────────────────────────────────────────────────────────────
   # 9. AI 콘텐츠 검토 큐 — 자동 생성·예약 발행은 하지 않는다.
@@ -806,6 +809,7 @@ collections:
           - { label: "발행 — 사이트에 공개", value: "published" }
         hint: "작성 중이면 초안을 고르세요. 초안은 목록·상세주소·사이트맵에 나오지 않습니다. 기존 사례는 이 값이 없어도 발행으로 유지됩니다."
       - { label: "게시일(선택)", name: "publishedAt", widget: "datetime", date_format: "YYYY-MM-DD", time_format: false, picker_utc: false, required: false, hint: "사이트에 올리는 날짜입니다. 목록 최신순 기준이며 실제 현장 작업일과 다릅니다. 비우면 등록 시각을 사용합니다." }
+      - { label: "콘텐츠 수정일(선택)", name: "updatedAt", widget: "datetime", date_format: "YYYY-MM-DD", time_format: false, picker_utc: false, required: false, hint: "제목·설명·사진·현장정보를 실제로 수정한 날짜만 입력하세요. 검색 상태만 확인한 경우에는 바꾸지 않습니다. 비우면 Git 수정 기록을 사용합니다." }
       # ⚠ 자동 색인 조건: 아래 (지역 + 작업 종류)가 키워드 페이지의 값과 '정확히' 일치해야
       #   그 지역+품목 페이지가 자동 색인됩니다. 자유 입력(오타·공백으로 조용히 실패) 대신
       #   '정확한 값만 고르는' 드롭다운으로 고정. 목록은 keywords.json 의 region/item 과 동일.
@@ -886,8 +890,55 @@ collections:
       - { label: "영상 썸네일(선택)", name: "videoThumbnail", widget: "image", required: false, hint: "비워두면 '샌딩 후 사진'을 씁니다." }
       - { label: "영상 제목(선택)", name: "videoTitle", widget: "string", required: false, default: "" }
       - { label: "운영자가 직접 확인한 실제 사례", name: "verified", widget: "boolean", default: true, hint: "이 지역·품목이 실제 그 현장이 맞을 때만 켜세요. 끄면 검색 색인 승급에서 제외됩니다(사이트에는 계속 보입니다)." }
-      - { label: "검색 색인 확인 상태", name: "indexStatus", widget: "select", required: false, options: ["unknown", "confirmed"], default: "unknown", hint: "기본은 unknown입니다. 네이버·구글 도구 등 실제 확인 근거가 있을 때만 confirmed로 바꾸세요. IndexNow 제출 성공만으로는 confirmed가 아닙니다." }
+      # 색인·검색 확인은 이 사례 파일의 수정일을 오염시키지 않도록
+      # "⑬ 시공사례 검색 추적" 레지스트리에서 URL별로 별도 관리한다.
       - { label: "제목(선택)", name: "title", widget: "string", required: false, default: "", hint: "비워두면 '지역 + 작업종류 + 시공사례'로 자동 생성됩니다." }
       # 목록은 기본적으로 '최근에 올린 사례'가 맨 위입니다. 특정 사례를 계속 맨 위에 두고
       # 싶을 때만 이 스위치를 켜세요(여러 개 켜면 그것들끼리 다시 최신순으로 정렬됩니다).
       - { label: "목록 맨 위에 고정", name: "featured", widget: "boolean", default: false, required: false, hint: "켜면 이 사례가 시공사례 목록·홈 미리보기의 맨 앞에 고정됩니다. 평소에는 꺼 두세요 — 끄면 올린 순서(최신 먼저)대로 나옵니다." }
+
+  # ─────────────────────────────────────────────────────────────
+  # 12. 시공사례 검색 추적 — 콘텐츠 수정일과 분리된 수동 관측 기록
+  # ─────────────────────────────────────────────────────────────
+  - name: "gallery_index_checks"
+    label: "⑬ 시공사례 검색 추적"
+    description: "Search Advisor/GSC URL 검사와 실제 검색결과 확인을 URL별로 기록합니다. IndexNow 제출 상태는 ⑧ 대기열에서 자동으로 합쳐지며, 여기서 'confirmed'로 추정하지 않습니다."
+    files:
+      - name: "checks"
+        label: "시공사례 URL 확인 기록"
+        file: "content/gallery-index-checks.json"
+        fields:
+          - label: "확인 기록"
+            name: "entries"
+            widget: "list"
+            required: false
+            default: []
+            label_singular: "사례 검색 확인"
+            summary: "{{fields.engine}} · {{fields.indexStatus}} · {{fields.url}}"
+            fields:
+              - { label: "사례 상세 URL", name: "url", widget: "string", hint: "https://prodaco.kr/gallery/ 로 시작하는 정확한 상세 URL" }
+              - { label: "검색엔진", name: "engine", widget: "select", options: ["naver", "google"] }
+              - label: "실제 URL 색인 확인"
+                name: "indexStatus"
+                widget: "select"
+                default: "unknown"
+                options:
+                  - { label: "미확인", value: "unknown" }
+                  - { label: "색인 확인됨", value: "indexed" }
+                  - { label: "도구에서 미색인 확인", value: "not_indexed" }
+                hint: "Search Advisor/GSC URL 검사 등 직접 근거가 있을 때만 indexed/not_indexed를 고르세요."
+              - { label: "마지막 URL 검사 시각", name: "lastIndexCheckAt", widget: "datetime", date_format: "YYYY-MM-DD", time_format: "HH:mm", picker_utc: true, required: false }
+              - label: "전체 제목 검색 노출"
+                name: "exactTitleStatus"
+                widget: "select"
+                default: "unknown"
+                options: ["unknown", "visible", "not_visible"]
+                hint: "참고 지표입니다. not_visible이라고 미색인으로 단정하지 않습니다."
+              - label: "일반 키워드 검색 노출"
+                name: "keywordStatus"
+                widget: "select"
+                default: "unknown"
+                options: ["unknown", "visible", "not_visible"]
+              - { label: "마지막 검색결과 확인 시각", name: "lastSearchCheckAt", widget: "datetime", date_format: "YYYY-MM-DD", time_format: "HH:mm", picker_utc: true, required: false }
+              - { label: "확인한 검색어(선택)", name: "query", widget: "string", required: false, default: "" }
+              - { label: "근거·메모(선택)", name: "note", widget: "text", required: false, default: "", hint: "Search Advisor/GSC 화면 또는 수동 검색에서 확인한 사실만 기록하세요." }

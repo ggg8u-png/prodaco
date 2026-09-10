@@ -21,25 +21,18 @@ import {
   caseRelatedLinks,
   siblingCases,
   decodeCaseId,
+  caseMetaDescription,
 } from "@/lib/caseDoc";
 import { uploadedImage } from "@/lib/cdnImage";
 import { caseFeaturedImage } from "@/lib/featuredImage";
 import CaseVideo, { videoEmbedUrl } from "@/components/CaseVideo";
+import { relatedGuidesForCase } from "@/lib/relatedGuides";
+import { blogPath } from "@/lib/blogUrl";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://prodaco.kr";
 
 export async function generateStaticParams() {
   return casePageItems().map((g) => ({ id: g.id }));
-}
-
-/** 사례 설명을 그대로 쓰되, 지역·품목을 앞에 붙여 검색결과에서 무엇인지 바로 알게 한다. */
-function descriptionFor(region: string, item: string, desc: string): string {
-  const head = `${region} ${item} 시공사례.`;
-  const body = (desc || "").trim().replace(/\s+/g, " ");
-  const full = body ? `${head} ${body}` : head;
-  if (full.length <= 158) return full;
-  const slice = full.slice(0, 155);
-  return `${slice.slice(0, slice.lastIndexOf(" ") > 100 ? slice.lastIndexOf(" ") : 155).trim()}…`;
 }
 
 /** 절대 URL 로 정규화 — 구조화데이터·og:image 는 상대경로를 쓰면 안 된다. */
@@ -53,7 +46,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const g = caseById(decodeCaseId(rawId));
   if (!g) return {};
   const url = caseUrl(siteUrl, g.id);
-  const description = descriptionFor(g.region, g.item, g.description);
+  const description = caseMetaDescription(g);
   const indexable = isCaseIndexable(g);
   // 대표 썸네일 — 운영자가 CMS 에서 '직접 올린 사진' 또는 '전/후 중 한 장'을 고르면 그 값,
   // 고르지 않았으면 지금까지와 같은 샌딩 후 사진(기존 사례의 og:image 는 바뀌지 않는다).
@@ -86,6 +79,7 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
   const { published, modified } = caseDateInfo(g);
   const related = caseRelatedLinks(g);
   const siblings = siblingCases(g, 3);
+  const guides = relatedGuidesForCase(g.item, 3);
   const facts = itemFactsFor(g.item);
 
   // 화면에 실제로 표시하는 항목만 모은다 — JSON-LD 와 화면 내용이 어긋나면 안 된다.
@@ -96,7 +90,7 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
     ...(g.area ? ([["작업 면적", g.area]] as Array<[string, string]>) : []),
     ...(g.workScope ? ([["작업 범위", g.workScope]] as Array<[string, string]>) : []),
     ...(g.cost ? ([["비용", g.cost]] as Array<[string, string]>) : []),
-    ...(published ? ([["작업일", published]] as Array<[string, string]>) : []),
+    ...(g.workDate ? ([["작업일", g.workDate.slice(0, 10)]] as Array<[string, string]>) : []),
   ];
 
   const articleJsonLd = {
@@ -104,7 +98,7 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
     "@type": "Article",
     "@id": url,
     headline: g.title,
-    description: descriptionFor(g.region, g.item, g.description),
+    description: caseMetaDescription(g),
     inLanguage: "ko",
     url,
     mainEntityOfPage: { "@type": "WebPage", "@id": url },
@@ -147,7 +141,6 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
         thumbnailUrl: [absoluteImage(g.videoThumbnail || g.afterImage)],
         contentUrl: g.videoUrl,
         embedUrl: videoEmbedUrl(g),
-        ...(published ? { uploadDate: published } : {}),
       }
     : null;
 
@@ -166,13 +159,13 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
             <span>›</span>
             <Link href="/gallery" className="hover:text-gray-300">시공사례</Link>
             <span>›</span>
-            <span className="text-gray-400">{g.region}</span>
+            <span className="line-clamp-1 text-gray-400">{g.title}</span>
           </nav>
           <p className="font-mono-pd mb-3 text-xs font-bold uppercase tracking-widest text-[#FFD400]">{g.item}</p>
           <h1 className="mb-4 text-2xl font-black leading-tight md:text-3xl">{g.title}</h1>
           {published && (
             <p className="text-xs text-gray-500">
-              작업일 <time dateTime={published}>{published}</time>
+              게시일 <time dateTime={published}>{published}</time>
               {modified && modified !== published && (
                 <> · 수정 <time dateTime={modified}>{modified}</time></>
               )}
@@ -285,6 +278,23 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
                   </Link>
                 ))}
               </div>
+            </section>
+          )}
+
+          {guides.length > 0 && (
+            <section className="mt-10">
+              <h2 className="font-mono-pd mb-3 text-xs font-bold uppercase tracking-[0.16em] text-[#9A8A2E]">
+                관련 철거 가이드
+              </h2>
+              <ul className="space-y-2">
+                {guides.map((guide) => (
+                  <li key={guide.id}>
+                    <Link href={blogPath(guide.id)} className="text-sm font-semibold text-[#16181D] underline decoration-gray-300 underline-offset-4 hover:text-[#9A8A2E]">
+                      {guide.title}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </section>
           )}
 

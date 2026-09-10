@@ -70,6 +70,22 @@ export function relatedGuidesFor(k: KeywordEntry, n = 3): Guide[] {
   return out;
 }
 
+/** 시공사례 → 실제 존재하는 품목별 블로그 가이드. 없는 글이나 억지 지역 연결은 만들지 않는다. */
+export function relatedGuidesForCase(item: string, n = 3): Guide[] {
+  const ids = [...(FAMILY_GUIDES[familyOf(item)] || []), ...FAMILY_GUIDES.generic];
+  const out: Guide[] = [];
+  const seen = new Set<string>();
+  for (const id of ids) {
+    if (seen.has(id)) continue;
+    seen.add(id);
+    const post = postById.get(id);
+    if (!post) continue;
+    out.push({ id: post.id, title: post.title });
+    if (out.length >= n) break;
+  }
+  return out;
+}
+
 // ─── 역방향: 블로그(필러) → 서비스(키워드) 사일로 링크 ──────────────────────────
 // 블로그 글에서 주제에 맞는 실제 지역+품목 페이지로 링크해 PageRank 를 서비스 사일로로
 // 되돌려 흐르게 한다(허브·롱테일 크롤 경로 강화). 존재하는 슬러그만 링크한다.

@@ -5,6 +5,7 @@ import { allReviews } from "@/data/reviews";
 import { faqs } from "@/data/faq";
 import { galleryItems } from "@/data/gallery";
 import { caseFeaturedImage } from "@/lib/featuredImage";
+import { casePath } from "@/lib/caseDoc";
 import { quoteFactors, consultPrep, ctaConfig } from "@/data/landing";
 import { getKeywords, hubDecisionFor } from "@/data/keywords";
 import { itemGuidesFor, itemAnchorFor } from "@/lib/itemGuides";
@@ -414,7 +415,7 @@ export default function Home() {
             {galleryItems.slice(0, 6).map((item, i) => {
               const featured = caseFeaturedImage(item);
               return (
-              <div key={item.id}>
+              <Link key={item.id} href={casePath(item.id)} className="group block">
                 {featured.source === "custom" ? (
                   <GalleryImage
                     src={featured.src}
@@ -428,9 +429,9 @@ export default function Home() {
                   <GalleryImage src={item.afterImage} alt={`${item.title} 샌딩 후`} label={home.labels.galleryAfterChip} className="aspect-[4/3] w-full" />
                 </div>
                 )}
-                <p className="mb-0.5 mt-3 text-[15.5px] font-extrabold tracking-[-0.02em]">{item.title}</p>
+                <p className="mb-0.5 mt-3 text-[15.5px] font-extrabold tracking-[-0.02em] transition-colors group-hover:text-[#9A8A2E]">{item.title}</p>
                 <p className="text-[13px] text-[#6B7280]">{item.description}</p>
-              </div>
+              </Link>
               );
             })}
           </div>

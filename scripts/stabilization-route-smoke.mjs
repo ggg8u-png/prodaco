@@ -57,17 +57,20 @@ function inspectJsonLd(html) {
   const blocks = [...html.matchAll(/<script\b[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)];
   let valid = true;
   let breadcrumbs = 0;
+  let articles = 0;
+  let article = null;
   const walk = (value) => {
     if (!value || typeof value !== "object") return;
     if (Array.isArray(value)) { value.forEach(walk); return; }
     if (value["@type"] === "BreadcrumbList") breadcrumbs++;
+    if (value["@type"] === "Article") { articles++; article ||= value; }
     Object.values(value).forEach(walk);
   };
   for (const block of blocks) {
     try { walk(JSON.parse(block[1].replace(/&quot;/g, '"'))); }
     catch { valid = false; }
   }
-  return { count: blocks.length, valid, breadcrumbs };
+  return { count: blocks.length, valid, breadcrumbs, articles, article };
 }
 
 async function inspectRoute(route, kind, sitemap) {
@@ -82,6 +85,7 @@ async function inspectRoute(route, kind, sitemap) {
   const robotsCount = countTags(html, "meta", "name", "robots");
   const description = attr(html, "meta", "name", "description", "content");
   const ogImage = attr(html, "meta", "property", "og:image", "content");
+  const ogUrl = attr(html, "meta", "property", "og:url", "content");
   const bodyTextLength = stripTags(html.match(/<body\b[^>]*>([\s\S]*?)<\/body>/i)?.[1] || html).length;
   const internalLinks = [...html.matchAll(/<a\b[^>]*href=["'](\/[^"'#?]*)/gi)].length;
   const cta = /href=["'](?:tel:|sms:|https:\/\/open\.kakao\.com\/)/i.test(html);
@@ -107,13 +111,24 @@ async function inspectRoute(route, kind, sitemap) {
     if (!included) failures.push("not in sitemap");
     if (!internalLinks) failures.push("no internal links");
     if (!cta) failures.push("missing CTA");
+    if (kind === "gallery") {
+      const h1 = stripTags(h1s[0]?.[1] || "");
+      if (robots.toLowerCase().includes("noindex")) failures.push("gallery noindex");
+      if (title !== `${h1} | 프로다`) failures.push("gallery title/H1 mismatch");
+      if (jsonLd.breadcrumbs !== 1) failures.push(`gallery BreadcrumbList x${jsonLd.breadcrumbs}`);
+      if (jsonLd.articles !== 1) failures.push(`gallery Article x${jsonLd.articles}`);
+      if (jsonLd.article && (jsonLd.article.headline !== h1 || normalizedPath(jsonLd.article.url || "") !== normalizedPath(route))) {
+        failures.push("gallery Article headline/url mismatch");
+      }
+      if (!ogUrl || normalizedPath(ogUrl) !== normalizedPath(route)) failures.push("gallery og:url mismatch");
+    }
   }
   return {
     kind, route, status: response.status, finalUrl: response.url, title,
     h1: stripTags(h1s[0]?.[1] || ""), h1Count: h1s.length, canonical,
     canonicalCount, robots, robotsCount, description, bodyTextLength,
-    jsonLdCount: jsonLd.count, jsonLdValid: jsonLd.valid,
-    breadcrumbCount: jsonLd.breadcrumbs, ogImage, sitemapIncluded: included,
+    jsonLdCount: jsonLd.count, jsonLdValid: jsonLd.valid, articleCount: jsonLd.articles,
+    breadcrumbCount: jsonLd.breadcrumbs, ogImage, ogUrl, sitemapIncluded: included,
     internalLinks, cta, result: failures.length ? "FAIL" : "PASS", failures,
   };
 }
@@ -124,7 +139,7 @@ async function main() {
   const sitemap = await sitemapPaths();
   const all = [...sitemap].sort((a, b) => a.localeCompare(b, "ko"));
   const core = ["/", "/services", "/faq", "/reviews", "/gallery", "/blog"];
-  const gallery = take(all.filter((value) => /^\/gallery\/[^/]+$/.test(value)), 5);
+  const gallery = take(all.filter((value) => /^\/gallery\/[^/]+$/.test(value)), 10);
   const blog = take(all.filter((value) => /^\/blog\/[^/]+$/.test(value)), 5);
   const regions = take(all.filter((value) => /^\/services\/[^/]+$/.test(value)), 5);
   const excluded = new Set(["/services", "/faq", "/reviews", "/gallery", "/blog", "/"]);
@@ -136,7 +151,7 @@ async function main() {
     "/__stabilization-missing-page__",
     "/존재하지-않는-안정화-주소",
   ];
-  if ([gallery, blog, regions, combos].some((values, index) => values.length < [5, 5, 5, 10][index])) {
+  if ([gallery, blog, regions, combos].some((values, index) => values.length < [10, 5, 5, 10][index])) {
     throw new Error(`표본 부족: gallery ${gallery.length}, blog ${blog.length}, regions ${regions.length}, combos ${combos.length}`);
   }
   const targets = [
@@ -159,6 +174,20 @@ async function main() {
     for (const row of rows.filter((item) => routes.includes(item.route))) {
       row.result = "FAIL";
       row.failures.push(`duplicate title: ${routes.join(", ")}`);
+    }
+  }
+
+  for (const field of ["h1", "canonical", "description"]) {
+    const values = new Map();
+    for (const row of rows.filter((item) => item.kind === "gallery")) {
+      values.set(row[field], [...(values.get(row[field]) || []), row.route]);
+    }
+    for (const routes of values.values()) {
+      if (routes.length < 2) continue;
+      for (const row of rows.filter((item) => item.kind === "gallery" && routes.includes(item.route))) {
+        row.result = "FAIL";
+        row.failures.push(`duplicate gallery ${field}: ${routes.join(", ")}`);
+      }
     }
   }
 
