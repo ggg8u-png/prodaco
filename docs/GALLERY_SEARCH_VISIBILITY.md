@@ -5,7 +5,7 @@
 1. `published`: 사이트에 공개되어 독립 상세 URL이 생긴 상태
 2. `technicalIndexability=PASS`: HTTP·metadata·canonical·robots·SSR·schema·sitemap·내부 링크가 정상인 상태
 3. `IndexNow=pending/submitted`: URL 제출 대기 또는 API 접수 상태
-4. `indexStatus=indexed`: Search Advisor/GSC의 URL 검사로 실제 색인을 확인한 상태
+4. `indexStatus=indexed`: Search Advisor/GSC의 URL 검사 또는 공개 검색결과에서 해당 상세 URL을 직접 확인한 상태
 5. `exactTitleStatus`: 전체 제목 검색에서 보이는지 확인한 참고값
 6. `keywordStatus`: 일반 검색어에서 보이는지 확인한 참고값
 
@@ -14,10 +14,11 @@
 ## Decap CMS 입력
 
 - `⑩ 시공 사례(사진)`에서 `작성 상태`, `게시일`, `콘텐츠 수정일`을 관리한다.
+- 새 사례와 기존 사례의 수정 저장에는 검색 제목과 현장별 실제 작업 설명 80자 이상이 필요하다. 기존에 이미 공개된 사례의 런타임 색인 하한(40자)은 대량 제외를 피하기 위해 유지하되, 80자 미만 글은 다음 수정 때 함께 보강한다. 제목 중복은 CMS가 다른 파일까지 조회할 수 없어 배포 전 회귀검사에서 차단한다.
 - `게시일`은 문서를 사이트에 공개한 날짜이고 `작업일`은 실제 현장 작업일이다.
 - `콘텐츠 수정일`은 제목·설명·사진·현장 정보가 실제로 바뀐 날만 입력한다.
 - 실제 검색 확인은 사례 JSON을 수정하지 않고 `⑬ 시공사례 검색 추적`에 URL별·검색엔진별로 기록한다.
-- Search Advisor/GSC의 직접 근거가 있을 때만 `indexed` 또는 `not_indexed`를 선택한다.
+- Search Advisor/GSC URL 검사 또는 공개 검색결과에서 해당 상세 URL을 직접 확인했을 때만 `indexed`를 선택한다. `not_indexed`는 Search Advisor/GSC URL 검사에서 미색인이 확인된 경우에만 선택한다.
 - IndexNow 대기·접수 기록은 `⑧ IndexNow 제출 대기열`에서 확인한다.
 
 ## 변경 URL 후보와 IndexNow

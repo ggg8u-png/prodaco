@@ -914,7 +914,7 @@ ok(!toml.includes("status = 302"), "netlify.toml 에 302 없음");
   }
 
   // 컬렉션의 최상위 fields 항목만 뽑는다(중첩 list/object 의 fields 는 8칸 이상이라 제외).
-  function topLevelFields(lines: string[]): Array<{ name: string; required: boolean }> {
+  function topLevelFields(lines: string[]): Array<{ name: string; required: boolean; raw: string }> {
     const start = lines.findIndex((l) => /^ {4}fields:\s*$/.test(l));
     if (start < 0) return [];
     const items: string[] = [];
@@ -925,7 +925,11 @@ ok(!toml.includes("status = 302"), "netlify.toml 에 302 없음");
       // 그 외(6칸 주석·빈 줄)는 어느 항목에도 속하지 않으므로 버린다.
     }
     return items
-      .map((t) => ({ name: (t.match(/\bname:\s*"?([^",\s}]+)"?/) || [])[1] || "", required: !/\brequired:\s*false\b/.test(t) }))
+      .map((t) => ({
+        name: (t.match(/\bname:\s*"?([^",\s}]+)"?/) || [])[1] || "",
+        required: !/\brequired:\s*false\b/.test(t),
+        raw: t,
+      }))
       .filter((f) => f.name);
   }
 
@@ -1003,6 +1007,17 @@ ok(!toml.includes("status = 302"), "netlify.toml 에 302 없음");
   // 선택 사진인데도 "No src" 항목이 처음부터 생겨 게시 검증을 방해하지 않게 빈 배열로 시작한다.
   const galleryCollection = blocks.find((col) => col.name === "gallery");
   const galleryConfig = galleryCollection?.lines.join("\n") || "";
+  const galleryFields = galleryCollection ? topLevelFields(galleryCollection.lines) : [];
+  const galleryTitle = galleryFields.find((field) => field.name === "title");
+  const galleryDescription = galleryFields.find((field) => field.name === "description");
+  ok(
+    Boolean(galleryTitle?.required) && Boolean(galleryTitle?.raw.includes("^\\S[\\s\\S]{6,}\\S$")),
+    "Decap[gallery]: 검색 제목은 필수·앞뒤 공백 없음·8자 이상"
+  );
+  ok(
+    Boolean(galleryDescription?.required) && Boolean(galleryDescription?.raw.includes("^\\S[\\s\\S]{78,}\\S$")),
+    "Decap[gallery]: 실제 작업 설명은 필수·앞뒤 공백 없음·80자 이상"
+  );
   ok(
     /name:\s*"?photos"?[\s\S]{0,180}?widget:\s*"?list"?[\s\S]{0,180}?default:\s*\[\]/.test(galleryConfig),
     "Decap[gallery]: 선택 사진 목록은 빈 배열로 시작"

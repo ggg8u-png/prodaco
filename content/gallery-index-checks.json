@@ -55,12 +55,13 @@
     {
       "url": "https://prodaco.kr/gallery/case-20260903-1038",
       "engine": "naver",
-      "indexStatus": "unknown",
-      "exactTitleStatus": "not_visible",
+      "indexStatus": "indexed",
+      "lastIndexCheckAt": "2026-09-10T08:24:00.000Z",
+      "exactTitleStatus": "unknown",
       "keywordStatus": "unknown",
-      "lastSearchCheckAt": "2026-09-10T04:44:00.000Z",
-      "query": "서울 동대문 데코타일철거 본드제거 시공사례",
-      "note": "정확한 전체 제목과 전체 URL 검색에서 해당 상세 URL을 확인하지 못함. Search Advisor URL 검사를 하지 않았으므로 미색인으로 단정하지 않음."
+      "lastSearchCheckAt": "2026-09-10T08:24:00.000Z",
+      "query": "site:prodaco.kr/gallery",
+      "note": "네이버 공개 검색에서 제목·요약·대표이미지를 가진 독립 상세 URL 결과를 확인. 이전 exact-title 미노출 관측은 이 메모에 보존."
     },
     {
       "url": "https://prodaco.kr/gallery/case-20260904-1416",
@@ -75,32 +76,46 @@
     {
       "url": "https://prodaco.kr/gallery/case-20260908-0751",
       "engine": "naver",
-      "indexStatus": "unknown",
-      "exactTitleStatus": "not_visible",
+      "indexStatus": "indexed",
+      "lastIndexCheckAt": "2026-09-10T08:24:00.000Z",
+      "exactTitleStatus": "unknown",
       "keywordStatus": "unknown",
-      "lastSearchCheckAt": "2026-09-10T04:44:00.000Z",
-      "query": "부천 면갈이 바닥샌딩 상동 상가 데코타일 시공전 작업비용",
-      "note": "정확한 전체 제목과 전체 URL 검색에서 해당 상세 URL을 확인하지 못함. Search Advisor URL 검사를 하지 않았으므로 미색인으로 단정하지 않음."
+      "lastSearchCheckAt": "2026-09-10T08:24:00.000Z",
+      "query": "site:prodaco.kr/gallery",
+      "note": "네이버 공개 검색에서 제목·요약·대표이미지를 가진 독립 상세 URL 결과를 확인. 이전 exact-title 미노출 관측은 이 메모에 보존."
     },
     {
       "url": "https://prodaco.kr/gallery/case-20260908-0756",
       "engine": "naver",
-      "indexStatus": "unknown",
-      "exactTitleStatus": "not_visible",
+      "indexStatus": "indexed",
+      "lastIndexCheckAt": "2026-09-10T08:24:00.000Z",
+      "exactTitleStatus": "unknown",
       "keywordStatus": "unknown",
-      "lastSearchCheckAt": "2026-09-10T04:44:00.000Z",
-      "query": "고양 일산 데코타일철거 후곡마을 16단지 장판 시공전 바닥재제거 샌딩",
-      "note": "정확한 전체 제목과 전체 URL 검색에서 해당 상세 URL을 확인하지 못함. Search Advisor URL 검사를 하지 않았으므로 미색인으로 단정하지 않음."
+      "lastSearchCheckAt": "2026-09-10T08:24:00.000Z",
+      "query": "site:prodaco.kr/gallery",
+      "note": "네이버 공개 검색에서 제목·요약·대표이미지·게시 경과 표기를 가진 독립 상세 URL 결과를 확인. 이전 exact-title 미노출 관측은 이 메모에 보존."
     },
     {
       "url": "https://prodaco.kr/gallery/case-20260908-0812",
       "engine": "naver",
-      "indexStatus": "unknown",
-      "exactTitleStatus": "not_visible",
+      "indexStatus": "indexed",
+      "lastIndexCheckAt": "2026-09-10T08:24:00.000Z",
+      "exactTitleStatus": "unknown",
       "keywordStatus": "unknown",
-      "lastSearchCheckAt": "2026-09-10T04:44:00.000Z",
-      "query": "서울 강남 마루철거 작업비용 안내",
-      "note": "정확한 전체 제목과 전체 URL 검색에서 해당 상세 URL을 확인하지 못함. Search Advisor URL 검사를 하지 않았으므로 미색인으로 단정하지 않음."
+      "lastSearchCheckAt": "2026-09-10T08:24:00.000Z",
+      "query": "site:prodaco.kr/gallery",
+      "note": "네이버 공개 검색에서 제목·요약·대표이미지를 가진 독립 상세 URL 결과를 확인. 이전 exact-title 미노출 관측은 이 메모에 보존."
+    },
+    {
+      "url": "https://prodaco.kr/gallery/case-20260904-1423",
+      "engine": "naver",
+      "indexStatus": "indexed",
+      "lastIndexCheckAt": "2026-09-10T08:24:00.000Z",
+      "exactTitleStatus": "unknown",
+      "keywordStatus": "visible",
+      "lastSearchCheckAt": "2026-09-10T08:24:00.000Z",
+      "query": "고양 덕양구 창릉호반써밋 30평 강마루 철거 바닥샌딩",
+      "note": "네이버 공개 검색에서 제목·요약·대표이미지를 가진 독립 상세 URL 결과를 확인했고, 일반 현장 키워드 검색에서도 해당 상세 URL이 직접 노출됨."
     }
   ]
 }
