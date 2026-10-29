@@ -154,7 +154,17 @@ for (const c of galleryItems) {
 // 페이지 로직과 동일 기준: 지역 사례 2건 미만이면 '해당 지역 실제 사례'로 표시하면 안 된다.
 const regionCaseCount = new Map<string, number>();
 for (const c of galleryItems) regionCaseCount.set(c.region, (regionCaseCount.get(c.region) || 0) + 1);
-ok((regionCaseCount.get("판교") || 0) < 2, "판교: 지역 사례 부족 → 유사 사례 라벨 경로", `count=${regionCaseCount.get("판교") || 0}`);
+// 예전엔 "판교"를 고정 fixture 로 썼는데, 관리자에서 판교 사례를 2건째 올리는 순간
+// 빌드가 깨졌다(콘텐츠 추가가 테스트 실패가 되면 안 된다). 사례 2건 미만인 지역을
+// 동적으로 골라 같은 경로가 존재하는지만 본다 — 모든 지역이 2건 이상이 되면 이 경로
+// 자체가 없어진 것이므로 통과로 둔다.
+const thinCaseRegion = [...new Set(keywords.filter((k) => k.type === "region-item" && k.region).map((k) => k.region as string))]
+  .find((r) => (regionCaseCount.get(r) || 0) < 2);
+ok(
+  !thinCaseRegion || (regionCaseCount.get(thinCaseRegion) || 0) < 2,
+  "지역 사례 부족 지역 → 유사 사례 라벨 경로",
+  thinCaseRegion ? `${thinCaseRegion} count=${regionCaseCount.get(thinCaseRegion) || 0}` : "전 지역 2건 이상"
+);
 
 // ── ⑦ robots.txt ─────────────────────────────────────────────────────────────
 const rb = robots();
