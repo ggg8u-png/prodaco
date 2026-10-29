@@ -15,7 +15,7 @@ import { itemFactsFor, FLOOR_COMPARE, compareKeyOf, itemMistakesFor } from "@/da
 import { neighborsOf, clusterLabelOf } from "@/data/regions";
 import { pickFaqs, uniqueDescription, uniqueTitle } from "@/lib/seo";
 import { relatedGuidesFor } from "@/lib/relatedGuides";
-import { itemGuidesFor, itemAnchorFor } from "@/lib/itemGuides";
+import { itemGuidesFor, itemAnchorFor, regionTailsFor } from "@/lib/itemGuides";
 import { keyAnswerFor, normalizeKeyAnswer } from "@/data/keyAnswer";
 import { comboProfileFor } from "@/data/comboProfiles";
 import { applyReplacements } from "@/lib/replacements";
@@ -212,6 +212,9 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
   // 같은 품목의 정보형 페이지(비용·평당비용·방법…) 중 색인 대상만 역방향 링크 —
   // 사일로를 양방향으로 닫는다(선택 규칙·근거는 src/lib/itemGuides.ts).
   const itemGuideLinks = rotatePick(itemGuidesFor(keyword.item, keyword.slug), seed, 5);
+
+  // 같은 지역·같은 품목의 꼬리말(비용·견적…) — 회전 없이 전량 링크(부모 → 자식 경로가 유일).
+  const regionTailLinks = regionTailsFor(keyword);
 
   // 같은 지역의 다른 품목 — 지역 사일로를 닫는 마지막 한 변.
   //
@@ -710,6 +713,28 @@ export default async function KeywordPage({ params }: { params: Promise<{ slug: 
                   className="text-xs font-medium text-[#16181D] px-3 py-1.5 border border-gray-300 bg-white hover:border-[#9A8A2E] hover:text-[#9A8A2E] transition-colors"
                 >
                   {applyReplacements(itemAnchorFor(k.item))}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {regionTailLinks.length > 0 && (
+        <section className="py-10 px-5">
+          <div className="max-w-3xl mx-auto">
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">{applyReplacements(`${keyword.region} ${keyword.item} 비용·견적 안내`)}</p>
+            <p className="text-xs text-gray-500 mb-4 leading-relaxed">
+              {applyReplacements(`${keyword.region} 지역 ${keyword.item} 비용과 견적, 업체 선택 기준을 항목별로 확인하세요.`)}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {regionTailLinks.map((k) => (
+                <Link
+                  key={k.slug}
+                  href={`/${k.slug}`}
+                  className="text-xs font-medium text-[#16181D] px-3 py-1.5 border border-gray-300 bg-white hover:border-[#9A8A2E] hover:text-[#9A8A2E] transition-colors"
+                >
+                  {applyReplacements(k.keyword)}
                 </Link>
               ))}
             </div>

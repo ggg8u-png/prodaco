@@ -25,7 +25,7 @@ import { entriesForGroup, SITEMAP_GROUPS } from "@/lib/sitemap";
 import { company } from "@/data/company";
 import { serviceFeaturedImage } from "@/lib/serviceFeaturedImage";
 import { neighborsOf } from "@/data/regions";
-import { itemGuidesFor } from "@/lib/itemGuides";
+import { itemGuidesFor, regionTailsFor } from "@/lib/itemGuides";
 import { casePageItems, indexableCases, casePath, caseRelatedLinks } from "@/lib/caseDoc";
 import { reviewPageItems, indexableReviews } from "@/lib/reviewDoc";
 import { posts } from "@/data/posts";
@@ -109,6 +109,8 @@ for (const k of indexed) {
     if (!getKeywordBySlug(target)) brokenLinks.push(`${k.slug} → ${target}`);
     else note(target);
   }
+  // 같은 지역·같은 품목 꼬리말(비용·견적…) — [slug]/page.tsx 의 regionTailLinks 와 같은 규칙
+  for (const t of regionTailsFor(k)) note(t.slug);
   // 같은 지역 다른 품목
   if (k.region)
     for (const sib of indexed.filter((x) => x.region === k.region && x.slug !== k.slug).slice(0, 6)) note(sib.slug);

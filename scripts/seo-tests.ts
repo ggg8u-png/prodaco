@@ -14,7 +14,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { josa, josaEnd } from "@/lib/josa";
 import { fillTemplate } from "@/lib/template";
-import { getKeywords, getKeywordBySlug, hubDecisionFor } from "@/data/keywords";
+import { getKeywords, getKeywordBySlug, hubDecisionFor, hubCanonicalRegionFor } from "@/data/keywords";
 import { indexabilityFor, keywordUrl, siteUrl } from "@/lib/seo/indexability";
 import { uniqueTitle, uniqueDescription, pickFaqs, faqMatchesItem } from "@/lib/seo";
 import { getContentForKeyword, familyOf } from "@/lib/content";
@@ -132,12 +132,23 @@ ok(tierA > 0, "Tier A 존재", String(tierA));
 ok(indexabilityFor("판교-존재하지않는품목").tier === "C", "무효 조합 Tier C");
 ok(getKeywordBySlug("판교-존재하지않는품목") === undefined, "무효 조합 keyword 없음(페이지 notFound)");
 
+/** 총칭 품목 페이지가 색인 허브로 canonical 수렴 중인가 — 사례 근거가 허브로 넘어간 정상 상태. */
+function caseEvidenceOnHub(k: NonNullable<ReturnType<typeof getKeywordBySlug>>): boolean {
+  const hub = hubCanonicalRegionFor(k);
+  return !!hub && hubDecisionFor(hub).index;
+}
+
 // ── ⑥ 실제 사례 → 자동 승급 + 지역 표시 정확성 ────────────────────────────────
 for (const c of galleryItems) {
   if (!c.region || !c.item || c.verified === false) continue;
   const k = getKeywordBySlug(`${c.region}-${c.item}`);
   if (k) {
-    ok(indexabilityFor(k).tier === "A", `검증 사례 보유 페이지 Tier A: ${c.region}-${c.item}`);
+    // 총칭 품목(바닥재철거·바닥철거)은 설계상 지역 허브로 canonical 을 모은다(Tier B).
+    // 이때 사례 근거는 허브가 받으므로, 허브가 색인 대상이면 통과로 본다.
+    ok(
+      indexabilityFor(k).tier === "A" || caseEvidenceOnHub(k),
+      `검증 사례 보유 페이지 Tier A(또는 색인 허브로 수렴): ${c.region}-${c.item}`
+    );
   }
 }
 // 페이지 로직과 동일 기준: 지역 사례 2건 미만이면 '해당 지역 실제 사례'로 표시하면 안 된다.
@@ -494,7 +505,11 @@ ok((index.match(/<sitemap>/g) || []).length >= 4, "sitemap index 그룹 4+");
     galleryItems.filter((c) => c.region && c.item && c.verified !== false).map((c) => `${c.region}|${c.item}`)
   );
   const caseNotIndexed = keywords.filter(
-    (k) => k.type === "region-item" && caseKeys.has(`${k.region}|${k.item}`) && !indexabilityFor(k).inSitemap
+    (k) =>
+      k.type === "region-item" &&
+      caseKeys.has(`${k.region}|${k.item}`) &&
+      !indexabilityFor(k).inSitemap &&
+      !caseEvidenceOnHub(k) // 총칭 품목 → 색인 허브로 canonical 수렴은 정상
   );
   ok(caseNotIndexed.length === 0, "검증 사례 보유 지역×품목은 전부 색인 대상", caseNotIndexed.slice(0, 3).map((k) => k.slug).join(", "));
 

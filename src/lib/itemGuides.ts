@@ -72,3 +72,24 @@ export function itemGuidesFor(item: string | undefined, selfSlug: string): Keywo
   const seen = new Set<string>();
   return [...tails, ...related].filter((k) => (seen.has(k.slug) ? false : seen.add(k.slug)));
 }
+
+/**
+ * 지역×품목 페이지 → 같은 지역·같은 품목의 꼬리말 페이지(비용·견적·평당비용…).
+ *
+ * 왜: generateCount 를 라이브 수 이상으로 올리면 staging 의 region-item-tail
+ *     (예: 서울-강마루철거-비용)이 품질 게이트를 통과해 색인 대상이 되는데,
+ *     이 유형으로 들어오는 내부링크 경로가 하나도 없어 전부 고아(inbound 0)였다.
+ *     부모(서울-강마루철거)에서 자식으로 내려가는 링크가 가장 자연스러운 경로다.
+ * 색인 대상(Tier A)만 — noindex 꼬리말까지 걸면 크롤 예산만 분산된다.
+ */
+export function regionTailsFor(k: Pick<KeywordEntry, "type" | "region" | "item" | "slug">): KeywordEntry[] {
+  if (k.type !== "region-item" || !k.region || !k.item) return [];
+  return getKeywords().filter(
+    (x) =>
+      x.type === "region-item-tail" &&
+      x.region === k.region &&
+      x.item === k.item &&
+      x.slug !== k.slug &&
+      indexabilityFor(x).inSitemap
+  );
+}
