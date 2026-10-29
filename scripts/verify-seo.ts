@@ -130,7 +130,10 @@ for (const region of new Set(keywords.filter((k) => k.region).map((k) => k.regio
   for (const k of keywords.filter((x) => x.type === "b2b" && x.region === region && indexabilityFor(x).inSitemap))
     note(k.slug);
 }
-const orphans = indexed.filter((k) => !inbound.get(k.slug));
+// 고아 판정은 사이트맵 포함(index + self-canonical) 페이지만 — canonical 이 대표 URL 로
+// 넘어가는 동의어 변형(가격·추천…)은 신호가 대표로 모이므로 직접 링크가 필요 없고,
+// 오히려 비정규 URL 로 링크를 거는 건 피해야 한다. (generateCount ≥ 16,562 에서 9,540건 오탐)
+const orphans = inSitemap.filter((k) => !inbound.get(k.slug));
 for (const o of orphans.slice(0, 10)) bad("고아 페이지(내부링크 inbound 0)", o.slug);
 for (const b of brokenLinks.slice(0, 10)) bad("깨진 내부링크", b);
 
