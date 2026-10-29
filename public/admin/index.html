@@ -86,6 +86,30 @@
           function GalleryPreview(props) { return preview(props, "gallery"); }
           CMS.registerPreviewTemplate("blog", BlogPreview);
           CMS.registerPreviewTemplate("gallery", GalleryPreview);
+
+          // 표시 전용 안내 박스 위젯 — config.yml 의 notice_title / notice_items 를 크게 보여준다.
+          // onChange 를 부르지 않으므로 값이 저장되지 않는다(사례 JSON 에 아무것도 쓰지 않음).
+          function NoticeControl(props) {
+            var field = props.field;
+            var title = field.get("notice_title") || "";
+            var items = field.get("notice_items");
+            items = items && items.toJS ? items.toJS() : (items || []);
+            return h("div", {
+              style: {
+                border: "3px solid #D92D20", background: "#FEF3F2", color: "#7A271A",
+                borderRadius: "8px", padding: "18px 20px", margin: "4px 0 8px"
+              }
+            },
+              h("p", { style: { fontSize: "20px", fontWeight: 800, lineHeight: 1.4, margin: "0 0 10px", color: "#B42318" } }, "🚫 " + title),
+              h("ul", { style: { margin: 0, paddingLeft: "20px" } },
+                items.map(function (t, i) {
+                  return h("li", { key: i, style: { fontSize: "15px", fontWeight: 600, lineHeight: 1.6, margin: "4px 0" } }, t);
+                })
+              )
+            );
+          }
+          function NoticePreview() { return null; }
+          CMS.registerWidget("notice", NoticeControl, NoticePreview);
         }
         register(0);
       })();
